@@ -1,0 +1,97 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --bg-base: #000000;
+  --bg-card: #0d0d0d;
+  --bg-elevated: #111111;
+  --bg-input: #0a0a0a;
+  --bg-terminal: #080808;
+  --border-default: #1a1a1a;
+  --border-subtle: #111111;
+  --border-active: #00ff88;
+  --accent-green: #00ff88;
+  --accent-green-dim: rgba(0,255,136,0.1);
+  --accent-green-hover: #00cc6a;
+  --red: #ff3333;
+  --amber: #f59e0b;
+  --blue: #3b82f6;
+  --purple: #8b5cf6;
+  --text-primary: #ffffff;
+  --text-secondary: #888888;
+  --text-muted: #444444;
+  --text-dim: #333333;
+  --tier-platinum: #a78bfa;
+  --tier-gold: #fbbf24;
+  --tier-silver: #94a3b8;
+  --tier-bronze: #f97316;
+}
+
+@theme inline {
+  --color-base: #000000;
+  --color-card: #0d0d0d;
+  --color-elevated: #111111;
+  --color-t-input: #0a0a0a;
+  --color-terminal: #080808;
+  --color-border: #1a1a1a;
+  --color-border-subtle: #111111;
+  --color-border-active: #00ff88;
+  --color-accent: #00ff88;
+  --color-accent-dim: rgba(0,255,136,0.1);
+  --color-accent-hover: #00cc6a;
+  --color-danger: #ff3333;
+  --color-t-amber: #f59e0b;
+  --color-t-blue: #3b82f6;
+  --color-t-purple: #8b5cf6;
+  --color-primary: #ffffff;
+  --color-secondary: #888888;
+  --color-muted: #444444;
+  --color-dim: #333333;
+  --color-tier-platinum: #a78bfa;
+  --color-tier-gold: #fbbf24;
+  --color-tier-silver: #94a3b8;
+  --color-tier-bronze: #f97316;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --radius-sm: 2px;
+  --radius-md: 2px;
+  --radius-lg: 4px;
+}
+
+.site-logo {
+  height: 32px;
+  width: auto;
+  display: block;
+  object-fit: contain;
+}
+
+@layer base {
+  * {
+    border-color: var(--border-default);
+  }
+  body {
+    background: var(--bg-base);
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@keyframes truva-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+.animate-truva-pulse {
+  animation: truva-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes terminal-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.animate-terminal-blink {
+  animation: terminal-blink 1s step-end infinite;
+}
