@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { TruvaStatCard, TruvaStatusPill, TruvaPulsingDot, TruvaButton, TruvaProgressBar } from '@/components/ui/truva';
+import { TruvaStatCard, TruvaStatusPill, TruvaButton } from '@/components/ui/truva';
 import { ShieldCheck, Zap, Users, TrendingUp, Shield } from 'lucide-react';
 
 const tierColors: Record<string, string> = {

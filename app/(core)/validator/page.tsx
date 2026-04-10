@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { TruvaStatCard, TruvaStatusPill, TruvaTerminal, TruvaProgressBar, TruvaButton, TruvaPulsingDot } from '@/components/ui/truva';
+import { TruvaStatCard, TruvaStatusPill, TruvaTerminal, TruvaProgressBar, TruvaButton } from '@/components/ui/truva';
 import { ShieldCheck, Zap, Award, TrendingUp, AlertTriangle, Server, Cpu, HardDrive } from 'lucide-react';
 
 function generateValidationLog(): string[] {

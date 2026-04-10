@@ -1,5 +1,5 @@
 import { TruvaStatCard, TruvaStatusPill, TruvaTerminal, TruvaProgressBar, TruvaBadge, TruvaButton, TruvaCheckTag } from '@/components/ui/truva';
-import { Shield, ShieldCheck, Zap, Clock, TrendingUp, Activity } from 'lucide-react';
+import { Shield, ShieldCheck, Zap, TrendingUp, Activity } from 'lucide-react';
 
 const terminalLines = [
   '[AUTH] Session initiated for TRADEBOT_X · NODE_SOLANA_01',

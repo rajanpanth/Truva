@@ -1,6 +1,6 @@
 import { TruvaButton, TruvaStatusPill } from '@/components/ui/truva';
 import { CodeBlock } from '@/components/ui/truva/CodeBlock';
-import { Book, Code, Shield, Zap, Globe, Terminal } from 'lucide-react';
+import { Book, Shield, Zap, Globe, Terminal } from 'lucide-react';
 
 const apiEndpoints = [
   { method: 'GET', path: '/api/v1/agents', desc: 'List all registered agents', auth: 'API_KEY' },
