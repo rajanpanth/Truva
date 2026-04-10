@@ -16,7 +16,6 @@ export function SolanaWalletProvider({ children }: { children: React.ReactNode }
   ], []);
 
   return (
-    // @ts-expect-error -- wallet-adapter types lag behind @types/react
     <ConnectionProvider endpoint={endpoint}>
       <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>
