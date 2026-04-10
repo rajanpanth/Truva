@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Agent } from '@/types/agent';
+import { Agent } from '@/backend/types/agent';
 
 interface AgentStoreState {
   selectedAgent: Agent | null;

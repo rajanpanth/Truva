@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { TrustGateLog } from '@/types/trustgate';
+import { createClient, isSupabaseConfigured } from '@/backend/supabase/client';
+import { TrustGateLog } from '@/backend/types/trustgate';
 import type { RealtimePostgresInsertPayload } from '@supabase/supabase-js';
 
 export function useRealtimeLogs(limit = 20) {
@@ -15,6 +15,8 @@ export function useRealtimeLogs(limit = 20) {
   }, [limit]);
 
   useEffect(() => {
+    if (!isSupabaseConfigured) return;
+
     const supabase = createClient();
 
     // Fetch initial logs
@@ -23,8 +25,8 @@ export function useRealtimeLogs(limit = 20) {
       .select('*')
       .order('created_at', { ascending: false })
       .limit(limit)
-      .then(({ data }) => {
-        if (data) setLogs(data as unknown as TrustGateLog[]);
+      .then(({ data }: { data: unknown[] | null }) => {
+        if (data) setLogs(data as TrustGateLog[]);
       });
 
     // Subscribe to realtime
@@ -39,7 +41,7 @@ export function useRealtimeLogs(limit = 20) {
         },
         addLog
       )
-      .subscribe((status) => {
+      .subscribe((status: string) => {
         setIsConnected(status === 'SUBSCRIBED');
       });
 

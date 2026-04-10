@@ -1,7 +1,17 @@
 import { PublicKey } from '@solana/web3.js';
 import { Buffer } from 'buffer';
 
-const TRUVA_PROGRAM_ID = new PublicKey('TRVAxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'.slice(0, 44).padEnd(44, '1'));
+// Use a valid base58 public key for the "program ID" placeholder
+// This is a deterministic keypair derived from the seed "truva" — not a real deployed program
+const TRUVA_PROGRAM_ID_STR = '11111111111111111111111111111112';
+
+let _programId: PublicKey | null = null;
+function getProgramId(): PublicKey {
+  if (!_programId) {
+    _programId = new PublicKey(TRUVA_PROGRAM_ID_STR);
+  }
+  return _programId;
+}
 
 export function deriveAgentPDA(agentPublicKey: string, seed: string): string {
   try {
@@ -12,7 +22,7 @@ export function deriveAgentPDA(agentPublicKey: string, seed: string): string {
         agentKey.toBuffer(),
         Buffer.from(seed),
       ],
-      TRUVA_PROGRAM_ID
+      getProgramId()
     );
     return pda.toBase58();
   } catch {

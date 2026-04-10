@@ -1,18 +1,23 @@
 import { useQuery } from '@tanstack/react-query';
-import { TrustGateLog } from '@/types/trustgate';
+import { TrustGateLog } from '@/backend/types/trustgate';
 
 interface UseTrustGateLogsOptions {
   limit?: number;
   offset?: number;
+  page?: number;
   status?: 'passed' | 'blocked';
+  decision?: string;
   agentId?: string;
 }
 
 async function fetchTrustGateLogs(options: UseTrustGateLogsOptions): Promise<{ data: TrustGateLog[]; total: number }> {
   const params = new URLSearchParams();
-  if (options.limit) params.set('limit', String(options.limit));
-  if (options.offset) params.set('offset', String(options.offset));
-  if (options.status) params.set('status', options.status);
+  const limit = options.limit ?? 20;
+  if (options.limit) params.set('limit', String(limit));
+  const offset = options.offset ?? (options.page != null ? options.page * limit : undefined);
+  if (offset != null) params.set('offset', String(offset));
+  const status = options.status ?? (options.decision as 'passed' | 'blocked' | undefined);
+  if (status) params.set('status', status);
   if (options.agentId) params.set('agent_id', options.agentId);
 
   const res = await fetch(`/api/trustgate?${params.toString()}`);

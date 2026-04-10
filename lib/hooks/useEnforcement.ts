@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query';
-import { EnforcementResult, TransactionRequest } from '@/types/enforcement';
+import { EnforcementResult, TransactionRequest } from '@/backend/types/enforcement';
 
 async function enforceTransaction(request: TransactionRequest): Promise<EnforcementResult> {
   const res = await fetch('/api/transactions/enforce', {
