@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { TruvaStatusPill, TruvaButton, TruvaStatCard, TruvaPulsingDot } from '@/components/ui/truva';
-import { Shield, Search, Filter, Download, Activity, Clock, ShieldCheck } from 'lucide-react';
+import { Shield, Search, Download, Activity, Clock, ShieldCheck } from 'lucide-react';
 
 function generateLog(i: number) {
   const agents = ['TRADEBOT_X', 'LIQUID_FLOW', 'ORACLE_EYE', 'GUARD_PROTO', 'NEXUS_BRIDGE', 'SENTINEL_V2'];

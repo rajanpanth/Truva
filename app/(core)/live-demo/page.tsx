@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { TruvaButton, TruvaStatCard, TruvaStatusPill, TruvaTerminal, TruvaProgressBar, TruvaPulsingDot } from '@/components/ui/truva';
-import { Shield, Zap, Activity, ShieldCheck, AlertTriangle, Play } from 'lucide-react';
+import { Shield, Activity, ShieldCheck, AlertTriangle, Play } from 'lucide-react';
 
 const phases = [
   { name: 'AGENT_REGISTRATION', desc: 'Registering agent on-chain with compliance metadata.', duration: 2000 },

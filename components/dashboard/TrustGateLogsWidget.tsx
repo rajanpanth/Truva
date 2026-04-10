@@ -2,7 +2,7 @@
 
 import { useRealtimeLogs } from '@/lib/hooks/useRealtimeLogs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { truncateAddress, formatTimeAgo, formatAmount } from '@/backend/utils/formatters';
+import { truncateAddress, formatTimeAgo } from '@/backend/utils/formatters';
 
 export function TrustGateLogsWidget() {
   const { logs } = useRealtimeLogs(20);

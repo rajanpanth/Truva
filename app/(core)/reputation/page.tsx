@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { TruvaStatCard, TruvaStatusPill, TruvaProgressBar, TruvaPulsingDot, TruvaTerminal } from '@/components/ui/truva';
-import { Globe, Shield, Activity, TrendingUp, Zap } from 'lucide-react';
+import { Globe, Shield, Activity, Zap } from 'lucide-react';
 
 /* SVG World Map — simplified continents */
 function TrustHeatmap() {
