@@ -123,7 +123,7 @@ export default function RegistryPage() {
       <div className="grid grid-cols-3 gap-4 mb-6">
         <TruvaStatCard label="TOTAL_REGISTERED" value={String(filtered.length)} sub="ACROSS ALL TIERS" icon={<Users size={16} className="text-[var(--accent-green)]" />} />
         <TruvaStatCard label="AVG_TRUST_SCORE" value={filtered.length ? (filtered.reduce((s, a) => s + a.score, 0) / filtered.length).toFixed(1) : '0'} sub="↑ 2.1% THIS EPOCH" icon={<Award size={16} className="text-[var(--accent-green)]" />} />
-        <TruvaStatCard label="ELITE_AGENTS" value={String(filtered.filter(a => a.tier === 'platinum').length)} sub="PLATINUM TIER" icon={<Star size={16} className="text-[var(--tier-platinum)]" />} />
+        <TruvaStatCard label="ELITE_AGENTS" value={String(filtered.filter(a => a.tier === 'gold').length)} sub="GOLD TIER" icon={<Star size={16} className="text-[var(--tier-gold)]" />} />
       </div>
 
       {/* Agent Grid */}
