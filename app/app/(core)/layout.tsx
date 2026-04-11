@@ -1,0 +1,19 @@
+import { ShellATopbar } from '@/components/layout/ShellATopbar';
+import { ShellASidebar } from '@/components/layout/ShellASidebar';
+import { ShellAStatusBar } from '@/components/layout/ShellAStatusBar';
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
+
+export default function CoreLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      <ShellATopbar />
+      <ShellASidebar />
+      <main className="ml-0 lg:ml-[210px] mt-12 mb-9 min-h-[calc(100vh-48px-36px)] bg-[var(--bg-base)] p-4 lg:p-8">
+        <ErrorBoundary>
+          {children}
+        </ErrorBoundary>
+      </main>
+      <ShellAStatusBar />
+    </>
+  );
+}
