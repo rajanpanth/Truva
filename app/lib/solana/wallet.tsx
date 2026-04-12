@@ -16,7 +16,6 @@ export function SolanaWalletProvider({ children }: { children: React.ReactNode }
   ], []);
 
   return (
-    /* @ts-expect-error React 18/19 JSX type mismatch with wallet adapter */
     <ConnectionProvider endpoint={endpoint}>
       <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>
