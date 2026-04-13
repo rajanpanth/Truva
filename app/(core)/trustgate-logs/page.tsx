@@ -62,7 +62,7 @@ export default function TrustGateLogsPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <TruvaStatCard label="TOTAL_VERIFIED" value={logs.length.toString()} sub="IN BUFFER" icon={<ShieldCheck size={16} className="text-[var(--accent-green)]" />} />
         <TruvaStatCard label="PASS_RATE" value={`${((passedCount / logs.length) * 100).toFixed(1)}%`} sub={`${passedCount} PASSED`} icon={<Shield size={16} className="text-[var(--accent-green)]" />} />
         <TruvaStatCard label="BLOCKED" value={blockedCount.toString()} sub="VIOLATIONS DETECTED" icon={<Activity size={16} className="text-[var(--red)]" />} />
@@ -70,7 +70,7 @@ export default function TrustGateLogsPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-3 mb-4">
+      <div className="flex flex-wrap items-center gap-3 mb-4">
         <div className="relative flex-1 max-w-[300px]">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
           <input
@@ -98,8 +98,8 @@ export default function TrustGateLogsPage() {
       </div>
 
       {/* Log Table */}
-      <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px]">
-        <table className="w-full border-collapse">
+      <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] overflow-x-auto">
+        <table className="w-full border-collapse min-w-[700px]">
           <thead>
             <tr className="border-b border-[var(--border-default)]">
               {['', 'TIMESTAMP', 'AGENT_ID', 'ACTION', 'TX_HASH', 'STATUS', 'LATENCY'].map((h) => (

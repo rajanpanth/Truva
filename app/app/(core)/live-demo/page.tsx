@@ -89,13 +89,13 @@ export default function LiveDemoPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <TruvaStatCard label="NETWORK_HEALTH" value={`${networkPulse.toFixed(1)}%`} sub="REAL-TIME" icon={<Activity size={16} className="text-[var(--accent-green)]" />} />
         <TruvaStatCard label="THREATS_BLOCKED" value="247" sub="THIS SESSION" icon={<ShieldCheck size={16} className="text-[var(--accent-green)]" />} />
         <TruvaStatCard label="ZK_PROOFS_GEN" value="1,204" sub="ZERO-KNOWLEDGE" icon={<Shield size={16} className="text-[var(--accent-green)]" />} />
       </div>
 
-      <div className="grid grid-cols-[1fr_320px] gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 mb-6">
         {/* Phase Tracker */}
         <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-5">
           <h3 className="text-[13px] uppercase tracking-[2px] font-bold mb-4">PROTOCOL_PHASES</h3>

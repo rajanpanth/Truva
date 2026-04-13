@@ -71,14 +71,14 @@ export default function ValidatorDashboard() {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <TruvaStatCard label="BLOCKS_VALIDATED" value="8,924" sub="THIS EPOCH" icon={<ShieldCheck size={16} className="text-[var(--accent-green)]" />} />
         <TruvaStatCard label="REWARDS_EARNED" value="2,450 TRU" sub="↑ 12% vs LAST EPOCH" icon={<Award size={16} className="text-[var(--accent-green)]" />} />
         <TruvaStatCard label="UPTIME" value={`${uptime.toFixed(2)}%`} sub="LAST 30 DAYS" icon={<TrendingUp size={16} className="text-[var(--accent-green)]" />} />
         <TruvaStatCard label="STAKE_LOCKED" value="1.2M TRU" sub="UNTIL EPOCH 500" icon={<Zap size={16} className="text-[var(--accent-green)]" />} />
       </div>
 
-      <div className="grid grid-cols-[1fr_360px] gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 mb-6">
         {/* Validation Log */}
         <TruvaTerminal
           title="VALIDATION_LOG"
@@ -99,7 +99,7 @@ export default function ValidatorDashboard() {
       </div>
 
       {/* System Telemetry + Alerts */}
-      <div className="grid grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-5">
           <h3 className="text-[13px] uppercase tracking-[2px] font-bold mb-4">SYSTEM_TELEMETRY</h3>
           <div className="space-y-3">

@@ -76,7 +76,7 @@ export default function LandingPage() {
         <Link href="/" className="flex items-center mr-8">
           <img src="/assets/logo/truva-logo.png" alt="TRUVA" className="site-logo" />
         </Link>
-        <nav className="flex items-center gap-5 flex-1">
+        <nav className="hidden md:flex items-center gap-5 flex-1">
           {['PROTOCOL', 'ORACLES', 'LEDGER', 'SECURITY'].map((item, i) => (
             <span
               key={item}
@@ -92,14 +92,14 @@ export default function LandingPage() {
       </header>
 
       {/* HERO */}
-      <section className="px-8 pt-12 pb-20">
+      <section className="px-4 sm:px-8 pt-12 pb-20">
         <div className="flex items-center gap-1.5 mb-6">
           <TruvaPulsingDot size={6} />
           <span className="text-[13px] uppercase tracking-[2px] text-[var(--accent-green)]">SYSTEM_STATUS: OPERATIONAL</span>
         </div>
-        <div className="grid grid-cols-[55%_1fr] gap-10 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-[55%_1fr] gap-10 items-start">
           <div>
-            <h1 className="text-[52px] font-extrabold leading-[1.05] tracking-tight">
+            <h1 className="text-[28px] sm:text-[40px] lg:text-[52px] font-extrabold leading-[1.05] tracking-tight">
               THE TRUST GATE<br />
               FOR <span className="text-[var(--accent-green)]">AI AGENT</span><br />
               PAYMENTS
@@ -117,15 +117,16 @@ export default function LandingPage() {
       </section>
 
       {/* TRUSTGATE REAL-TIME LOGS */}
-      <section className="px-8 py-10 border-t border-[var(--border-default)]">
-        <div className="flex items-center justify-between mb-4">
+      <section className="px-4 sm:px-8 py-10 border-t border-[var(--border-default)]">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
           <div className="flex items-center gap-2">
             <TruvaPulsingDot size={5} />
             <span className="text-[13px] uppercase tracking-[2px] text-[var(--text-primary)] font-bold">TRUSTGATE_REAL_TIME_LOGS</span>
           </div>
           <span className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)]">ACTIVE_FILTERS: ALL &nbsp; LOG_BUFFER: 51240</span>
         </div>
-        <table className="w-full border-collapse">
+        <div className="overflow-x-auto">
+        <table className="w-full border-collapse min-w-[600px]">
           <thead>
             <tr className="border-b border-[var(--border-default)]">
               {['TIMESTAMP', 'AGENT_ID', 'TRANSACTION_HASH', 'STATUS', 'LATENCY'].map((h) => (
@@ -145,21 +146,22 @@ export default function LandingPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </section>
 
       {/* AGENT REGISTRY */}
-      <section className="px-8 py-12 border-t border-[var(--border-default)]">
+      <section className="px-4 sm:px-8 py-12 border-t border-[var(--border-default)]">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-[24px] font-bold">AGENT_REGISTRY</h2>
             <p className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mt-1">VERIFIED_AUTONOMOUS_ENTITIES_V1.0.4</p>
           </div>
           <div className="relative">
-            <input placeholder="FILTER_BY_HASH_OR_NAME" className="pl-8 pr-3 py-2 bg-[var(--bg-input)] border border-[var(--border-default)] rounded-[2px] text-[13px] text-[var(--text-primary)] font-mono placeholder:text-[var(--text-dim)] w-[260px] focus:border-[var(--accent-green)] focus:outline-none" />
+            <input placeholder="FILTER_BY_HASH_OR_NAME" className="pl-8 pr-3 py-2 bg-[var(--bg-input)] border border-[var(--border-default)] rounded-[2px] text-[13px] text-[var(--text-primary)] font-mono placeholder:text-[var(--text-dim)] w-full sm:w-[260px] focus:border-[var(--accent-green)] focus:outline-none" />
             <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
           </div>
         </div>
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {agents.map((a) => (
             <div key={a.name} className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-4">
               <div className="flex items-start justify-between mb-1">
@@ -188,13 +190,13 @@ export default function LandingPage() {
       </section>
 
       {/* TRADEBOT X PASSPORT */}
-      <section className="px-8 py-12 border-t border-[var(--border-default)]">
+      <section className="px-4 sm:px-8 py-12 border-t border-[var(--border-default)]">
         <div className="flex items-center gap-3 mb-1">
           <Shield size={24} className="text-[var(--accent-green)]" />
           <h2 className="text-[22px] font-bold">TRADEBOT X PASSPORT</h2>
         </div>
         <p className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mb-6">REPUTATION_STAMP_ID: AF-9283-TR-001</p>
-        <div className="grid grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           {[
             { label: 'RELIABILITY', val: '99.98', unit: '%', pct: 99.98 },
             { label: 'LATENCY_AVG', val: '4.2', unit: 'ms', pct: 15 },
@@ -214,7 +216,7 @@ export default function LandingPage() {
         </div>
         <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-5">
           <div className="text-[13px] uppercase tracking-[2px] text-[var(--text-primary)] font-bold mb-4">COMPLIANCE_MANIFESTO_V.2</div>
-          <div className="grid grid-cols-2 gap-x-12 gap-y-3 text-[12px]">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-3 text-[12px]">
             <div className="flex justify-between"><span className="text-[var(--text-secondary)]">KYA_STATUS</span><span className="font-bold text-[var(--accent-green)]">VERIFIED</span></div>
             <div className="flex justify-between"><span className="text-[var(--text-secondary)]">OPERATING_LIMIT</span><span className="font-bold">$10.0M DAILY</span></div>
             <div className="flex justify-between"><span className="text-[var(--text-secondary)]">JURISDICTION</span><span className="font-bold">GLOBAL_MESH</span></div>
@@ -224,8 +226,8 @@ export default function LandingPage() {
       </section>
 
       {/* REGISTER YOUR AGENT */}
-      <section className="px-8 py-12 border-t border-[var(--border-default)]">
-        <div className="grid grid-cols-[1fr_340px] gap-10">
+      <section className="px-4 sm:px-8 py-12 border-t border-[var(--border-default)]">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-10">
           <div>
             <h2 className="text-[28px] font-extrabold mb-2">REGISTER_YOUR_AGENT</h2>
             <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed mb-8 max-w-[440px]">
@@ -269,8 +271,8 @@ export default function LandingPage() {
       </section>
 
       {/* FOOTER */}
-      <footer className="px-8 py-6 border-t border-[var(--border-default)]">
-        <div className="flex items-center justify-between">
+      <footer className="px-4 sm:px-8 py-6 border-t border-[var(--border-default)]">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <div className="text-[12px] font-bold">TRUVA PROTOCOL</div>
             <div className="text-[12px] text-[var(--text-muted)] mt-1">© 2026 TRUVA PROTOCOL · SYSTEM_STATUS: OPERATIONAL</div>
