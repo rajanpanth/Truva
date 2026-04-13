@@ -17,8 +17,8 @@ export function LiveSidebar() {
             <div className="w-10 h-10 bg-white/[0.04] rounded-xl flex items-center justify-center text-zinc-600 text-base shrink-0">🏆</div>
             <div>
               <div className="text-[13px] font-semibold text-white">Colosseum Frontier Hackathon</div>
-              <div className="text-[11px] text-zinc-600 mt-0.5">has started!</div>
-              <div className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 border border-[#14F195]/30 rounded-full text-[#14F195] text-[10px] font-semibold">
+              <div className="text-[13px] text-zinc-600 mt-0.5">has started!</div>
+              <div className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 border border-[#14F195]/30 rounded-full text-[#14F195] text-[13px] font-semibold">
                 Event &middot; Apr 6 &ndash; May 11
               </div>
             </div>

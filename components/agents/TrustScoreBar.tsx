@@ -12,7 +12,7 @@ function getScoreColor(score: number) {
   return '#ff4444';
 }
 
-export function TrustScoreBar({ score, showLabel = true, height = 4 }: TrustScoreBarProps) {
+export function TrustScoreBar({ score, showLabel = true, height = 6 }: TrustScoreBarProps) {
   const color = getScoreColor(score);
   const clampedScore = Math.max(0, Math.min(100, score));
 
@@ -31,7 +31,7 @@ export function TrustScoreBar({ score, showLabel = true, height = 4 }: TrustScor
         />
       </div>
       {showLabel && (
-        <span className="font-mono text-[11px]" style={{ color }}>
+        <span className="font-mono text-[13px]" style={{ color }}>
           {clampedScore}
         </span>
       )}

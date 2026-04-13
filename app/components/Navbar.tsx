@@ -57,7 +57,7 @@ export function Navbar() {
               className="w-[240px] lg:w-[320px] bg-[#0a0a0a] border border-white/[0.1] rounded-md py-1.5 pl-8 pr-12 text-[13px] font-mono text-white placeholder-zinc-600 focus:outline-none focus:border-[#14F195]/80 transition-all"
             />
             <div className="absolute right-3 flex items-center">
-              <span className="text-[10px] font-bold text-[#14F195] bg-[#14F195]/10 border border-[#14F195]/20 rounded px-1.5 py-0.5">/</span>
+              <span className="text-[13px] font-bold text-[#14F195] bg-[#14F195]/10 border border-[#14F195]/20 rounded px-1.5 py-0.5">/</span>
             </div>
           </form>
         </div>

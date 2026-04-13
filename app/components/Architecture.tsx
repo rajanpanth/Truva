@@ -21,9 +21,9 @@ export function Architecture() {
                 : ""
             }`}
           >
-            <div className="text-[11px] font-bold text-[#14F195] font-mono mb-2.5">{layer.num}</div>
+            <div className="text-[13px] font-bold text-[#14F195] font-mono mb-2.5">{layer.num}</div>
             <h4 className="text-[14px] font-bold text-white mb-1.5">{layer.title}</h4>
-            <p className="text-[11px] text-zinc-600 leading-relaxed">{layer.desc}</p>
+            <p className="text-[13px] text-zinc-600 leading-relaxed">{layer.desc}</p>
           </div>
         ))}
       </div>

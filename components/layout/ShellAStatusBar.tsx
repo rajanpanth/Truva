@@ -18,7 +18,7 @@ export function ShellAStatusBar() {
   }, []);
 
   return (
-    <footer className="fixed bottom-0 left-0 right-0 z-50 h-9 bg-[var(--bg-terminal)] border-t border-[var(--border-default)] flex items-center px-4 text-[10px] uppercase tracking-[2px] font-mono">
+    <footer className="fixed bottom-0 left-0 right-0 z-50 h-9 bg-[var(--bg-terminal)] border-t border-[var(--border-default)] flex items-center px-4 text-[13px] uppercase tracking-[2px] font-mono">
       <div className="flex items-center gap-2">
         <TruvaPulsingDot size={5} />
         <span className="text-[var(--accent-green)]">NETWORK_STABLE</span>
@@ -29,7 +29,7 @@ export function ShellAStatusBar() {
       </div>
       <div className="flex items-center gap-3 text-[var(--text-secondary)]">
         <span>UTC: {utc}</span>
-        <span className="px-2 py-0.5 border border-[var(--accent-green)] text-[var(--accent-green)] rounded-[2px] text-[9px]">
+        <span className="px-2 py-0.5 border border-[var(--accent-green)] text-[var(--accent-green)] rounded-[2px] text-[12px]">
           SESSION_ID: 0X44FEA
         </span>
       </div>

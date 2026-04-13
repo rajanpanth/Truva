@@ -41,7 +41,7 @@ export function Leaderboard() {
           <div className="w-10 h-10 rounded-xl bg-yellow-400/10 border border-yellow-400/20 flex items-center justify-center text-base">⚔️</div>
           <div>
             <div className="text-[13px] font-bold text-white">Trust Score Battle</div>
-            <div className="text-[11px] text-zinc-600">Which agent earns Gold first?</div>
+            <div className="text-[13px] text-zinc-600">Which agent earns Gold first?</div>
           </div>
         </div>
         <div className="flex items-center justify-between px-5 py-2.5 border-b border-white/[0.06]">
@@ -52,11 +52,11 @@ export function Leaderboard() {
           {topFive.map((agent, i) => (
             <Link key={agent.pubkey} href={`/agent/${agent.pubkey}`}>
               <div className={`flex items-center gap-3 px-5 py-2 row-hover group ${i < 4 ? "border-b border-white/[0.04]" : ""}`}>
-                <span className="text-[11px] font-bold text-zinc-600 w-4 text-center shrink-0">{i + 1}</span>
+                <span className="text-[13px] font-bold text-zinc-600 w-4 text-center shrink-0">{i + 1}</span>
                 <div className={`w-2 h-2 rounded-full shrink-0 ${tierDot[agent.tier]}`} />
                 <span className="flex-1 text-[12px] font-semibold text-white group-hover:text-[#14F195] transition-colors truncate">{agent.name}</span>
-                <span className="open-link text-[10px]">↗</span>
-                <span className="text-[11px] font-bold text-[#14F195] shrink-0">🛡 {agent.trustScore}</span>
+                <span className="open-link text-[13px]">↗</span>
+                <span className="text-[13px] font-bold text-[#14F195] shrink-0">🛡 {agent.trustScore}</span>
               </div>
             </Link>
           ))}

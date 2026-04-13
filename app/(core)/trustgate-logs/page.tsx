@@ -54,9 +54,9 @@ export default function TrustGateLogsPage() {
             <h1 className="text-[24px] font-bold">TRUSTGATE_LOGS</h1>
             <TruvaStatusPill variant="live" />
           </div>
-          <p className="text-[10px] uppercase tracking-[2px] text-[var(--text-secondary)] mt-1">REAL-TIME VERIFICATION STREAM · BUFFER: {logs.length} ENTRIES</p>
+          <p className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mt-1">REAL-TIME VERIFICATION STREAM · BUFFER: {logs.length} ENTRIES</p>
         </div>
-        <TruvaButton variant="outlined" className="text-[9px] flex items-center gap-1.5">
+        <TruvaButton variant="outlined" className="text-[12px] flex items-center gap-1.5">
           <Download size={12} /> EXPORT_CSV
         </TruvaButton>
       </div>
@@ -77,7 +77,7 @@ export default function TrustGateLogsPage() {
             placeholder="SEARCH_AGENT_OR_HASH"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-8 pr-3 py-2 bg-[var(--bg-input)] border border-[var(--border-default)] rounded-[2px] text-[11px] text-[var(--text-primary)] font-mono placeholder:text-[var(--text-dim)] focus:border-[var(--accent-green)] focus:outline-none"
+            className="w-full pl-8 pr-3 py-2 bg-[var(--bg-input)] border border-[var(--border-default)] rounded-[2px] text-[13px] text-[var(--text-primary)] font-mono placeholder:text-[var(--text-dim)] focus:border-[var(--accent-green)] focus:outline-none"
           />
         </div>
         <div className="flex gap-1">
@@ -85,7 +85,7 @@ export default function TrustGateLogsPage() {
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`px-3 py-1.5 text-[9px] uppercase tracking-[2px] rounded-[2px] border transition-colors ${
+              className={`px-3 py-1.5 text-[12px] uppercase tracking-[2px] rounded-[2px] border transition-colors ${
                 filter === f
                   ? 'border-[var(--accent-green)] text-[var(--accent-green)] bg-[var(--accent-green-dim)]'
                   : 'border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--text-muted)]'
@@ -103,7 +103,7 @@ export default function TrustGateLogsPage() {
           <thead>
             <tr className="border-b border-[var(--border-default)]">
               {['', 'TIMESTAMP', 'AGENT_ID', 'ACTION', 'TX_HASH', 'STATUS', 'LATENCY'].map((h) => (
-                <th key={h} className="px-4 py-3 text-left text-[10px] uppercase tracking-[2px] text-[var(--text-muted)] font-medium">{h}</th>
+                <th key={h} className="px-4 py-3 text-left text-[13px] uppercase tracking-[2px] text-[var(--text-muted)] font-medium">{h}</th>
               ))}
             </tr>
           </thead>
@@ -126,12 +126,12 @@ export default function TrustGateLogsPage() {
       </div>
 
       <div className="flex items-center justify-between mt-4">
-        <span className="text-[9px] uppercase tracking-[2px] text-[var(--text-muted)]">
+        <span className="text-[12px] uppercase tracking-[2px] text-[var(--text-muted)]">
           SHOWING {Math.min(20, filtered.length)} OF {filtered.length} ENTRIES
         </span>
         <div className="flex items-center gap-2">
           <TruvaPulsingDot size={5} />
-          <span className="text-[9px] uppercase tracking-[2px] text-[var(--accent-green)]">AUTO-REFRESH: 4s</span>
+          <span className="text-[12px] uppercase tracking-[2px] text-[var(--accent-green)]">AUTO-REFRESH: 4s</span>
         </div>
       </div>
     </div>

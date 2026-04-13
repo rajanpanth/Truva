@@ -26,7 +26,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
     if (this.state.hasError) {
       return this.props.fallback ?? (
         <div className="flex flex-col items-center justify-center min-h-[200px] p-8 text-center">
-          <div className="text-[11px] font-mono text-red-500 tracking-widest mb-3">SYSTEM_ERROR</div>
+          <div className="text-[13px] font-mono text-red-500 tracking-widest mb-3">SYSTEM_ERROR</div>
           <p className="text-[13px] text-zinc-400 max-w-md mb-4">
             Something went wrong rendering this section.
           </p>
