@@ -65,9 +65,9 @@ export default function ValidatorDashboard() {
             <h1 className="text-[24px] font-bold">VALIDATOR_DASHBOARD</h1>
             <TruvaStatusPill variant="online" />
           </div>
-          <p className="text-[10px] uppercase tracking-[2px] text-[var(--text-secondary)] mt-1">NODE_001 · SOLANA_MAINNET · EPOCH_412</p>
+          <p className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mt-1">NODE_001 · SOLANA_MAINNET · EPOCH_412</p>
         </div>
-        <TruvaButton variant="outlined" className="text-[9px]">VALIDATOR_SETTINGS</TruvaButton>
+        <TruvaButton variant="outlined" className="text-[12px]">VALIDATOR_SETTINGS</TruvaButton>
       </div>
 
       {/* Stat Cards */}
@@ -89,9 +89,9 @@ export default function ValidatorDashboard() {
 
         {/* Reward Trajectory */}
         <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-5">
-          <h3 className="text-[11px] uppercase tracking-[2px] font-bold mb-4">REWARD_TRAJECTORY</h3>
+          <h3 className="text-[13px] uppercase tracking-[2px] font-bold mb-4">REWARD_TRAJECTORY</h3>
           <RewardChart />
-          <div className="flex justify-between text-[10px] mt-3 pt-3 border-t border-[var(--border-subtle)]">
+          <div className="flex justify-between text-[13px] mt-3 pt-3 border-t border-[var(--border-subtle)]">
             <span className="text-[var(--text-muted)]">12-EPOCH TREND</span>
             <span className="text-[var(--accent-green)] font-bold">↑ 38.4%</span>
           </div>
@@ -101,7 +101,7 @@ export default function ValidatorDashboard() {
       {/* System Telemetry + Alerts */}
       <div className="grid grid-cols-2 gap-6 mb-6">
         <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-5">
-          <h3 className="text-[11px] uppercase tracking-[2px] font-bold mb-4">SYSTEM_TELEMETRY</h3>
+          <h3 className="text-[13px] uppercase tracking-[2px] font-bold mb-4">SYSTEM_TELEMETRY</h3>
           <div className="space-y-3">
             {[
               { label: 'CPU_USAGE', value: 34, icon: <Cpu size={14} />, color: 'var(--accent-green)' },
@@ -110,7 +110,7 @@ export default function ValidatorDashboard() {
               { label: 'NETWORK_BW', value: 45, icon: <Zap size={14} />, color: 'var(--accent-green)' },
             ].map((m) => (
               <div key={m.label}>
-                <div className="flex items-center justify-between text-[10px] mb-1">
+                <div className="flex items-center justify-between text-[13px] mb-1">
                   <div className="flex items-center gap-2 text-[var(--text-secondary)]">
                     <span className="text-[var(--text-muted)]">{m.icon}</span>
                     {m.label}
@@ -129,8 +129,8 @@ export default function ValidatorDashboard() {
             <div className="flex items-start gap-3">
               <ShieldCheck size={18} className="text-[var(--accent-green)] mt-0.5 shrink-0" />
               <div>
-                <div className="text-[11px] font-bold text-[var(--accent-green)]">ALL SYSTEMS NOMINAL</div>
-                <p className="text-[10px] text-[var(--text-secondary)] mt-1">
+                <div className="text-[13px] font-bold text-[var(--accent-green)]">ALL SYSTEMS NOMINAL</div>
+                <p className="text-[13px] text-[var(--text-secondary)] mt-1">
                   Validator node operating within normal parameters. No anomalies detected in the last 24 hours.
                 </p>
               </div>
@@ -141,8 +141,8 @@ export default function ValidatorDashboard() {
             <div className="flex items-start gap-3">
               <AlertTriangle size={18} className="text-[var(--amber)] mt-0.5 shrink-0" />
               <div>
-                <div className="text-[11px] font-bold text-[var(--amber)]">EPOCH TRANSITION PENDING</div>
-                <p className="text-[10px] text-[var(--text-secondary)] mt-1">
+                <div className="text-[13px] font-bold text-[var(--amber)]">EPOCH TRANSITION PENDING</div>
+                <p className="text-[13px] text-[var(--text-secondary)] mt-1">
                   Epoch 413 begins in ~2h 14m. Ensure stake delegation is confirmed before transition.
                 </p>
               </div>
@@ -161,7 +161,7 @@ export default function ValidatorDashboard() {
           <div key={f.title} className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-5">
             <div className="text-[var(--accent-green)] mb-3">{f.icon}</div>
             <h4 className="text-[12px] font-bold mb-2">{f.title}</h4>
-            <p className="text-[10px] text-[var(--text-secondary)] leading-relaxed">{f.desc}</p>
+            <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed">{f.desc}</p>
           </div>
         ))}
       </div>

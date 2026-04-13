@@ -32,7 +32,7 @@ export function ShellATopbar() {
             <Link
               key={item.label}
               href={item.href}
-              className={`text-[11px] uppercase tracking-[2px] font-medium pb-0.5 transition-colors ${
+              className={`text-[13px] uppercase tracking-[2px] font-medium pb-0.5 transition-colors ${
                 isActive
                   ? 'text-[var(--accent-green)] border-b-2 border-[var(--accent-green)]'
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
@@ -51,7 +51,7 @@ export function ShellATopbar() {
         <button className="p-1.5 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
           <Settings size={16} />
         </button>
-        <TruvaButton variant="outlined" className="text-[9px] px-3 py-1.5">
+        <TruvaButton variant="outlined" className="text-[12px] px-3 py-1.5">
           LAUNCH_TERMINAL
         </TruvaButton>
       </div>

@@ -22,7 +22,7 @@ export const TruvaButton = forwardRef<HTMLButtonElement, TruvaButtonProps>(
   ({ variant = 'primary', className = '', children, ...props }, ref) => (
     <button
       ref={ref}
-      className={`inline-flex items-center justify-center gap-2 px-4 py-2 text-[11px] uppercase tracking-[2px] font-mono font-medium rounded-[2px] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${styles[variant]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 px-4 py-2 text-[13px] uppercase tracking-[2px] font-mono font-medium rounded-[2px] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${styles[variant]} ${className}`}
       {...props}
     >
       {children}

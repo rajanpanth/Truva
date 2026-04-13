@@ -99,7 +99,7 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
           {openPanel && (
             <div ref={panelRef} className="absolute top-12 right-0 w-[300px] bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] shadow-lg z-50">
               <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border-subtle)]">
-                <span className="text-[11px] uppercase tracking-[2px] font-bold">
+                <span className="text-[13px] uppercase tracking-[2px] font-bold">
                   {openPanel === 'notifications' && 'NOTIFICATIONS'}
                   {openPanel === 'messages' && 'MESSAGES'}
                   {openPanel === 'profile' && 'OPERATOR_PROFILE'}
@@ -120,8 +120,8 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
                     <div key={i} className="flex items-start gap-2 p-2 rounded-[2px] hover:bg-[var(--bg-elevated)] cursor-pointer">
                       <TruvaPulsingDot size={6} />
                       <div>
-                        <p className="text-[11px] text-[var(--text-primary)]">{n.msg}</p>
-                        <p className="text-[9px] text-[var(--text-muted)] mt-0.5">{n.time}</p>
+                        <p className="text-[13px] text-[var(--text-primary)]">{n.msg}</p>
+                        <p className="text-[12px] text-[var(--text-muted)] mt-0.5">{n.time}</p>
                       </div>
                     </div>
                   ))}
@@ -140,9 +140,9 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
                         <span className="text-[8px] font-bold text-[var(--text-muted)]">{m.from[0]}</span>
                       </div>
                       <div>
-                        <p className="text-[10px] font-bold text-[var(--text-secondary)]">{m.from}</p>
-                        <p className="text-[11px] text-[var(--text-primary)]">{m.msg}</p>
-                        <p className="text-[9px] text-[var(--text-muted)] mt-0.5">{m.time}</p>
+                        <p className="text-[13px] font-bold text-[var(--text-secondary)]">{m.from}</p>
+                        <p className="text-[13px] text-[var(--text-primary)]">{m.msg}</p>
+                        <p className="text-[12px] text-[var(--text-muted)] mt-0.5">{m.time}</p>
                       </div>
                     </div>
                   ))}
@@ -157,7 +157,7 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
                     </div>
                     <div>
                       <p className="text-[13px] font-bold">OPERATOR_0x9A</p>
-                      <p className="text-[10px] text-[var(--text-muted)]">admin@truva.network</p>
+                      <p className="text-[13px] text-[var(--text-muted)]">admin@truva.network</p>
                     </div>
                   </div>
                   <div className="space-y-1 border-t border-[var(--border-subtle)] pt-3">

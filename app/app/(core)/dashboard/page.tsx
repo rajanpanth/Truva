@@ -58,8 +58,8 @@ export default function DashboardPage() {
         {/* Connected Agents */}
         <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-[11px] uppercase tracking-[2px] font-bold">CONNECTED_AGENTS</h3>
-            <Link href="/registry"><TruvaButton variant="ghost" className="text-[9px] px-3 py-1">VIEW_ALL</TruvaButton></Link>
+            <h3 className="text-[13px] uppercase tracking-[2px] font-bold">CONNECTED_AGENTS</h3>
+            <Link href="/registry"><TruvaButton variant="ghost" className="text-[12px] px-3 py-1">VIEW_ALL</TruvaButton></Link>
           </div>
           <div className="space-y-3">
             {connectedAgents.map((a) => (
@@ -72,7 +72,7 @@ export default function DashboardPage() {
                     <span className="text-[12px] font-bold">{a.name}</span>
                     <TruvaStatusPill variant={a.tier} />
                   </div>
-                  <div className="text-[9px] text-[var(--text-muted)] mt-0.5">{a.id}</div>
+                  <div className="text-[12px] text-[var(--text-muted)] mt-0.5">{a.id}</div>
                 </div>
                 <div className="text-right shrink-0">
                   <div className="text-[12px] font-bold" style={{ color: tierColors[a.tier] }}>{a.score}%</div>
@@ -87,14 +87,14 @@ export default function DashboardPage() {
         <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-5">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <h3 className="text-[11px] uppercase tracking-[2px] font-bold">TRUSTGATE_LOGS</h3>
+              <h3 className="text-[13px] uppercase tracking-[2px] font-bold">TRUSTGATE_LOGS</h3>
               <TruvaStatusPill variant="live" />
             </div>
-            <span className="text-[9px] text-[var(--text-muted)]">{now} UTC</span>
+            <span className="text-[12px] text-[var(--text-muted)]">{now} UTC</span>
           </div>
           <div className="space-y-1.5 max-h-[340px] overflow-y-auto">
             {logData.map((l, i) => (
-              <div key={i} className="flex items-center gap-2 px-2 py-1.5 text-[11px] hover:bg-[var(--bg-elevated)] rounded-[2px]">
+              <div key={i} className="flex items-center gap-2 px-2 py-1.5 text-[13px] hover:bg-[var(--bg-elevated)] rounded-[2px]">
                 <span className="text-[var(--text-muted)] w-[54px] shrink-0">{l.ts}</span>
                 <span className="text-[var(--accent-green)] w-[80px] shrink-0 truncate">{l.agent}</span>
                 <span className="text-[var(--text-secondary)] flex-1 truncate">{l.action}</span>
@@ -107,12 +107,12 @@ export default function DashboardPage() {
 
       {/* Payment Settlement History */}
       <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-5">
-        <h3 className="text-[11px] uppercase tracking-[2px] font-bold mb-4">PAYMENT_SETTLEMENT_HISTORY</h3>
+        <h3 className="text-[13px] uppercase tracking-[2px] font-bold mb-4">PAYMENT_SETTLEMENT_HISTORY</h3>
         <table className="w-full border-collapse">
           <thead>
             <tr className="border-b border-[var(--border-default)]">
               {['DATE', 'DESCRIPTION', 'AMOUNT', 'STATUS'].map((h) => (
-                <th key={h} className="px-4 py-2.5 text-left text-[10px] uppercase tracking-[2px] text-[var(--text-muted)] font-medium">{h}</th>
+                <th key={h} className="px-4 py-2.5 text-left text-[13px] uppercase tracking-[2px] text-[var(--text-muted)] font-medium">{h}</th>
               ))}
             </tr>
           </thead>

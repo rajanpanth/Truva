@@ -41,7 +41,7 @@ export function TruvaStatusPill({ variant, label, className = '' }: TruvaStatusP
   const c = config[variant];
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-[9px] uppercase tracking-[2px] font-mono font-medium rounded-[2px] ${className}`}
+      className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-[12px] uppercase tracking-[2px] font-mono font-medium rounded-[2px] ${className}`}
       style={{
         border: c.border !== 'transparent' ? `1px solid ${c.border}` : 'none',
         color: c.text,

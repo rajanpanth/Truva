@@ -25,18 +25,18 @@ export function AgentCard({ agent }: { agent: Agent }) {
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <span className="text-[13px] font-semibold text-white group-hover:text-[#14F195] transition-colors">{agent.name}</span>
-              <span className="text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-white/[0.04] text-zinc-500 border border-white/[0.05]">{agent.category}</span>
-              <span className={`text-[9px] font-bold tracking-wider px-1.5 py-0.5 rounded border ${tierLabel[agent.tier]}`}>{agent.tier.toUpperCase()}</span>
+              <span className="text-[12px] font-bold tracking-wider px-1.5 py-0.5 rounded bg-white/[0.04] text-zinc-500 border border-white/[0.05]">{agent.category}</span>
+              <span className={`text-[12px] font-bold tracking-wider px-1.5 py-0.5 rounded border ${tierLabel[agent.tier]}`}>{agent.tier.toUpperCase()}</span>
             </div>
-            <div className="text-[11px] text-zinc-600 truncate mt-0.5">{agent.description}</div>
+            <div className="text-[13px] text-zinc-600 truncate mt-0.5">{agent.description}</div>
           </div>
         </div>
         {/* Col 2: Builder */}
         <div className="flex items-center gap-2 min-w-0">
-          <div className="w-6 h-6 rounded-full bg-white/[0.04] flex items-center justify-center text-[10px] shrink-0">🤖</div>
+          <div className="w-6 h-6 rounded-full bg-white/[0.04] flex items-center justify-center text-[13px] shrink-0">🤖</div>
           <div className="min-w-0">
-            <div className="text-[11px] font-medium text-zinc-400 truncate">{agent.builder || agent.name.split(' ')[0]}</div>
-            <div className="text-[10px] text-zinc-700 truncate">{agent.builder || agent.name.split(' ')[0]}</div>
+            <div className="text-[13px] font-medium text-zinc-400 truncate">{agent.builder || agent.name.split(' ')[0]}</div>
+            <div className="text-[13px] text-zinc-700 truncate">{agent.builder || agent.name.split(' ')[0]}</div>
           </div>
         </div>
         {/* Col 3: Score */}
@@ -48,7 +48,7 @@ export function AgentCard({ agent }: { agent: Agent }) {
         </div>
         {/* Col 4: Action */}
         <div className="flex justify-end items-center pl-6">
-          <span className="px-3 py-1.5 border border-white/[0.1] text-[10px] font-mono font-bold text-zinc-400 group-hover:border-[#14F195]/40 group-hover:text-[#14F195] transition-all rounded-[2px] uppercase whitespace-nowrap">
+          <span className="px-3 py-1.5 border border-white/[0.1] text-[13px] font-mono font-bold text-zinc-400 group-hover:border-[#14F195]/40 group-hover:text-[#14F195] transition-all rounded-[2px] uppercase whitespace-nowrap">
             VIEW_PASSPORT
           </span>
         </div>

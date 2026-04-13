@@ -33,11 +33,11 @@ function TrustHeatmap() {
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Globe size={14} className="text-[var(--accent-green)]" />
-          <h3 className="text-[11px] uppercase tracking-[2px] font-bold">TRUST_HEATMAP</h3>
+          <h3 className="text-[13px] uppercase tracking-[2px] font-bold">TRUST_HEATMAP</h3>
         </div>
         <div className="flex items-center gap-2">
           <TruvaPulsingDot size={5} />
-          <span className="text-[9px] text-[var(--accent-green)] uppercase tracking-[2px]">LIVE</span>
+          <span className="text-[12px] text-[var(--accent-green)] uppercase tracking-[2px]">LIVE</span>
         </div>
       </div>
       <svg viewBox="0 0 600 250" className="w-full h-[200px]">
@@ -65,7 +65,7 @@ function TrustHeatmap() {
           </g>
         ))}
       </svg>
-      <div className="flex justify-between text-[9px] text-[var(--text-muted)] mt-2">
+      <div className="flex justify-between text-[12px] text-[var(--text-muted)] mt-2">
         <span>8 ACTIVE REGIONS</span>
         <span>GLOBAL TRUST INDEX: 94.2%</span>
       </div>
@@ -86,13 +86,13 @@ function VolumeChart() {
 
   return (
     <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-5">
-      <h3 className="text-[11px] uppercase tracking-[2px] font-bold mb-3">TX_VOLUME_24H</h3>
+      <h3 className="text-[13px] uppercase tracking-[2px] font-bold mb-3">TX_VOLUME_24H</h3>
       <div className="flex items-end gap-[2px] h-[100px]">
         {data.map((v, i) => (
           <div key={i} className="flex-1 bg-[var(--accent-green)] rounded-[1px]" style={{ height: `${v}%`, opacity: i === data.length - 1 ? 1 : 0.5 }} />
         ))}
       </div>
-      <div className="flex justify-between text-[9px] text-[var(--text-muted)] mt-2">
+      <div className="flex justify-between text-[12px] text-[var(--text-muted)] mt-2">
         <span>24H AGO</span>
         <span>NOW</span>
       </div>
@@ -107,7 +107,7 @@ function ZKGauge({ value }: { value: number }) {
 
   return (
     <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-5 flex flex-col items-center">
-      <h3 className="text-[11px] uppercase tracking-[2px] font-bold mb-3 self-start">ZK_PROOF_VALIDITY</h3>
+      <h3 className="text-[13px] uppercase tracking-[2px] font-bold mb-3 self-start">ZK_PROOF_VALIDITY</h3>
       <svg viewBox="0 0 100 100" className="w-[100px] h-[100px]">
         <circle cx="50" cy="50" r="45" fill="none" stroke="var(--border-default)" strokeWidth="4" />
         <circle cx="50" cy="50" r="45" fill="none" stroke="var(--accent-green)" strokeWidth="4"
@@ -165,7 +165,7 @@ export default function ReputationExplorerPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-[24px] font-bold">REPUTATION_EXPLORER</h1>
-          <p className="text-[10px] uppercase tracking-[2px] text-[var(--text-secondary)] mt-1">GLOBAL TRUST TOPOLOGY · LIVE_FEED</p>
+          <p className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mt-1">GLOBAL TRUST TOPOLOGY · LIVE_FEED</p>
         </div>
       </div>
 
@@ -183,13 +183,13 @@ export default function ReputationExplorerPage() {
       <div className="grid grid-cols-[1fr_1fr] gap-6 mt-6">
         {/* Validator Score Attestations */}
         <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-5">
-          <h3 className="text-[11px] uppercase tracking-[2px] font-bold mb-4">VALIDATOR_ATTESTATIONS</h3>
+          <h3 className="text-[13px] uppercase tracking-[2px] font-bold mb-4">VALIDATOR_ATTESTATIONS</h3>
           <div className="space-y-2">
             {attestations.map((a, i) => (
               <div key={i} className="flex items-center justify-between p-2.5 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-[2px]">
                 <div>
-                  <div className="text-[11px] font-bold">{a.validator}</div>
-                  <div className="text-[9px] text-[var(--text-muted)]">EPOCH {a.epoch}</div>
+                  <div className="text-[13px] font-bold">{a.validator}</div>
+                  <div className="text-[12px] text-[var(--text-muted)]">EPOCH {a.epoch}</div>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-[12px] font-bold">{a.score}</span>
@@ -202,11 +202,11 @@ export default function ReputationExplorerPage() {
 
         {/* Reputation Flow */}
         <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-5">
-          <h3 className="text-[11px] uppercase tracking-[2px] font-bold mb-4">REPUTATION_FLOW</h3>
+          <h3 className="text-[13px] uppercase tracking-[2px] font-bold mb-4">REPUTATION_FLOW</h3>
           <div className="space-y-3">
             {reputationFlows.map((r) => (
               <div key={r.agent}>
-                <div className="flex items-center justify-between text-[11px] mb-1">
+                <div className="flex items-center justify-between text-[13px] mb-1">
                   <span className="text-[var(--text-secondary)]">{r.agent}</span>
                   <div className="flex items-center gap-2">
                     <span className={r.delta.startsWith('+') ? 'text-[var(--accent-green)]' : 'text-[var(--red)]'}>{r.delta}</span>
