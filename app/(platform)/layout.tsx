@@ -29,7 +29,7 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
   return (
     <div className="flex min-h-screen bg-[var(--bg-base)]">
       {/* Left sidebar */}
-      <aside className="w-[180px] bg-[var(--bg-base)] border-r border-[var(--border-default)] flex flex-col p-4 shrink-0">
+      <aside className="hidden lg:flex w-[180px] bg-[var(--bg-base)] border-r border-[var(--border-default)] flex-col p-4 shrink-0">
         <div className="mb-8">
           <img src="/assets/logo/truva-logo.png" alt="Truva" className="site-logo" />
         </div>
@@ -80,7 +80,7 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
             <input
               placeholder="Search nodes..."
-              className="pl-8 pr-3 py-1.5 bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] text-[12px] text-[var(--text-primary)] font-mono placeholder:text-[var(--text-muted)] w-[200px] focus:border-[var(--accent-green)] focus:outline-none"
+              className="pl-8 pr-3 py-1.5 bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] text-[12px] text-[var(--text-primary)] font-mono placeholder:text-[var(--text-muted)] w-full sm:w-[200px] focus:border-[var(--accent-green)] focus:outline-none"
             />
           </div>
           <div className="relative flex items-center gap-1">
@@ -97,7 +97,7 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
 
           {/* Dropdown panels */}
           {openPanel && (
-            <div ref={panelRef} className="absolute top-12 right-0 w-[300px] bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] shadow-lg z-50">
+            <div ref={panelRef} className="absolute top-12 right-0 w-[calc(100vw-2rem)] sm:w-[300px] bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] shadow-lg z-50">
               <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border-subtle)]">
                 <span className="text-[13px] uppercase tracking-[2px] font-bold">
                   {openPanel === 'notifications' && 'NOTIFICATIONS'}
