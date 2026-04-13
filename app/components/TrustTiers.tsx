@@ -42,7 +42,7 @@ export function TrustTiers() {
           >
             {tier.popular && (
               <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[12px] font-bold tracking-widest px-3 py-1 bg-[#14F195] text-black rounded-full">
-                MOST COMMON
+                PREMIUM
               </div>
             )}
             <div className="text-2xl mb-3 mt-1">{tier.emoji}</div>
