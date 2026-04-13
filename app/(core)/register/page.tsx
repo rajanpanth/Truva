@@ -210,7 +210,7 @@ export default function RegisterPage() {
       </div>
 
       {/* Progress Steps */}
-      <div className="flex items-center gap-2 mb-8">
+      <div className="flex flex-wrap items-center gap-2 mb-8">
         {steps.map((s, i) => (
           <div key={s} className="flex items-center gap-2">
             <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[2px] border text-[13px] uppercase tracking-[2px] ${
@@ -226,7 +226,7 @@ export default function RegisterPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-[1fr_340px] gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-8">
         {/* Form */}
         <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-6">
           {step === 0 && (

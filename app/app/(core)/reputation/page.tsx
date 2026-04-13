@@ -170,7 +170,7 @@ export default function ReputationExplorerPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <TruvaStatCard label="GLOBAL_TRUST_INDEX" value="94.2%" sub="↑ 1.2% THIS EPOCH" icon={<Globe size={16} className="text-[var(--accent-green)]" />} />
         <TruvaStatCard label="ATTESTATIONS" value="5,204" sub="ACROSS 19 VALIDATORS" icon={<Shield size={16} className="text-[var(--accent-green)]" />} />
         <TruvaStatCard label="ZK_PROOFS_VERIFIED" value="12,847" sub="LAST 24H" icon={<Zap size={16} className="text-[var(--accent-green)]" />} />
@@ -180,7 +180,7 @@ export default function ReputationExplorerPage() {
       {/* Trust Heatmap */}
       <TrustHeatmap />
 
-      <div className="grid grid-cols-[1fr_1fr] gap-6 mt-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
         {/* Validator Score Attestations */}
         <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-5">
           <h3 className="text-[13px] uppercase tracking-[2px] font-bold mb-4">VALIDATOR_ATTESTATIONS</h3>
@@ -220,7 +220,7 @@ export default function ReputationExplorerPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-[1fr_1fr] gap-6 mt-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
         <VolumeChart />
         <ZKGauge value={99.2} />
       </div>

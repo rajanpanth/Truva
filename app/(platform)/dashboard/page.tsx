@@ -46,14 +46,14 @@ export default function PlatformDashboard() {
   return (
     <div className="space-y-6">
       {/* Stat cards */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <TruvaStatCard label="ACTIVE_AGENTS" value="4" sub="↑ 2 THIS EPOCH" icon={<Users size={16} className="text-[var(--accent-green)]" />} />
         <TruvaStatCard label="TX_VALIDATED" value="12,847" sub="LAST 24H" icon={<ShieldCheck size={16} className="text-[var(--accent-green)]" />} />
         <TruvaStatCard label="AVG_LATENCY" value="14ms" sub="P99: 45ms" icon={<Zap size={16} className="text-[var(--accent-green)]" />} />
         <TruvaStatCard label="TRUST_INDEX" value="94.2" sub="↑ 1.2% WoW" icon={<TrendingUp size={16} className="text-[var(--accent-green)]" />} />
       </div>
 
-      <div className="grid grid-cols-[1fr_360px] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
         {/* Connected Agents */}
         <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-5">
           <div className="flex items-center justify-between mb-4">

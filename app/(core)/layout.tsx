@@ -7,7 +7,7 @@ export default function CoreLayout({ children }: { children: React.ReactNode }) 
     <>
       <ShellATopbar />
       <ShellASidebar />
-      <main className="ml-[210px] mt-12 mb-9 min-h-[calc(100vh-48px-36px)] bg-[var(--bg-base)] p-8">
+      <main className="ml-0 lg:ml-[210px] mt-12 mb-9 min-h-[calc(100vh-48px-36px)] bg-[var(--bg-base)] p-4 lg:p-8">
         {children}
       </main>
       <ShellAStatusBar />

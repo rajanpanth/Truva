@@ -47,7 +47,7 @@ export default function AgentProfilePage({ params }: { params: { id: string } })
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
         {/* Trust Score - tall card */}
         <div className="bg-[var(--bg-card)] border border-[var(--accent-green)] rounded-[2px] p-5 row-span-1 flex flex-col items-center justify-center text-center">
           <Shield size={32} className="text-[var(--accent-green)] mb-2" />
@@ -71,7 +71,7 @@ export default function AgentProfilePage({ params }: { params: { id: string } })
         </div>
       </div>
 
-      <div className="grid grid-cols-[1fr_380px] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
         {/* System Activity Log - Terminal */}
         <div>
           <TruvaTerminal
