@@ -11,7 +11,7 @@ const tierStyles: Record<TrustTier, string> = {
 export function TrustBadge({ tier }: { tier: TrustTier }) {
   return (
     <span
-      className={`inline-flex items-center px-2 py-[2px] text-[9px] font-bold tracking-widest rounded-md border ${tierStyles[tier]}`}
+      className={`inline-flex items-center px-2 py-[2px] text-[12px] font-bold tracking-widest rounded-md border ${tierStyles[tier]}`}
     >
       {tier.toUpperCase()}
     </span>

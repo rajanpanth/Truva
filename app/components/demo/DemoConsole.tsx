@@ -8,14 +8,14 @@ export function DemoConsole() {
   const { checkResults, currentPhase } = useDemoStore();
 
   return (
-    <div className="rounded border border-[#1a1a1a] bg-[#0d0d0d]">
+    <div className="rounded border border-[#2a3f52] bg-[#0d0d0d]">
       {/* Title bar */}
-      <div className="flex items-center justify-between border-b border-[#1a1a1a] px-4 py-2">
-        <span className="font-mono text-[10px] tracking-widest text-[#555]">TRUVA_KERNEL_LOGGER</span>
+      <div className="flex items-center justify-between border-b border-[#2a3f52] px-4 py-2">
+        <span className="font-mono text-[13px] tracking-widest text-[#555]">TRUVA_KERNEL_LOGGER</span>
         {currentPhase !== null && (
           <div className="flex items-center gap-2">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#00ff88]" />
-            <span className="font-mono text-[10px] text-[#555]">PROCESSING</span>
+            <span className="font-mono text-[13px] text-[#555]">PROCESSING</span>
           </div>
         )}
       </div>

@@ -41,16 +41,16 @@ export function TrustTiers() {
             className={`card relative p-6 text-center ${tier.bg} ${tier.popular ? "!border-[#14F195]/20 shadow-[0_0_40px_rgba(20,241,149,0.04)]" : ""}`}
           >
             {tier.popular && (
-              <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[9px] font-bold tracking-widest px-3 py-1 bg-[#14F195] text-black rounded-full">
+              <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[12px] font-bold tracking-widest px-3 py-1 bg-[#14F195] text-black rounded-full">
                 MOST COMMON
               </div>
             )}
             <div className="text-2xl mb-3 mt-1">{tier.emoji}</div>
             <h3 className="text-[15px] font-extrabold text-white mb-1">{tier.name}</h3>
-            <p className="text-[11px] text-zinc-600 mb-4">{tier.req}</p>
+            <p className="text-[13px] text-zinc-600 mb-4">{tier.req}</p>
             <div className="space-y-0">
               {tier.perks.map((perk) => (
-                <div key={perk} className="py-2 border-t border-white/[0.04] text-[11px] text-zinc-500">{perk}</div>
+                <div key={perk} className="py-2 border-t border-white/[0.04] text-[13px] text-zinc-500">{perk}</div>
               ))}
             </div>
           </div>

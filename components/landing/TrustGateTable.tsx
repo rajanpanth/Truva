@@ -8,7 +8,7 @@ const logRows = [
 
 export function TrustGateTable() {
   return (
-    <section className="border-t border-[#1a1a1a] bg-[#0a0a0a] px-6 py-12">
+    <section className="border-t border-[#2a3f52] bg-[#0a0a0a] px-6 py-12">
       <div className="mx-auto max-w-7xl">
         <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-2">
@@ -17,7 +17,7 @@ export function TrustGateTable() {
               TRUSTGATE_REAL_TIME_LOGS
             </span>
           </div>
-          <span className="font-mono text-[10px] tracking-widest text-[#444]">
+          <span className="font-mono text-[13px] tracking-widest text-[#444]">
             ACTIVE_FILTERS: ALL &nbsp; LOG_BUFFER: 51240
           </span>
         </div>
@@ -25,9 +25,9 @@ export function TrustGateTable() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-[#1a1a1a]">
+              <tr className="border-b border-[#2a3f52]">
                 {['TIMESTAMP', 'AGENT_ID', 'TRANSACTION_HASH', 'STATUS', 'LATENCY'].map((h) => (
-                  <th key={h} className="px-4 py-3 text-left font-mono text-[10px] tracking-[0.2em] text-[#444]">
+                  <th key={h} className="px-4 py-3 text-left font-mono text-[13px] tracking-[0.2em] text-[#444]">
                     {h}
                   </th>
                 ))}
@@ -35,7 +35,7 @@ export function TrustGateTable() {
             </thead>
             <tbody>
               {logRows.map((row, i) => (
-                <tr key={i} className="border-b border-[#111]">
+                <tr key={i} className="border-b border-[#2a3f52]">
                   <td className="px-4 py-3 font-mono text-xs text-[#666]">{row.timestamp}</td>
                   <td className="px-4 py-3 font-mono text-xs font-bold text-[#00ff88]">{row.agent}</td>
                   <td className="px-4 py-3 font-mono text-xs text-[#555]">{row.hash}</td>

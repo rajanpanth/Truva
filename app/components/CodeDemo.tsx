@@ -10,7 +10,7 @@ export function CodeDemo() {
             <span className="w-[9px] h-[9px] rounded-full bg-yellow-500/80" />
             <span className="w-[9px] h-[9px] rounded-full bg-[#14F195]/80" />
           </div>
-          <span className="text-[11px] text-zinc-600 font-mono">payment-gate.ts</span>
+          <span className="text-[13px] text-zinc-600 font-mono">payment-gate.ts</span>
         </div>
         <pre className="px-5 py-4 text-[12px] leading-[1.8] font-mono text-zinc-400 overflow-x-auto">
           <code>
@@ -41,7 +41,7 @@ export function CodeDemo() {
             <div className="w-8 h-8 bg-[#14F195] text-black font-extrabold text-[12px] rounded-full flex items-center justify-center shrink-0">{step.num}</div>
             <div>
               <div className="text-[12px] font-bold text-white mb-0.5">{step.title}</div>
-              <div className="text-[11px] text-zinc-600">{step.desc}</div>
+              <div className="text-[13px] text-zinc-600">{step.desc}</div>
             </div>
           </div>
         ))}

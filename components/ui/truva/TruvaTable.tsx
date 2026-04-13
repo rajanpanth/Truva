@@ -23,7 +23,7 @@ export function TruvaTable({ columns, data, className = '', onRowClick }: TruvaT
             {columns.map((col) => (
               <th
                 key={col.key}
-                className={`px-4 py-3 text-[10px] uppercase tracking-[2px] text-[var(--text-muted)] font-medium text-${col.align ?? 'left'}`}
+                className={`px-4 py-3 text-[13px] uppercase tracking-[2px] text-[var(--text-muted)] font-medium text-${col.align ?? 'left'}`}
                 style={{ width: col.width }}
               >
                 {col.label}

@@ -16,9 +16,9 @@
   --bg-elevated: #111111;
 
   /* Borders */
-  --border-default: rgba(255, 255, 255, 0.06);
+  --border-default: rgba(42, 63, 82, 0.8);
   --border-active: rgba(255, 255, 255, 0.15);
-  --border-subtle: rgba(255, 255, 255, 0.04);
+  --border-subtle: rgba(42, 63, 82, 0.4);
 
   /* Text */
   --text-primary: #e4e4e7;
@@ -75,7 +75,7 @@ body {
 /* ===== TICKER BAR ===== */
 .ticker-bar {
   background: #0a0a0a;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255,255,255,0.12);
   overflow: hidden;
   padding: 8px 0;
   width: 100%;
@@ -106,7 +106,7 @@ body {
 .card {
   background: rgba(255, 255, 255, 0.02);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 4px;
   overflow: hidden;
   transition: all 0.2s ease;

@@ -20,7 +20,7 @@ function LiveBarChart() {
 
   return (
     <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-4">
-      <div className="text-[10px] uppercase tracking-[2px] text-[var(--text-muted)] mb-3">FREESPOT_REGISTER</div>
+      <div className="text-[13px] uppercase tracking-[2px] text-[var(--text-muted)] mb-3">FREESPOT_REGISTER</div>
       <div className="flex items-end gap-[3px] h-[140px]">
         {bars.map((h, i) => (
           <div
@@ -30,7 +30,7 @@ function LiveBarChart() {
           />
         ))}
       </div>
-      <div className="flex justify-between items-center mt-3 text-[10px] uppercase tracking-[2px]">
+      <div className="flex justify-between items-center mt-3 text-[13px] uppercase tracking-[2px]">
         <span className="text-[var(--text-muted)]">00:00:00</span>
         <span className="text-[var(--accent-green)]">LIVE_TX_FEED</span>
         <span className="text-[var(--text-secondary)]">4.2k TPS</span>
@@ -80,14 +80,14 @@ export default function LandingPage() {
           {['PROTOCOL', 'ORACLES', 'LEDGER', 'SECURITY'].map((item, i) => (
             <span
               key={item}
-              className={`text-[11px] uppercase tracking-[2px] ${i === 0 ? 'text-[var(--accent-green)] border-b-2 border-[var(--accent-green)] pb-0.5' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer'}`}
+              className={`text-[13px] uppercase tracking-[2px] ${i === 0 ? 'text-[var(--accent-green)] border-b-2 border-[var(--accent-green)] pb-0.5' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer'}`}
             >
               {item}
             </span>
           ))}
         </nav>
         <Link href="/registry">
-          <TruvaButton variant="outlined" className="text-[9px] px-3 py-1.5">TERMINAL_ACCESS</TruvaButton>
+          <TruvaButton variant="outlined" className="text-[12px] px-3 py-1.5">TERMINAL_ACCESS</TruvaButton>
         </Link>
       </header>
 
@@ -95,7 +95,7 @@ export default function LandingPage() {
       <section className="px-8 pt-12 pb-20">
         <div className="flex items-center gap-1.5 mb-6">
           <TruvaPulsingDot size={6} />
-          <span className="text-[10px] uppercase tracking-[2px] text-[var(--accent-green)]">SYSTEM_STATUS: OPERATIONAL</span>
+          <span className="text-[13px] uppercase tracking-[2px] text-[var(--accent-green)]">SYSTEM_STATUS: OPERATIONAL</span>
         </div>
         <div className="grid grid-cols-[55%_1fr] gap-10 items-start">
           <div>
@@ -121,15 +121,15 @@ export default function LandingPage() {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <TruvaPulsingDot size={5} />
-            <span className="text-[11px] uppercase tracking-[2px] text-[var(--text-primary)] font-bold">TRUSTGATE_REAL_TIME_LOGS</span>
+            <span className="text-[13px] uppercase tracking-[2px] text-[var(--text-primary)] font-bold">TRUSTGATE_REAL_TIME_LOGS</span>
           </div>
-          <span className="text-[10px] uppercase tracking-[2px] text-[var(--text-secondary)]">ACTIVE_FILTERS: ALL &nbsp; LOG_BUFFER: 51240</span>
+          <span className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)]">ACTIVE_FILTERS: ALL &nbsp; LOG_BUFFER: 51240</span>
         </div>
         <table className="w-full border-collapse">
           <thead>
             <tr className="border-b border-[var(--border-default)]">
               {['TIMESTAMP', 'AGENT_ID', 'TRANSACTION_HASH', 'STATUS', 'LATENCY'].map((h) => (
-                <th key={h} className="px-4 py-2.5 text-left text-[10px] uppercase tracking-[2px] text-[var(--text-muted)] font-medium">{h}</th>
+                <th key={h} className="px-4 py-2.5 text-left text-[13px] uppercase tracking-[2px] text-[var(--text-muted)] font-medium">{h}</th>
               ))}
             </tr>
           </thead>
@@ -152,10 +152,10 @@ export default function LandingPage() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-[24px] font-bold">AGENT_REGISTRY</h2>
-            <p className="text-[10px] uppercase tracking-[2px] text-[var(--text-secondary)] mt-1">VERIFIED_AUTONOMOUS_ENTITIES_V1.0.4</p>
+            <p className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mt-1">VERIFIED_AUTONOMOUS_ENTITIES_V1.0.4</p>
           </div>
           <div className="relative">
-            <input placeholder="FILTER_BY_HASH_OR_NAME" className="pl-8 pr-3 py-2 bg-[var(--bg-input)] border border-[var(--border-default)] rounded-[2px] text-[11px] text-[var(--text-primary)] font-mono placeholder:text-[var(--text-dim)] w-[260px] focus:border-[var(--accent-green)] focus:outline-none" />
+            <input placeholder="FILTER_BY_HASH_OR_NAME" className="pl-8 pr-3 py-2 bg-[var(--bg-input)] border border-[var(--border-default)] rounded-[2px] text-[13px] text-[var(--text-primary)] font-mono placeholder:text-[var(--text-dim)] w-[260px] focus:border-[var(--accent-green)] focus:outline-none" />
             <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
           </div>
         </div>
@@ -169,18 +169,18 @@ export default function LandingPage() {
                   </div>
                   <div>
                     <div className="text-[12px] font-bold">{a.name}</div>
-                    <div className="text-[9px] text-[var(--text-muted)]">ID: {a.id}</div>
+                    <div className="text-[12px] text-[var(--text-muted)]">ID: {a.id}</div>
                   </div>
                 </div>
                 <TruvaStatusPill variant={a.tier} />
               </div>
-              <div className="mt-3 flex items-center justify-between text-[10px] uppercase tracking-[2px] text-[var(--text-secondary)] mb-1">
+              <div className="mt-3 flex items-center justify-between text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mb-1">
                 <span>TRUST SCORE</span>
                 <span style={{ color: tierColors[a.tier] }}>{a.score}%</span>
               </div>
               <TruvaProgressBar value={a.score} color={tierColors[a.tier]} />
               <Link href={`/agent/${a.name.toLowerCase().replace(/[\s_]/g, '-')}`}>
-                <TruvaButton variant="ghost" className="w-full mt-3 text-[9px]">VIEW_PASSPORT</TruvaButton>
+                <TruvaButton variant="ghost" className="w-full mt-3 text-[12px]">VIEW_PASSPORT</TruvaButton>
               </Link>
             </div>
           ))}
@@ -193,7 +193,7 @@ export default function LandingPage() {
           <Shield size={24} className="text-[var(--accent-green)]" />
           <h2 className="text-[22px] font-bold">TRADEBOT X PASSPORT</h2>
         </div>
-        <p className="text-[10px] uppercase tracking-[2px] text-[var(--text-secondary)] mb-6">REPUTATION_STAMP_ID: AF-9283-TR-001</p>
+        <p className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mb-6">REPUTATION_STAMP_ID: AF-9283-TR-001</p>
         <div className="grid grid-cols-4 gap-4 mb-6">
           {[
             { label: 'RELIABILITY', val: '99.98', unit: '%', pct: 99.98 },
@@ -201,19 +201,19 @@ export default function LandingPage() {
             { label: 'COMPLIANCE', val: '100', unit: '%', pct: 100 },
           ].map((m) => (
             <div key={m.label} className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-4">
-              <div className="text-[10px] uppercase tracking-[2px] text-[var(--text-secondary)] mb-2">{m.label}</div>
+              <div className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mb-2">{m.label}</div>
               <div className="text-[28px] font-bold">{m.val}<span className="text-[16px]">{m.unit}</span></div>
               <TruvaProgressBar value={m.pct} className="mt-2" />
             </div>
           ))}
           <div className="bg-[var(--bg-card)] border border-[var(--accent-green)] rounded-[2px] p-4 flex flex-col items-center justify-center text-center">
             <Shield size={28} className="text-[var(--accent-green)] mb-2" />
-            <div className="text-[10px] uppercase tracking-[2px] text-[var(--accent-green)] italic mb-1">STAKED_REPUTATION</div>
+            <div className="text-[13px] uppercase tracking-[2px] text-[var(--accent-green)] italic mb-1">STAKED_REPUTATION</div>
             <div className="text-[22px] font-bold">500,000 TRU</div>
           </div>
         </div>
         <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-5">
-          <div className="text-[11px] uppercase tracking-[2px] text-[var(--text-primary)] font-bold mb-4">COMPLIANCE_MANIFESTO_V.2</div>
+          <div className="text-[13px] uppercase tracking-[2px] text-[var(--text-primary)] font-bold mb-4">COMPLIANCE_MANIFESTO_V.2</div>
           <div className="grid grid-cols-2 gap-x-12 gap-y-3 text-[12px]">
             <div className="flex justify-between"><span className="text-[var(--text-secondary)]">KYA_STATUS</span><span className="font-bold text-[var(--accent-green)]">VERIFIED</span></div>
             <div className="flex justify-between"><span className="text-[var(--text-secondary)]">OPERATING_LIMIT</span><span className="font-bold">$10.0M DAILY</span></div>
@@ -235,7 +235,7 @@ export default function LandingPage() {
               <TruvaInput label="AGENT_ENTITY_NAME" placeholder="e.g. ALPHA_LIQUIDITY_BOT" value={formName} onChange={(e) => setFormName(e.target.value)} />
               <TruvaInput label="PUBLIC_KEY_HEX [ED25519]" placeholder="0x..." value={formKey} onChange={(e) => setFormKey(e.target.value)} />
               <div>
-                <label className="block mb-2 text-[10px] uppercase tracking-[2px] text-[var(--text-secondary)]">DEPLOYMENT_CATEGORY</label>
+                <label className="block mb-2 text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)]">DEPLOYMENT_CATEGORY</label>
                 <select value={formCategory} onChange={(e) => setFormCategory(e.target.value)} className="w-full bg-[var(--bg-input)] border border-[var(--border-default)] rounded-[2px] px-3 py-2.5 text-[13px] text-[var(--text-primary)] font-mono focus:border-[var(--accent-green)] focus:outline-none appearance-none cursor-pointer">
                   <option>FINANCIAL_ARBITRAGE</option>
                   <option>DATA_ORACLE</option>
@@ -247,20 +247,20 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-5">
-            <div className="text-[11px] uppercase tracking-[2px] text-[var(--text-primary)] font-bold mb-5">TIER_PROGRESSION</div>
+            <div className="text-[13px] uppercase tracking-[2px] text-[var(--text-primary)] font-bold mb-5">TIER_PROGRESSION</div>
             <div className="space-y-4">
               {tiers.map((t) => (
                 <div key={t.name} className="flex items-start gap-3">
                   <CheckCircle size={16} style={{ color: t.color }} className="mt-0.5 shrink-0" />
                   <div>
                     <div className="text-[12px] font-bold" style={{ color: t.color }}>{t.name}</div>
-                    <div className="text-[10px] text-[var(--text-muted)]">{t.desc}</div>
+                    <div className="text-[13px] text-[var(--text-muted)]">{t.desc}</div>
                   </div>
                 </div>
               ))}
             </div>
             <div className="mt-6 p-3 bg-[var(--bg-terminal)] border border-[var(--border-default)] rounded-[2px]">
-              <p className="text-[9px] uppercase tracking-[1px] text-[var(--text-muted)] leading-relaxed">
+              <p className="text-[12px] uppercase tracking-[1px] text-[var(--text-muted)] leading-relaxed">
                 NOTE: ALL REGISTRATION REQUESTS ARE SUBJECT TO A 24-CYCLE VALIDATION PERIOD BY THE TRUVA CONSENSUS ENGINE.
               </p>
             </div>
@@ -273,11 +273,11 @@ export default function LandingPage() {
         <div className="flex items-center justify-between">
           <div>
             <div className="text-[12px] font-bold">TRUVA PROTOCOL</div>
-            <div className="text-[9px] text-[var(--text-muted)] mt-1">© 2026 TRUVA PROTOCOL · SYSTEM_STATUS: OPERATIONAL</div>
+            <div className="text-[12px] text-[var(--text-muted)] mt-1">© 2026 TRUVA PROTOCOL · SYSTEM_STATUS: OPERATIONAL</div>
           </div>
           <div className="flex gap-5">
             {['DOCUMENTATION', 'AGENT_REGISTRY', 'VALIDATION_LOG', 'PRIVACY'].map((link) => (
-              <span key={link} className="text-[9px] uppercase tracking-[2px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer">{link}</span>
+              <span key={link} className="text-[12px] uppercase tracking-[2px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer">{link}</span>
             ))}
           </div>
         </div>

@@ -49,7 +49,7 @@ export default function RegistryPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-[24px] font-bold">AGENT_REGISTRY</h1>
-          <p className="text-[10px] uppercase tracking-[2px] text-[var(--text-secondary)] mt-1">VERIFIED_AUTONOMOUS_ENTITIES · MAINNET_CLUSTER_V1.2</p>
+          <p className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mt-1">VERIFIED_AUTONOMOUS_ENTITIES · MAINNET_CLUSTER_V1.2</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="relative">
@@ -58,18 +58,18 @@ export default function RegistryPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="SEARCH_AGENT_ID"
-              className="pl-8 pr-3 py-2 bg-[var(--bg-input)] border border-[var(--border-default)] rounded-[2px] text-[11px] text-[var(--text-primary)] font-mono placeholder:text-[var(--text-dim)] w-[220px] focus:border-[var(--accent-green)] focus:outline-none"
+              className="pl-8 pr-3 py-2 bg-[var(--bg-input)] border border-[var(--border-default)] rounded-[2px] text-[13px] text-[var(--text-primary)] font-mono placeholder:text-[var(--text-dim)] w-[220px] focus:border-[var(--accent-green)] focus:outline-none"
             />
           </div>
           <Link href="/register">
-            <TruvaButton variant="primary" className="text-[9px]">REGISTER_NEW</TruvaButton>
+            <TruvaButton variant="primary" className="text-[12px]">REGISTER_NEW</TruvaButton>
           </Link>
         </div>
       </div>
 
       {/* Filters */}
       <div className="flex items-center gap-3 mb-6">
-        <span className="text-[10px] uppercase tracking-[2px] text-[var(--text-muted)]">FILTER_BY:</span>
+        <span className="text-[13px] uppercase tracking-[2px] text-[var(--text-muted)]">FILTER_BY:</span>
 
         {/* Tier filter pills */}
         <div className="flex items-center gap-1.5">
@@ -77,7 +77,7 @@ export default function RegistryPage() {
             <button
               key={t}
               onClick={() => setTierFilter(t)}
-              className={`px-3 py-1 text-[10px] uppercase tracking-[1px] font-bold rounded-[2px] border transition-colors ${
+              className={`px-3 py-1 text-[13px] uppercase tracking-[1px] font-bold rounded-[2px] border transition-colors ${
                 tierFilter === t
                   ? t === 'all'
                     ? 'border-[var(--accent-green)] text-[var(--accent-green)] bg-[var(--accent-green)]/10'
@@ -96,7 +96,7 @@ export default function RegistryPage() {
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="appearance-none px-3 py-1.5 pr-7 bg-[var(--bg-input)] border border-[var(--border-default)] rounded-[2px] text-[10px] uppercase tracking-[1px] text-[var(--text-primary)] font-mono cursor-pointer focus:border-[var(--accent-green)] focus:outline-none"
+            className="appearance-none px-3 py-1.5 pr-7 bg-[var(--bg-input)] border border-[var(--border-default)] rounded-[2px] text-[13px] uppercase tracking-[1px] text-[var(--text-primary)] font-mono cursor-pointer focus:border-[var(--accent-green)] focus:outline-none"
           >
             {allCategories.map((c) => (
               <option key={c} value={c} className="bg-[var(--bg-base)]">{c.replace(/_/g, ' ')}</option>
@@ -108,13 +108,13 @@ export default function RegistryPage() {
         {(tierFilter !== 'all' || categoryFilter !== 'ALL_TYPES') && (
           <button
             onClick={() => { setTierFilter('all'); setCategoryFilter('ALL_TYPES'); setSearch(''); }}
-            className="text-[10px] uppercase tracking-[1px] text-[var(--status-blocked)] hover:underline ml-1"
+            className="text-[13px] uppercase tracking-[1px] text-[var(--status-blocked)] hover:underline ml-1"
           >
             CLEAR_FILTERS
           </button>
         )}
 
-        <span className="ml-auto text-[10px] uppercase tracking-[1px] text-[var(--text-muted)]">
+        <span className="ml-auto text-[13px] uppercase tracking-[1px] text-[var(--text-muted)]">
           SHOWING {filtered.length} OF {agents.length}
         </span>
       </div>
@@ -131,7 +131,7 @@ export default function RegistryPage() {
         <div className="text-center py-16 text-[var(--text-muted)]">
           <Shield size={32} className="mx-auto mb-3 opacity-40" />
           <p className="text-[12px] uppercase tracking-[2px]">NO_AGENTS_MATCH_FILTERS</p>
-          <p className="text-[10px] mt-1">Adjust your filter criteria above</p>
+          <p className="text-[13px] mt-1">Adjust your filter criteria above</p>
         </div>
       ) : (
       <div className="grid grid-cols-3 gap-4">
@@ -144,7 +144,7 @@ export default function RegistryPage() {
                 </div>
                 <div>
                   <div className="text-[13px] font-bold">{a.name}</div>
-                  <div className="text-[9px] text-[var(--text-muted)]">{a.id}</div>
+                  <div className="text-[12px] text-[var(--text-muted)]">{a.id}</div>
                 </div>
               </div>
               <TruvaStatusPill variant={a.status} />
@@ -152,10 +152,10 @@ export default function RegistryPage() {
 
             <div className="flex items-center gap-2 mb-3">
               <TruvaBadge variant={a.tier} />
-              <span className="text-[9px] uppercase tracking-[1px] text-[var(--text-muted)]">{a.category}</span>
+              <span className="text-[12px] uppercase tracking-[1px] text-[var(--text-muted)]">{a.category}</span>
             </div>
 
-            <div className="flex items-center justify-between text-[10px] uppercase tracking-[2px] text-[var(--text-secondary)] mb-1">
+            <div className="flex items-center justify-between text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mb-1">
               <span>TRUST_SCORE</span>
               <span style={{ color: tierColors[a.tier] }}>{a.score}%</span>
             </div>
@@ -163,17 +163,17 @@ export default function RegistryPage() {
 
             <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-[var(--border-subtle)]">
               <div>
-                <div className="text-[9px] uppercase tracking-[1px] text-[var(--text-muted)]">TX_COUNT</div>
+                <div className="text-[12px] uppercase tracking-[1px] text-[var(--text-muted)]">TX_COUNT</div>
                 <div className="text-[12px] font-bold mt-0.5">{a.txCount}</div>
               </div>
               <div>
-                <div className="text-[9px] uppercase tracking-[1px] text-[var(--text-muted)]">UPTIME</div>
+                <div className="text-[12px] uppercase tracking-[1px] text-[var(--text-muted)]">UPTIME</div>
                 <div className="text-[12px] font-bold mt-0.5">{a.uptime}</div>
               </div>
             </div>
 
             <Link href={`/agent/${a.name.toLowerCase().replace(/_/g, '-')}`}>
-              <TruvaButton variant="ghost" className="w-full mt-3 text-[9px]">VIEW_PASSPORT</TruvaButton>
+              <TruvaButton variant="ghost" className="w-full mt-3 text-[12px]">VIEW_PASSPORT</TruvaButton>
             </Link>
           </div>
         ))}
@@ -181,7 +181,7 @@ export default function RegistryPage() {
       )}
 
       <div className="flex justify-center mt-8">
-        <TruvaButton variant="outlined" className="text-[9px] px-6">FETCH_ADDITIONAL_RECORDS</TruvaButton>
+        <TruvaButton variant="outlined" className="text-[12px] px-6">FETCH_ADDITIONAL_RECORDS</TruvaButton>
       </div>
     </div>
   );

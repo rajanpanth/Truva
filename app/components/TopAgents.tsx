@@ -22,11 +22,11 @@ export function TopAgents() {
           <h2 className="text-[14px] font-mono font-bold text-[#14F195] tracking-widest uppercase">
             [HIGHEST_REPUTATION_NODE]
           </h2>
-          <p className="text-[10px] font-mono text-zinc-500 tracking-widest uppercase">
+          <p className="text-[13px] font-mono text-zinc-500 tracking-widest uppercase">
             SYS_TIME: Apr_6-12_2026
           </p>
         </div>
-        <Link href="#" className="flex items-center gap-2 text-[10px] font-mono font-bold text-zinc-500 hover:text-[#14F195] transition-colors tracking-widest uppercase">
+        <Link href="#" className="flex items-center gap-2 text-[13px] font-mono font-bold text-zinc-500 hover:text-[#14F195] transition-colors tracking-widest uppercase">
           VIEW_ALL_NODES
           <span className="text-[#14F195]">&gt;&gt;</span>
         </Link>
@@ -41,7 +41,7 @@ export function TopAgents() {
           <div className="relative flex items-center justify-between mb-6 border-b border-white/[0.05] pb-3">
             <div className="flex items-center gap-2">
               <span className="text-[12px] font-mono font-bold tracking-widest text-[#14F195]">RANK::01</span>
-              <span className={`ml-2 px-1.5 py-0.5 text-[9px] font-bold border uppercase tracking-wider ${tierColor[topAgent.tier]}`}>
+              <span className={`ml-2 px-1.5 py-0.5 text-[12px] font-bold border uppercase tracking-wider ${tierColor[topAgent.tier]}`}>
                 {topAgent.tier}
               </span>
             </div>
@@ -63,11 +63,11 @@ export function TopAgents() {
           </div>
 
           <div className="border border-white/[0.1] bg-[#0a0a0a] px-4 py-3 flex items-center justify-between relative">
-            <span className="text-[10px] font-mono font-bold tracking-widest text-zinc-400 uppercase flex items-center gap-2">
+            <span className="text-[13px] font-mono font-bold tracking-widest text-zinc-400 uppercase flex items-center gap-2">
               <span className="w-1.5 h-1.5 bg-[#14F195] inline-block animate-pulse"></span>
               {topAgent.category}
             </span>
-            <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest">
+            <span className="text-[13px] font-mono text-zinc-500 uppercase tracking-widest">
               TXNS // <span className="text-[#14F195] font-bold">{topAgent.transactionCount}</span>
             </span>
           </div>
@@ -81,7 +81,7 @@ export function TopAgents() {
           return (
             <Link key={agent.pubkey} href={`/agent/${agent.pubkey}`}>
               <div className="border border-white/[0.06] bg-[#050505] p-4 flex items-center gap-4 transition-all hover:border-[#14F195]/40 group">
-                <div className="text-[11px] font-mono font-bold text-zinc-600 tracking-widest w-8 text-center shrink-0">
+                <div className="text-[13px] font-mono font-bold text-zinc-600 tracking-widest w-8 text-center shrink-0">
                   [0{index + 2}]
                 </div>
                 <div className="w-10 h-10 bg-zinc-900 border border-white/[0.1] flex items-center justify-center text-lg font-mono font-bold text-white shrink-0">
@@ -94,9 +94,9 @@ export function TopAgents() {
                       {agent.tier}
                     </span>
                   </div>
-                  <p className="text-[11px] text-zinc-500 truncate font-mono uppercase">{agent.description}</p>
+                  <p className="text-[13px] text-zinc-500 truncate font-mono uppercase">{agent.description}</p>
                 </div>
-                <div className="text-[11px] font-mono font-bold text-white flex flex-col items-end gap-1 shrink-0">
+                <div className="text-[13px] font-mono font-bold text-white flex flex-col items-end gap-1 shrink-0">
                   <span className="text-zinc-600 text-[8px] tracking-widest">SCORE</span>
                   <span className="text-[#14F195]">{agent.trustScore}</span>
                 </div>

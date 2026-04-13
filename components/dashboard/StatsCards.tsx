@@ -43,7 +43,7 @@ export function StatsCards() {
     return (
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-24 animate-pulse rounded border border-[#1a1a1a] bg-[#0d0d0d]" />
+          <div key={i} className="h-24 animate-pulse rounded border border-[#2a3f52] bg-[#0d0d0d]" />
         ))}
       </div>
     );
@@ -52,13 +52,13 @@ export function StatsCards() {
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {stats?.map((stat) => (
-        <div key={stat.label} className="rounded border border-[#1a1a1a] bg-[#0d0d0d] p-5">
+        <div key={stat.label} className="rounded border border-[#2a3f52] bg-[#0d0d0d] p-5">
           <div className="mb-2 flex items-center gap-2">
             <stat.icon className="h-3.5 w-3.5 text-[#00ff88]" />
-            <span className="font-mono text-[10px] tracking-widest text-[#555]">{stat.label}</span>
+            <span className="font-mono text-[13px] tracking-widest text-[#555]">{stat.label}</span>
           </div>
           <p className="font-mono text-2xl font-bold text-white">{stat.value}</p>
-          <p className="mt-1 font-mono text-[10px] text-[#444]">{stat.sub}</p>
+          <p className="mt-1 font-mono text-[13px] text-[#444]">{stat.sub}</p>
         </div>
       ))}
     </div>

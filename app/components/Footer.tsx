@@ -22,20 +22,20 @@ export function Footer() {
           {/* Links */}
           <div className="flex gap-16">
             <div className="flex flex-col gap-2.5">
-              <h4 className="text-[11px] font-bold text-zinc-500 tracking-widest uppercase mb-1">Protocol</h4>
+              <h4 className="text-[13px] font-bold text-zinc-500 tracking-widest uppercase mb-1">Protocol</h4>
               <Link href="/" className="text-[13px] text-zinc-600 hover:text-accent transition-colors">Registry</Link>
               <Link href="/demo" className="text-[13px] text-zinc-600 hover:text-accent transition-colors">TrustGate</Link>
               <span className="text-[13px] text-zinc-600">Trust Tiers</span>
               <span className="text-[13px] text-zinc-600">SDK</span>
             </div>
             <div className="flex flex-col gap-2.5">
-              <h4 className="text-[11px] font-bold text-zinc-500 tracking-widest uppercase mb-1">Resources</h4>
+              <h4 className="text-[13px] font-bold text-zinc-500 tracking-widest uppercase mb-1">Resources</h4>
               <span className="text-[13px] text-zinc-600">Documentation</span>
               <span className="text-[13px] text-zinc-600">API Reference</span>
               <span className="text-[13px] text-zinc-600">GitHub</span>
             </div>
             <div className="flex flex-col gap-2.5">
-              <h4 className="text-[11px] font-bold text-zinc-500 tracking-widest uppercase mb-1">Community</h4>
+              <h4 className="text-[13px] font-bold text-zinc-500 tracking-widest uppercase mb-1">Community</h4>
               <span className="text-[13px] text-zinc-600">Twitter / X</span>
               <span className="text-[13px] text-zinc-600">Telegram</span>
               <span className="text-[13px] text-zinc-600">Discord</span>
@@ -43,7 +43,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row justify-between items-center pt-6 border-t border-white/[0.05] text-[11px] text-zinc-700 gap-2">
+        <div className="flex flex-col sm:flex-row justify-between items-center pt-6 border-t border-white/[0.05] text-[13px] text-zinc-700 gap-2">
           <span>© 2026 TRUVA. All rights reserved.</span>
           <span>Built on Solana · Colosseum Frontier Hackathon</span>
         </div>

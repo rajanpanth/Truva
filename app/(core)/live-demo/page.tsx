@@ -81,9 +81,9 @@ export default function LiveDemoPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-[24px] font-bold">LIVE_DEMO</h1>
-          <p className="text-[10px] uppercase tracking-[2px] text-[var(--text-secondary)] mt-1">INTERACTIVE PROTOCOL DEMONSTRATION · SANDBOX_MODE</p>
+          <p className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mt-1">INTERACTIVE PROTOCOL DEMONSTRATION · SANDBOX_MODE</p>
         </div>
-        <TruvaButton variant="primary" className="text-[9px] flex items-center gap-1.5" onClick={runDemo} disabled={running}>
+        <TruvaButton variant="primary" className="text-[12px] flex items-center gap-1.5" onClick={runDemo} disabled={running}>
           <Play size={12} /> {running ? 'RUNNING...' : 'RUN_DEMO_SEQUENCE'}
         </TruvaButton>
       </div>
@@ -98,7 +98,7 @@ export default function LiveDemoPage() {
       <div className="grid grid-cols-[1fr_320px] gap-6 mb-6">
         {/* Phase Tracker */}
         <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-5">
-          <h3 className="text-[11px] uppercase tracking-[2px] font-bold mb-4">PROTOCOL_PHASES</h3>
+          <h3 className="text-[13px] uppercase tracking-[2px] font-bold mb-4">PROTOCOL_PHASES</h3>
           <div className="space-y-3">
             {phases.map((p, i) => {
               const isActive = currentPhase === i;
@@ -121,7 +121,7 @@ export default function LiveDemoPage() {
                     {isActive && <TruvaStatusPill variant="live" />}
                     {isComplete && <TruvaStatusPill variant="passed" />}
                   </div>
-                  <p className="text-[10px] text-[var(--text-muted)] mt-1 ml-5">{p.desc}</p>
+                  <p className="text-[13px] text-[var(--text-muted)] mt-1 ml-5">{p.desc}</p>
                   {isActive && <TruvaProgressBar value={50} className="mt-2" />}
                 </div>
               );
@@ -134,32 +134,32 @@ export default function LiveDemoPage() {
           <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-5">
             <div className="flex items-center gap-2 mb-4">
               <AlertTriangle size={14} className="text-[var(--red)]" />
-              <h3 className="text-[11px] uppercase tracking-[2px] font-bold">ATTACK_SIMULATOR</h3>
+              <h3 className="text-[13px] uppercase tracking-[2px] font-bold">ATTACK_SIMULATOR</h3>
             </div>
             <div className="space-y-2 mb-4">
               {attackTypes.map((a) => (
                 <button
                   key={a.id}
                   onClick={() => setSelectedAttack(a.id)}
-                  className={`w-full text-left p-2.5 rounded-[2px] border text-[11px] transition-colors ${
+                  className={`w-full text-left p-2.5 rounded-[2px] border text-[13px] transition-colors ${
                     selectedAttack === a.id
                       ? 'border-[var(--red)] text-[var(--red)] bg-[rgba(255,51,51,0.05)]'
                       : 'border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--text-muted)]'
                   }`}
                 >
                   <div className="font-bold">{a.label}</div>
-                  <div className="text-[9px] text-[var(--text-muted)] mt-0.5">{a.desc}</div>
+                  <div className="text-[12px] text-[var(--text-muted)] mt-0.5">{a.desc}</div>
                 </button>
               ))}
             </div>
-            <TruvaButton variant="danger" className="w-full text-[9px]" onClick={runAttack} disabled={attackRunning}>
+            <TruvaButton variant="danger" className="w-full text-[12px]" onClick={runAttack} disabled={attackRunning}>
               {attackRunning ? 'ATTACKING...' : 'LAUNCH_ATTACK'}
             </TruvaButton>
           </div>
 
           {/* Network Monitor */}
           <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-5">
-            <h3 className="text-[11px] uppercase tracking-[2px] font-bold mb-3">NETWORK_MONITOR</h3>
+            <h3 className="text-[13px] uppercase tracking-[2px] font-bold mb-3">NETWORK_MONITOR</h3>
             <div className="space-y-2">
               {[
                 { label: 'CONSENSUS', value: networkPulse, color: 'var(--accent-green)' },
@@ -167,7 +167,7 @@ export default function LiveDemoPage() {
                 { label: 'VALIDATOR_SYNC', value: 96, color: 'var(--accent-green)' },
               ].map((m) => (
                 <div key={m.label}>
-                  <div className="flex justify-between text-[10px] mb-1">
+                  <div className="flex justify-between text-[13px] mb-1">
                     <span className="text-[var(--text-secondary)]">{m.label}</span>
                     <span style={{ color: m.color }}>{m.value.toFixed(1)}%</span>
                   </div>

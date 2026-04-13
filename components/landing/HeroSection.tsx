@@ -12,7 +12,7 @@ export function HeroSection() {
       <div className="mx-auto mb-12 max-w-7xl">
         <div className="flex items-center gap-2">
           <span className="h-2 w-2 rounded-full bg-[#00ff88]" />
-          <span className="font-mono text-[10px] tracking-widest text-[#00ff88]">
+          <span className="font-mono text-[13px] tracking-widest text-[#00ff88]">
             SYSTEM_STATUS: OPERATIONAL
           </span>
         </div>
@@ -58,10 +58,10 @@ export function HeroSection() {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8, delay: 0.3 }}
-          className="w-full max-w-sm rounded border border-[#1a1a1a] bg-[#0d0d0d] p-6"
+          className="w-full max-w-sm rounded border border-[#2a3f52] bg-[#0d0d0d] p-6"
         >
           <div className="mb-2 flex items-center justify-between">
-            <span className="font-mono text-[10px] tracking-widest text-[#555]">FREESPOT_REGISTER</span>
+            <span className="font-mono text-[13px] tracking-widest text-[#555]">FREESPOT_REGISTER</span>
           </div>
           <div className="mb-4 flex items-end gap-[3px]" style={{ height: 120 }}>
             {barData.map((h, i) => (
@@ -74,7 +74,7 @@ export function HeroSection() {
               />
             ))}
           </div>
-          <div className="flex items-center justify-between font-mono text-[10px] text-[#555]">
+          <div className="flex items-center justify-between font-mono text-[13px] text-[#555]">
             <span>00:00:00</span>
             <span className="text-[#00ff88]">LIVE_TX_FEED</span>
             <span>4.2k TPS</span>

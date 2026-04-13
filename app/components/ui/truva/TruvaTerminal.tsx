@@ -28,7 +28,7 @@ function renderTag(tag: string) {
   if (tag === 'ALERT' || tag === 'ACTION') {
     return (
       <span
-        className="inline-block px-1.5 py-0 text-[11px] rounded-[2px] font-bold"
+        className="inline-block px-1.5 py-0 text-[13px] rounded-[2px] font-bold"
         style={{ background: color, color: '#ffffff' }}
       >
         {tag}
@@ -66,7 +66,7 @@ export function TruvaTerminal({ lines, title, className = '', showCursor, maxHei
           <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f57]" />
           <span className="w-2.5 h-2.5 rounded-full bg-[#febc2e]" />
           <span className="w-2.5 h-2.5 rounded-full bg-[#28c840]" />
-          <span className="ml-3 text-[10px] uppercase tracking-[2px] text-[var(--text-secondary)]">
+          <span className="ml-3 text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)]">
             {title}
           </span>
         </div>
