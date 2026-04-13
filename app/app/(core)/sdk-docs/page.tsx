@@ -96,7 +96,8 @@ console.log(agent.status); // 'PENDING_VALIDATION'`}
           <Book size={16} className="text-[var(--accent-green)]" />
           <h2 className="text-[14px] font-bold">API_REFERENCE</h2>
         </div>
-        <table className="w-full border-collapse">
+        <div className="overflow-x-auto">
+        <table className="w-full border-collapse min-w-[600px]">
           <thead>
             <tr className="border-b border-[var(--border-default)]">
               {['METHOD', 'ENDPOINT', 'DESCRIPTION', 'AUTH'].map((h) => (
@@ -119,10 +120,11 @@ console.log(agent.status); // 'PENDING_VALIDATION'`}
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Feature Cards */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
           { icon: <Shield size={20} />, title: 'TRUSTGATE_SDK', desc: 'Real-time transaction validation with configurable risk thresholds and ZK-proof integration.' },
           { icon: <Zap size={20} />, title: 'AGENT_FRAMEWORK', desc: 'Register, manage, and monitor autonomous agents with built-in tier progression and staking.' },

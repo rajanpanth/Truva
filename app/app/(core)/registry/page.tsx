@@ -58,7 +58,7 @@ export default function RegistryPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="SEARCH_AGENT_ID"
-              className="pl-8 pr-3 py-2 bg-[var(--bg-input)] border border-[var(--border-default)] rounded-[2px] text-[13px] text-[var(--text-primary)] font-mono placeholder:text-[var(--text-dim)] w-[220px] focus:border-[var(--accent-green)] focus:outline-none"
+              className="pl-8 pr-3 py-2 bg-[var(--bg-input)] border border-[var(--border-default)] rounded-[2px] text-[13px] text-[var(--text-primary)] font-mono placeholder:text-[var(--text-dim)] w-full sm:w-[220px] focus:border-[var(--accent-green)] focus:outline-none"
             />
           </div>
           <Link href="/register">
@@ -68,7 +68,7 @@ export default function RegistryPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex flex-wrap items-center gap-3 mb-6">
         <span className="text-[13px] uppercase tracking-[2px] text-[var(--text-muted)]">FILTER_BY:</span>
 
         {/* Tier filter pills */}
@@ -120,7 +120,7 @@ export default function RegistryPage() {
       </div>
 
       {/* Tier summary cards */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <TruvaStatCard label="TOTAL_REGISTERED" value={String(filtered.length)} sub="ACROSS ALL TIERS" icon={<Users size={16} className="text-[var(--accent-green)]" />} />
         <TruvaStatCard label="AVG_TRUST_SCORE" value={filtered.length ? (filtered.reduce((s, a) => s + a.score, 0) / filtered.length).toFixed(1) : '0'} sub="↑ 2.1% THIS EPOCH" icon={<Award size={16} className="text-[var(--accent-green)]" />} />
         <TruvaStatCard label="ELITE_AGENTS" value={String(filtered.filter(a => a.tier === 'gold').length)} sub="GOLD TIER" icon={<Star size={16} className="text-[var(--tier-gold)]" />} />
@@ -134,7 +134,7 @@ export default function RegistryPage() {
           <p className="text-[13px] mt-1">Adjust your filter criteria above</p>
         </div>
       ) : (
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {filtered.map((a) => (
           <div key={a.name} className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-4 hover:border-[var(--border-active)] transition-colors">
             <div className="flex items-start justify-between mb-3">

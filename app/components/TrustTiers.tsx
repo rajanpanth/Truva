@@ -38,10 +38,10 @@ export function TrustTiers() {
         {tiers.map((tier) => (
           <div
             key={tier.name}
-            className={`card relative p-6 text-center ${tier.bg} ${tier.popular ? "!border-[#14F195]/20 shadow-[0_0_40px_rgba(20,241,149,0.04)]" : ""}`}
+            className={`card relative overflow-hidden p-6 text-center ${tier.bg} ${tier.popular ? "!border-[#14F195]/20 shadow-[0_0_40px_rgba(20,241,149,0.04)]" : ""}`}
           >
             {tier.popular && (
-              <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 text-[12px] font-bold tracking-widest px-3 py-1 bg-[#14F195] text-black rounded-full">
+              <div className="absolute top-3 right-3 text-[12px] font-bold tracking-widest px-3 py-1 bg-[#14F195] text-black rounded-full">
                 PREMIUM
               </div>
             )}
