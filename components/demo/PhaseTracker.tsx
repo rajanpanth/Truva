@@ -49,7 +49,7 @@ export function PhaseTracker() {
             key={phase.id}
             className={cn(
               'rounded border bg-[#0d0d0d] p-4 transition-colors',
-              active ? 'border-[#00ff88]' : 'border-[#1a1a1a]'
+              active ? 'border-[#00ff88]' : 'border-[#2a3f52]'
             )}
           >
             <div className="mb-3 flex items-center gap-2">
@@ -57,7 +57,7 @@ export function PhaseTracker() {
                 className="h-4 w-4"
                 style={{ color: done || active ? phase.color : '#333' }}
               />
-              <span className="font-mono text-[10px] tracking-widest text-[#555]">
+              <span className="font-mono text-[13px] tracking-widest text-[#555]">
                 PHASE_{phase.id + 1}
               </span>
             </div>
@@ -67,9 +67,9 @@ export function PhaseTracker() {
             )}>
               {phase.label}
             </p>
-            <p className="mt-1 font-mono text-[10px] leading-relaxed text-[#444]">{phase.desc}</p>
+            <p className="mt-1 font-mono text-[13px] leading-relaxed text-[#444]">{phase.desc}</p>
             {active && (
-              <div className="mt-3 h-0.5 w-full overflow-hidden rounded bg-[#1a1a1a]">
+              <div className="mt-3 h-1.5 w-full overflow-hidden rounded bg-[#1a1a1a]">
                 <div className="h-full w-1/2 animate-pulse rounded bg-[#00ff88]" />
               </div>
             )}

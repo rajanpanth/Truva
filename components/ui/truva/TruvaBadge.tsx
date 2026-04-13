@@ -19,7 +19,7 @@ export function TruvaBadge({ variant, label, className = '' }: TruvaBadgeProps) 
   const color = badgeColors[variant];
   return (
     <span
-      className={`inline-block px-1.5 py-0.5 text-[9px] uppercase tracking-[1px] font-mono font-medium rounded-[2px] ${className}`}
+      className={`inline-block px-1.5 py-0.5 text-[12px] uppercase tracking-[1px] font-mono font-medium rounded-[2px] ${className}`}
       style={{ border: `1px solid ${color}`, color }}
     >
       {label ?? variant.toUpperCase()}

@@ -22,13 +22,13 @@ export function LogTable() {
   return (
     <div>
       <div className="mb-3 flex items-center justify-between">
-        <span className="font-mono text-[10px] uppercase tracking-widest text-[#555]">
+        <span className="font-mono text-[13px] uppercase tracking-widest text-[#555]">
           ENFORCEMENT_LOGS
         </span>
         <select
           value={decisionFilter}
           onChange={(e) => { setDecisionFilter(e.target.value); setPage(0); }}
-          className="border border-[#1a1a1a] bg-[#111] px-3 py-1.5 font-mono text-[11px] uppercase text-white outline-none focus:border-[#00ff88]"
+          className="border border-[#2a3f52] bg-[#111] px-3 py-1.5 font-mono text-[13px] uppercase text-white outline-none focus:border-[#00ff88]"
         >
           <option value="all">ALL</option>
           <option value="allow">ALLOWED</option>
@@ -36,12 +36,12 @@ export function LogTable() {
         </select>
       </div>
 
-      <div className="overflow-x-auto border border-[#1a1a1a] bg-[#0d0d0d]">
+      <div className="overflow-x-auto border border-[#2a3f52] bg-[#0d0d0d]">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-[#1a1a1a]">
+            <tr className="border-b border-[#2a3f52]">
               {['AGENT', 'ACTION', 'AMOUNT', 'DECISION', 'LATENCY', 'CHECKS', 'TIME'].map((h) => (
-                <th key={h} className="px-3 py-2 text-left font-mono text-[9px] uppercase tracking-widest text-[#555]">
+                <th key={h} className="px-3 py-2 text-left font-mono text-[12px] uppercase tracking-widest text-[#555]">
                   {h}
                 </th>
               ))}
@@ -50,7 +50,7 @@ export function LogTable() {
           <tbody>
             {isLoading
               ? Array.from({ length: 10 }).map((_, i) => (
-                  <tr key={i} className="border-b border-[#1a1a1a]">
+                  <tr key={i} className="border-b border-[#2a3f52]">
                     {Array.from({ length: 7 }).map((_, j) => (
                       <td key={j} className="px-3 py-2">
                         <div className="h-3 w-16 animate-pulse bg-[#1a1a1a]" />
@@ -65,22 +65,22 @@ export function LogTable() {
                   const totalChecks = Object.keys(checks).length;
 
                   return (
-                    <tr key={log.id} className="border-b border-[#1a1a1a] hover:bg-[#111]">
-                      <td className="px-3 py-2 font-mono text-[11px] text-white">
+                    <tr key={log.id} className="border-b border-[#2a3f52] hover:bg-[#111]">
+                      <td className="px-3 py-2 font-mono text-[13px] text-white">
                         {truncateAddress(log.agent_id)}
                       </td>
-                      <td className="px-3 py-2 font-mono text-[11px] uppercase text-[#555]">{log.action}</td>
-                      <td className="px-3 py-2 font-mono text-[11px] text-white">{formatAmount(log.amount ?? 0)}</td>
+                      <td className="px-3 py-2 font-mono text-[13px] uppercase text-[#555]">{log.action}</td>
+                      <td className="px-3 py-2 font-mono text-[13px] text-white">{formatAmount(log.amount ?? 0)}</td>
                       <td className="px-3 py-2">
-                        <span className={`font-mono text-[10px] uppercase ${passed ? 'text-[#00ff88]' : 'text-[#ff4444]'}`}>
+                        <span className={`font-mono text-[13px] uppercase ${passed ? 'text-[#00ff88]' : 'text-[#ff4444]'}`}>
                           {log.status}
                         </span>
                       </td>
-                      <td className="px-3 py-2 font-mono text-[11px] text-[#555]">{log.latency_ms}ms</td>
-                      <td className="px-3 py-2 font-mono text-[11px] text-[#555]">
+                      <td className="px-3 py-2 font-mono text-[13px] text-[#555]">{log.latency_ms}ms</td>
+                      <td className="px-3 py-2 font-mono text-[13px] text-[#555]">
                         {passedCount}/{totalChecks}
                       </td>
-                      <td className="px-3 py-2 font-mono text-[10px] text-[#555]">{formatTimeAgo(log.created_at)}</td>
+                      <td className="px-3 py-2 font-mono text-[13px] text-[#555]">{formatTimeAgo(log.created_at)}</td>
                     </tr>
                   );
                 })}
@@ -89,24 +89,24 @@ export function LogTable() {
       </div>
 
       <div className="mt-3 flex items-center justify-between">
-        <span className="font-mono text-[10px] text-[#555]">
+        <span className="font-mono text-[13px] text-[#555]">
           {total} TOTAL_LOGS
         </span>
         <div className="flex items-center gap-2">
           <button
             disabled={page === 0}
             onClick={() => setPage((p) => Math.max(0, p - 1))}
-            className="border border-[#1a1a1a] bg-[#0d0d0d] p-1.5 text-white disabled:opacity-30 hover:border-[#00ff88]"
+            className="border border-[#2a3f52] bg-[#0d0d0d] p-1.5 text-white disabled:opacity-30 hover:border-[#00ff88]"
           >
             <ChevronLeft className="h-3 w-3" />
           </button>
-          <span className="font-mono text-[10px] text-[#555]">
+          <span className="font-mono text-[13px] text-[#555]">
             {page + 1} / {Math.max(1, totalPages)}
           </span>
           <button
             disabled={page >= totalPages - 1}
             onClick={() => setPage((p) => p + 1)}
-            className="border border-[#1a1a1a] bg-[#0d0d0d] p-1.5 text-white disabled:opacity-30 hover:border-[#00ff88]"
+            className="border border-[#2a3f52] bg-[#0d0d0d] p-1.5 text-white disabled:opacity-30 hover:border-[#00ff88]"
           >
             <ChevronRight className="h-3 w-3" />
           </button>

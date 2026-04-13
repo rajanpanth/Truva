@@ -110,7 +110,7 @@ export default function Dashboard() {
                 <h3 className="text-[32px] md:text-[40px] font-bold text-white font-mono uppercase leading-none tracking-tight mb-3">
                   AGENT_REGISTRY
                 </h3>
-                <div className="text-[11px] font-mono tracking-[0.15em] text-zinc-400 uppercase">
+                <div className="text-[13px] font-mono tracking-[0.15em] text-zinc-400 uppercase">
                   VERIFIED_AUTONOMOUS_ENTITIES_V1.0.4
                 </div>
               </div>
@@ -124,7 +124,7 @@ export default function Dashboard() {
                 <input 
                   type="text" 
                   placeholder="FILTER_BY_HASH_OR_NAME" 
-                  className="w-full md:w-[280px] bg-transparent border border-white/[0.1] rounded py-2 pl-9 pr-4 text-[11px] font-mono text-white placeholder-zinc-600 focus:outline-none focus:border-[#14F195]/60 transition-all uppercase tracking-widest"
+                  className="w-full md:w-[280px] bg-transparent border border-white/[0.1] rounded py-2 pl-9 pr-4 text-[13px] font-mono text-white placeholder-zinc-600 focus:outline-none focus:border-[#14F195]/60 transition-all uppercase tracking-widest"
                 />
               </div>
             </div>
@@ -148,7 +148,7 @@ export default function Dashboard() {
                 ))}
               </div>
 
-              <div className="grid grid-cols-[1fr_120px_80px_140px] px-5 py-1.5 text-[10px] font-mono font-bold text-zinc-600 tracking-widest border-y border-white/[0.08] uppercase">
+              <div className="grid grid-cols-[1fr_120px_80px_140px] px-5 py-1.5 text-[13px] font-mono font-bold text-zinc-600 tracking-widest border-y border-white/[0.08] uppercase">
                 <span>IDENTITY</span>
                 <span>AUTHORITY</span>
                 <span className="text-right">REPUTATION</span>
@@ -209,15 +209,15 @@ export default function Dashboard() {
             <div className="flex flex-wrap gap-6 mb-6 text-center">
               <div>
                 <div className="text-[20px] font-black text-white">{agentCount.toLocaleString()}+</div>
-                <div className="text-[10px] font-bold text-zinc-600 tracking-widest">AGENTS</div>
+                <div className="text-[13px] font-bold text-zinc-600 tracking-widest">AGENTS</div>
               </div>
               <div>
                 <div className="text-[20px] font-black text-white">{transactionCount >= 1_000_000 ? `${(transactionCount / 1_000_000).toFixed(1)}M` : transactionCount.toLocaleString()}</div>
-                <div className="text-[10px] font-bold text-zinc-600 tracking-widest">TRANSACTIONS</div>
+                <div className="text-[13px] font-bold text-zinc-600 tracking-widest">TRANSACTIONS</div>
               </div>
               <div>
                 <div className="text-[20px] font-black text-white">{gateCheckCount.toLocaleString()}</div>
-                <div className="text-[10px] font-bold text-zinc-600 tracking-widest">GATE CHECKS</div>
+                <div className="text-[13px] font-bold text-zinc-600 tracking-widest">GATE CHECKS</div>
               </div>
             </div>
             <div className="flex flex-wrap gap-3">

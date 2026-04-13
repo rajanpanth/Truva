@@ -27,7 +27,7 @@ export function RealTimeLogs() {
         <h2 className="font-mono text-[18px] md:text-[22px] font-bold text-[#14F195] tracking-widest uppercase leading-none">
           TRUSTGATE_REAL_TIME_LOGS
         </h2>
-        <div className="font-mono text-[10px] text-zinc-500 tracking-widest flex gap-4">
+        <div className="font-mono text-[13px] text-zinc-500 tracking-widest flex gap-4">
           <span className={isConnected ? "text-[#14F195]" : ""}>
             {isConnected ? "● LIVE" : "○ OFFLINE"}
           </span>
@@ -38,7 +38,7 @@ export function RealTimeLogs() {
       {/* Table */}
       <div className="w-full border-y border-white/[0.08] bg-[#050505]">
         {/* Table Header */}
-        <div className="grid grid-cols-[1fr_1fr_1fr_100px_80px] px-5 py-3 border-b border-white/[0.08] text-[10px] font-mono font-bold text-zinc-600 tracking-widest uppercase">
+        <div className="grid grid-cols-[1fr_1fr_1fr_100px_80px] px-5 py-3 border-b border-white/[0.08] text-[13px] font-mono font-bold text-zinc-600 tracking-widest uppercase">
           <span>TIMESTAMP</span>
           <span>AGENT_ID</span>
           <span>TRANSACTION_HASH</span>

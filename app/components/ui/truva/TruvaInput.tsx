@@ -10,7 +10,7 @@ export const TruvaInput = forwardRef<HTMLInputElement, TruvaInputProps>(
   ({ label, rightElement, className = '', ...props }, ref) => (
     <div className={className}>
       {label && (
-        <label className="block mb-2 text-[10px] uppercase tracking-[2px] text-[var(--text-secondary)]">
+        <label className="block mb-2 text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)]">
           {label}
         </label>
       )}

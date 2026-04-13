@@ -56,27 +56,27 @@ export function LatencyChart() {
 
   if (isLoading) {
     return (
-      <div className="h-[300px] animate-pulse border border-[#1a1a1a] bg-[#0d0d0d]" />
+      <div className="h-[300px] animate-pulse border border-[#2a3f52] bg-[#0d0d0d]" />
     );
   }
 
   return (
     <div>
       <div className="mb-3">
-        <span className="font-mono text-[10px] uppercase tracking-widest text-[#555]">
+        <span className="font-mono text-[13px] uppercase tracking-widest text-[#555]">
           ENFORCEMENT_LATENCY · 60_MIN
         </span>
       </div>
 
-      <div className="border border-[#1a1a1a] bg-[#0d0d0d] p-4">
+      <div className="border border-[#2a3f52] bg-[#0d0d0d] p-4">
         {!chartData || chartData.length === 0 ? (
-          <p className="py-12 text-center font-mono text-[11px] text-[#555]">
+          <p className="py-12 text-center font-mono text-[13px] text-[#555]">
             NO_DATA_LAST_60_MIN
           </p>
         ) : (
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#2a3f52" />
               <XAxis
                 dataKey="time"
                 stroke="#333"
@@ -90,7 +90,7 @@ export function LatencyChart() {
               <Tooltip
                 contentStyle={{
                   backgroundColor: '#0d0d0d',
-                  border: '1px solid #1a1a1a',
+                  border: '1px solid #2a3f52',
                   borderRadius: 0,
                   color: '#fff',
                   fontFamily: 'monospace',

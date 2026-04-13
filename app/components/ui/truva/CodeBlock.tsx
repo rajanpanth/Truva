@@ -16,9 +16,9 @@ export function CodeBlock({ code, language = 'bash' }: { code: string; language?
       <div className="flex items-center justify-between px-4 py-2 border-b border-[var(--border-default)]">
         <div className="flex items-center gap-2">
           <Terminal size={12} className="text-[var(--text-muted)]" />
-          <span className="text-[9px] uppercase tracking-[2px] text-[var(--text-muted)]">{language}</span>
+          <span className="text-[12px] uppercase tracking-[2px] text-[var(--text-muted)]">{language}</span>
         </div>
-        <button onClick={handleCopy} className="flex items-center gap-1.5 text-[9px] uppercase tracking-[1px] text-[var(--text-secondary)] hover:text-[var(--accent-green)] transition-colors">
+        <button onClick={handleCopy} className="flex items-center gap-1.5 text-[12px] uppercase tracking-[1px] text-[var(--text-secondary)] hover:text-[var(--accent-green)] transition-colors">
           {copied ? <><Check size={12} className="text-[var(--accent-green)]" /> COPIED</> : <><Copy size={12} /> COPY</>}
         </button>
       </div>
