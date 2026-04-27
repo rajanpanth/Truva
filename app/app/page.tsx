@@ -80,8 +80,8 @@ export default function Dashboard() {
               <Link href="/registry" className="px-8 py-3.5 bg-[#14F195] text-black font-mono text-[14px] font-bold tracking-widest hover:bg-[#14F195]/90 transition-colors">
                 INITIATE_PROTOCOL
               </Link>
-              <Link href="/dashboard" className="px-8 py-3.5 bg-transparent border border-white/[0.2] text-white font-mono text-[14px] font-bold tracking-widest hover:border-white/[0.4] transition-colors">
-                VIEW_SPEC_V2.0
+              <Link href="/waitlist" className="px-8 py-3.5 bg-transparent border border-white/[0.2] text-white font-mono text-[14px] font-bold tracking-widest hover:border-[#14F195]/60 hover:text-[#14F195] transition-colors">
+                GET_EARLY_ACCESS
               </Link>
             </div>
           </div>
@@ -249,6 +249,7 @@ export default function Dashboard() {
         <HeroCTA />
       </div>
       </div>
+
       <Footer />
     </>
   );
