@@ -1,18 +1,40 @@
 {
-  "name": "@truva/sdk",
+  "name": "truva-sdk",
   "version": "0.1.0",
-  "description": "SDK for interacting with the Truva Protocol TrustGate program on Solana",
+  "description": "TypeScript SDK for interacting with the Truva Protocol — trust-gated AI agent payments on Solana",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "prepublish": "npm run build"
+    "prepublishOnly": "npm run build"
   },
+  "keywords": [
+    "solana",
+    "trustgate",
+    "truva",
+    "ai-agents",
+    "trust-score",
+    "payments",
+    "web3",
+    "anchor"
+  ],
+  "author": "Rajan Panth",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rajanpanth/Truva.git",
+    "directory": "sdk"
+  },
+  "homepage": "https://truva-x.tech",
   "dependencies": {
     "@coral-xyz/anchor": "^0.30.1",
     "@solana/web3.js": "^1.95.3"
   },
   "devDependencies": {
     "typescript": "^5.6.2"
-  }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
 }
