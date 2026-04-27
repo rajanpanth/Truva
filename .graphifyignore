@@ -1,0 +1,10 @@
+node_modules/
+dist/
+build/
+.next/
+.env
+.env.*
+__pycache__/
+*.log
+*.lock
+graphify-out/cache/
