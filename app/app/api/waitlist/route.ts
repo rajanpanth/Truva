@@ -15,7 +15,7 @@ const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
 interface WaitlistEntry {
   email: string;
   name: string;
-  telegram: string;
+  twitter: string;
   role: string;
   joinedAt: string;
 }
@@ -110,8 +110,8 @@ function notificationEmail(entry: WaitlistEntry, position: number): string {
         <span style="color:#14F195;font-size:14px;">${entry.email}</span>
       </div>
       <div style="margin-bottom:12px;">
-        <span style="color:#555;font-size:11px;letter-spacing:2px;">TELEGRAM</span><br>
-        <span style="color:#999;font-size:14px;">${entry.telegram || 'Not provided'}</span>
+        <span style="color:#555;font-size:11px;letter-spacing:2px;">TWITTER / X</span><br>
+        <span style="color:#999;font-size:14px;">${entry.twitter || 'Not provided'}</span>
       </div>
       <div>
         <span style="color:#555;font-size:11px;letter-spacing:2px;">JOINED</span><br>
@@ -170,7 +170,7 @@ async function sendEmails(entry: WaitlistEntry, position: number) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { email, name, telegram, role } = body;
+    const { email, name, twitter, role } = body;
 
     if (!email || typeof email !== 'string') {
       return NextResponse.json(
@@ -199,7 +199,7 @@ export async function POST(req: NextRequest) {
     const entry: WaitlistEntry = {
       email: email.toLowerCase().trim(),
       name: (name || '').trim(),
-      telegram: (telegram || '').trim(),
+      twitter: (twitter || '').trim(),
       role: role || 'EARLY_ACCESS',
       joinedAt: new Date().toISOString(),
     };
