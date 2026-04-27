@@ -102,7 +102,7 @@ async function getProgram(): Promise<anchor.Program> {
     const programId = new PublicKey(TRUVA_PROGRAM_ID);
     program = new (anchor.Program as any)(idl, programId, provider);
   }
-  return program;
+  return program!;
 }
 
 // ── PDA Derivation ──
