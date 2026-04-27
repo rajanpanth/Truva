@@ -1,5 +1,5 @@
 {
-  "name": "truva-sdk",
+  "name": "@truva-protocol/sdk",
   "version": "0.1.0",
   "description": "TypeScript SDK for interacting with the Truva Protocol — trust-gated AI agent payments on Solana",
   "main": "dist/index.js",
