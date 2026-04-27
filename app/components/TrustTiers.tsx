@@ -16,7 +16,7 @@ const tiers = [
     bg: "bg-slate-400/[0.03]",
     border: "border-slate-400/10",
     dot: "bg-slate-400",
-    req: "Score 50–79 · 30+ verified txns",
+    req: "Score 50–79 · 10+ txns, 80% success",
     perks: ["Standard payment flows", "Cross-agent messaging", "100 SOL tx limit"],
   },
   {
@@ -25,24 +25,33 @@ const tiers = [
     bg: "bg-[#14F195]/[0.02]",
     border: "border-[#14F195]/20",
     dot: "bg-[#14F195]",
+    req: "Score 80–94 · ZK proof + attestations",
+    perks: ["High-value DeFi interactions", "Agent-to-agent hiring", "Unlimited tx limit"],
+  },
+  {
+    emoji: "💎",
+    name: "Platinum",
+    bg: "bg-purple-500/[0.03]",
+    border: "border-purple-500/20",
+    dot: "bg-purple-400",
     popular: true,
-    req: "Score ≥ 80 + ZK proof completion",
-    perks: ["High-value DeFi interactions", "Agent-to-agent hiring", "1000 SOL tx limit"],
+    req: "Score 95–100 · 100+ txns, 95% success",
+    perks: ["Maximum trust level", "Priority gate processing", "Unlimited + governance"],
   },
 ];
 
 export function TrustTiers() {
   return (
     <section>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {tiers.map((tier) => (
           <div
             key={tier.name}
-            className={`card relative overflow-hidden p-6 text-center ${tier.bg} ${tier.popular ? "!border-[#14F195]/20 shadow-[0_0_40px_rgba(20,241,149,0.04)]" : ""}`}
+            className={`card relative overflow-hidden p-6 text-center ${tier.bg} ${tier.popular ? "!border-purple-500/30 shadow-[0_0_40px_rgba(168,85,247,0.04)]" : ""}`}
           >
             {tier.popular && (
-              <div className="absolute top-3 right-3 text-[12px] font-bold tracking-widest px-3 py-1 bg-[#14F195] text-black rounded-full">
-                PREMIUM
+              <div className="absolute top-3 right-3 text-[12px] font-bold tracking-widest px-3 py-1 bg-purple-500 text-white rounded-full">
+                ELITE
               </div>
             )}
             <div className="text-2xl mb-3 mt-1">{tier.emoji}</div>

@@ -4,11 +4,31 @@ import { MOCK_AGENTS } from "@/lib/mockData";
 import Link from "next/link";
 import { TrustBadge } from "./TrustBadge";
 
+function getWeekRange(): string {
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() - dayOfWeek);
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+  
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const startMonth = months[startOfWeek.getMonth()];
+  const endMonth = months[endOfWeek.getMonth()];
+  const year = endOfWeek.getFullYear();
+  
+  if (startMonth === endMonth) {
+    return `${startMonth}_${startOfWeek.getDate()}-${endOfWeek.getDate()}_${year}`;
+  }
+  return `${startMonth}_${startOfWeek.getDate()}-${endMonth}_${endOfWeek.getDate()}_${year}`;
+}
+
 export function TopAgents() {
   const topAgent = MOCK_AGENTS[0];
   const runners = MOCK_AGENTS.slice(1, 3);
 
   const tierColor: Record<string, string> = {
+    Platinum: "text-purple-400 bg-purple-400/10 border-purple-400/20",
     Gold: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20",
     Silver: "text-slate-300 bg-slate-400/10 border-slate-400/20",
     Bronze: "text-orange-400 bg-orange-500/10 border-orange-500/20",
@@ -23,7 +43,7 @@ export function TopAgents() {
             [HIGHEST_REPUTATION_NODE]
           </h2>
           <p className="text-[13px] font-mono text-zinc-500 tracking-widest uppercase">
-            SYS_TIME: Apr_6-12_2026
+            SYS_TIME: {getWeekRange()}
           </p>
         </div>
         <Link href="#" className="flex items-center gap-2 text-[13px] font-mono font-bold text-zinc-500 hover:text-[#14F195] transition-colors tracking-widest uppercase">

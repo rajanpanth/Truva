@@ -1,0 +1,85 @@
+name: Truva CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # TypeScript compilation checks
+  typecheck:
+    name: TypeScript Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install root dependencies
+        run: npm install
+
+      - name: Install reputation engine dependencies
+        run: cd backend/reputation-engine && npm install
+
+      - name: Install SDK dependencies
+        run: cd sdk && npm install
+
+      - name: Typecheck reputation engine
+        run: cd backend/reputation-engine && npx tsc --noEmit
+
+      - name: Typecheck SDK
+        run: cd sdk && npx tsc --noEmit
+
+  # Anchor program build
+  anchor-build:
+    name: Anchor Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install Solana CLI
+        run: |
+          sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+
+      - name: Install Anchor CLI
+        run: |
+          npm install -g @coral-xyz/anchor-cli@0.30.1
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Anchor program
+        run: anchor build
+
+  # Frontend build
+  frontend-build:
+    name: Frontend Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install frontend dependencies
+        run: cd app && npm install
+
+      - name: Build frontend
+        run: cd app && npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: "https://placeholder.supabase.co"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: "placeholder_key"

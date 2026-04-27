@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use crate::errors::TrustGateError;
+use crate::errors::TruvaError;
 use crate::state::passport::{AgentPassport, TrustTier, PassportInitialized};
 
 #[derive(Accounts)]
@@ -24,30 +24,26 @@ pub struct InitializePassport<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn handler(
-    ctx: Context<InitializePassport>,
-    trust_score: u8,
-) -> Result<()> {
-    require!(trust_score <= 100, TrustGateError::InvalidTrustScore);
-
+pub fn handler(ctx: Context<InitializePassport>) -> Result<()> {
     let timestamp = Clock::get()?.unix_timestamp;
-    let tier = TrustTier::from_score(trust_score);
 
     let passport = &mut ctx.accounts.passport;
-    passport.agent_pubkey = ctx.accounts.agent.key();
-    passport.trust_score = trust_score;
-    passport.trust_tier = tier;
-    passport.transaction_count = 0;
+    passport.agent = ctx.accounts.agent.key();
     passport.authority = ctx.accounts.authority.key();
-    passport.last_updated = timestamp;
-    passport.is_frozen = false;
+    passport.trust_score = 0;
+    passport.trust_tier = TrustTier::Bronze;
+    passport.tx_count = 0;
+    passport.success_count = 0;
+    passport.frozen = false;
+    passport.created_at = timestamp;
+    passport.updated_at = timestamp;
     passport.bump = ctx.bumps.passport;
 
     emit!(PassportInitialized {
         agent: ctx.accounts.agent.key(),
         authority: ctx.accounts.authority.key(),
-        trust_score,
-        trust_tier: tier as u8,
+        trust_score: 0,
+        trust_tier: TrustTier::Bronze as u8,
         timestamp,
     });
 

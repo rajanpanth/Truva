@@ -1,7 +1,7 @@
 {
-  "name": "@agent-passport/sdk",
+  "name": "@truva/sdk",
   "version": "0.1.0",
-  "description": "SDK for interacting with the Agent Passport TrustGate program on Solana",
+  "description": "SDK for interacting with the Truva Protocol TrustGate program on Solana",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {

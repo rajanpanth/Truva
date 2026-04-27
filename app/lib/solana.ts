@@ -14,6 +14,7 @@ export function getConnection(): Connection {
 
 /**
  * Derive the Passport PDA for a given agent pubkey
+ * Seeds: ["passport", agent_pubkey] — matches the Anchor program
  */
 export function getPassportPDA(agentPubkey: PublicKey): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
@@ -24,11 +25,13 @@ export function getPassportPDA(agentPubkey: PublicKey): [PublicKey, number] {
 
 /**
  * Trust tier enum mapping (matches the on-chain Rust enum)
+ * Bronze=0, Silver=1, Gold=2, Platinum=3
  */
 export const TrustTierMap = {
   Bronze: { bronze: {} },
   Silver: { silver: {} },
   Gold: { gold: {} },
+  Platinum: { platinum: {} },
 } as const;
 
 export type TrustTierKey = keyof typeof TrustTierMap;

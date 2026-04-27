@@ -6,7 +6,7 @@ import { TruvaStatCard, TruvaStatusPill, TruvaTerminal, TruvaProgressBar, TruvaB
 import { Shield, ShieldCheck, Zap, TrendingUp, Activity } from 'lucide-react';
 import type { Agent } from '@/backend/types/agent';
 
-const TIER_BADGE: Record<number, 'bronze' | 'silver' | 'gold'> = { 1: 'bronze', 2: 'silver', 3: 'gold' };
+const TIER_BADGE: Record<number, 'bronze' | 'silver' | 'gold' | 'platinum'> = { 0: 'bronze', 1: 'silver', 2: 'gold', 3: 'platinum' };
 
 function buildFallbackAgent(slug: string): Agent {
   const name = slug.replace(/-/g, '_').toUpperCase();
@@ -41,13 +41,24 @@ export default function AgentProfilePage() {
   const id = params?.id as string;
   const [agent, setAgent] = useState<Agent | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
     fetch(`/api/agents/${id}`)
       .then((r) => r.json())
-      .then((res) => setAgent(res.data ?? buildFallbackAgent(id)))
-      .catch(() => setAgent(buildFallbackAgent(id)))
+      .then((res) => {
+        if (res.data) {
+          setAgent(res.data);
+        } else {
+          setError('Agent not found');
+          setAgent(buildFallbackAgent(id));
+        }
+      })
+      .catch((err) => {
+        setError(err.message || 'Failed to load agent');
+        setAgent(buildFallbackAgent(id));
+      })
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -71,6 +82,11 @@ export default function AgentProfilePage() {
 
   return (
     <div>
+      {error && (
+        <div className="mb-4 px-4 py-3 border border-yellow-500/20 bg-yellow-500/5 rounded-[2px] flex items-center gap-3">
+          <span className="text-[13px] font-mono text-yellow-400 tracking-widest">⚠️ {error.toUpperCase()} — SHOWING_DEMO_DATA</span>
+        </div>
+      )}
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div className="flex items-center gap-4">

@@ -1,16 +1,20 @@
 {
-  "name": "agent-passport",
+  "name": "truva",
   "version": "0.1.0",
-  "description": "Solana-native programmable trust gate for AI agents",
+  "description": "Truva Protocol — Trust and reputation layer for AI agents on Solana",
   "private": true,
   "scripts": {
     "build:program": "anchor build",
     "test:program": "anchor test",
+    "test": "anchor test",
     "seed": "npx ts-node scripts/seedAgents.ts",
     "simulate": "npx ts-node scripts/simulateTransactions.ts",
     "dev:app": "cd app && npm run dev",
     "build:app": "cd app && npm run build",
-    "test": "anchor test"
+    "dev:backend": "cd backend/reputation-engine && npm run dev",
+    "build:backend": "cd backend/reputation-engine && npm run build",
+    "start:backend": "cd backend/reputation-engine && npm run start",
+    "db:migrate": "cd backend/reputation-engine && npm run db:migrate"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.30.1",
