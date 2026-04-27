@@ -100,7 +100,7 @@ async function getProgram(): Promise<anchor.Program> {
     }
 
     const programId = new PublicKey(TRUVA_PROGRAM_ID);
-    program = new anchor.Program(idl, programId, provider);
+    program = new (anchor.Program as any)(idl, programId, provider);
   }
   return program;
 }
@@ -121,7 +121,7 @@ export async function getOnChainTier(agentPubkey: string): Promise<string | null
   try {
     const prog = await getProgram();
     const [pda] = derivePassportPDA(agentPubkey);
-    const account = await prog.account.agentPassport.fetch(pda);
+    const account = await (prog.account as any).agentPassport.fetch(pda);
     const tierKey = Object.keys(account.trustTier as object)[0];
     const tierMap: Record<string, string> = {
       bronze: "Bronze",
