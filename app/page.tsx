@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { TruvaButton, TruvaStatusPill, TruvaProgressBar, TruvaPulsingDot, TruvaInput } from '@/components/ui/truva';
-import { Shield, CheckCircle } from 'lucide-react';
+import { Shield, CheckCircle, Zap } from 'lucide-react';
 
 /* ─── Animated bar chart ─── */
 function LiveBarChart() {
@@ -68,6 +68,45 @@ export default function LandingPage() {
   const [formName, setFormName] = useState('');
   const [formKey, setFormKey] = useState('');
   const [formCategory, setFormCategory] = useState('FINANCIAL_ARBITRAGE');
+
+  /* ─── Waitlist state ─── */
+  const [waitlistEmail, setWaitlistEmail] = useState('');
+  const [waitlistRole, setWaitlistRole] = useState('DEVELOPER');
+  const [waitlistStatus, setWaitlistStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [waitlistMsg, setWaitlistMsg] = useState('');
+  const [waitlistPosition, setWaitlistPosition] = useState<number | null>(null);
+  const [waitlistCount, setWaitlistCount] = useState(0);
+
+  useEffect(() => {
+    fetch('/api/waitlist').then(r => r.json()).then(d => {
+      if (d.success) setWaitlistCount(d.data.count);
+    }).catch(() => {});
+  }, []);
+
+  const handleWaitlistSubmit = async () => {
+    if (!waitlistEmail) return;
+    setWaitlistStatus('loading');
+    try {
+      const res = await fetch('/api/waitlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: waitlistEmail, role: waitlistRole }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setWaitlistStatus('success');
+        setWaitlistPosition(data.data.position);
+        setWaitlistCount(data.data.position);
+        setWaitlistMsg(`POSITION_ASSIGNED: #${String(data.data.position).padStart(4, '0')}`);
+      } else {
+        setWaitlistStatus('error');
+        setWaitlistMsg(data.error === 'Already on the waitlist' ? 'DUPLICATE_ENTRY_DETECTED' : data.error?.toUpperCase() || 'SUBMISSION_FAILED');
+      }
+    } catch {
+      setWaitlistStatus('error');
+      setWaitlistMsg('NETWORK_ERROR — RETRY_LATER');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[var(--bg-base)]">
@@ -267,6 +306,81 @@ export default function LandingPage() {
               </p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* EARLY ACCESS WAITLIST */}
+      <section className="px-4 sm:px-8 py-16 border-t border-[var(--border-default)]">
+        <div className="max-w-[680px] mx-auto text-center">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <Zap size={18} className="text-[var(--accent-green)]" />
+            <span className="text-[13px] uppercase tracking-[2px] text-[var(--accent-green)] font-bold">EARLY_ACCESS_PROTOCOL</span>
+          </div>
+          <h2 className="text-[28px] sm:text-[36px] font-extrabold leading-tight mb-3">
+            JOIN THE TRUST<br />INFRASTRUCTURE
+          </h2>
+          <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed mb-8 max-w-[440px] mx-auto">
+            Get early access to the Truva SDK and be among the first protocols to trust-gate AI agent payments on Solana.
+          </p>
+
+          {waitlistStatus === 'success' ? (
+            <div className="bg-[var(--bg-card)] border border-[var(--accent-green)] rounded-[2px] p-6 text-left">
+              <div className="flex items-center gap-2 mb-3">
+                <TruvaPulsingDot size={6} />
+                <span className="text-[13px] uppercase tracking-[2px] text-[var(--accent-green)] font-bold">ACCESS_QUEUED</span>
+              </div>
+              <div className="bg-[var(--bg-terminal)] border border-[var(--border-default)] rounded-[2px] p-4 font-mono text-[13px]">
+                <div className="text-[var(--text-muted)]">$ truva waitlist --status</div>
+                <div className="text-[var(--accent-green)] mt-1">{waitlistMsg}</div>
+                <div className="text-[var(--text-secondary)] mt-1">QUEUE_DEPTH: {waitlistCount} OPERATORS</div>
+                <div className="text-[var(--text-muted)] mt-1">ETA: MAINNET_LAUNCH_Q3_2026</div>
+                <span className="inline-block w-2 h-4 bg-[var(--accent-green)] animate-terminal-blink mt-1" />
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <input
+                  type="email"
+                  placeholder="OPERATOR_EMAIL@DOMAIN.COM"
+                  value={waitlistEmail}
+                  onChange={(e) => { setWaitlistEmail(e.target.value); setWaitlistStatus('idle'); }}
+                  onKeyDown={(e) => e.key === 'Enter' && handleWaitlistSubmit()}
+                  className="flex-1 bg-[var(--bg-input)] border border-[var(--border-default)] rounded-[2px] px-4 py-3 text-[13px] text-[var(--text-primary)] font-mono placeholder:text-[var(--text-dim)] focus:border-[var(--accent-green)] focus:outline-none"
+                />
+                <select
+                  value={waitlistRole}
+                  onChange={(e) => setWaitlistRole(e.target.value)}
+                  className="bg-[var(--bg-input)] border border-[var(--border-default)] rounded-[2px] px-3 py-3 text-[13px] text-[var(--text-primary)] font-mono focus:border-[var(--accent-green)] focus:outline-none appearance-none cursor-pointer sm:w-[200px]"
+                >
+                  <option>DEVELOPER</option>
+                  <option>PROTOCOL_TEAM</option>
+                  <option>AGENT_OPERATOR</option>
+                  <option>INVESTOR</option>
+                </select>
+              </div>
+              <TruvaButton
+                variant="primary"
+                className="w-full sm:w-auto px-10 py-3"
+                onClick={handleWaitlistSubmit}
+                disabled={waitlistStatus === 'loading'}
+              >
+                {waitlistStatus === 'loading' ? 'PROCESSING...' : 'REQUEST_EARLY_ACCESS'}
+              </TruvaButton>
+
+              {waitlistStatus === 'error' && (
+                <div className="text-[13px] uppercase tracking-[2px] text-[var(--red)]">
+                  ⚠ {waitlistMsg}
+                </div>
+              )}
+
+              {waitlistCount > 0 && (
+                <div className="text-[13px] uppercase tracking-[2px] text-[var(--text-muted)] mt-2">
+                  {waitlistCount} OPERATOR{waitlistCount !== 1 ? 'S' : ''} IN QUEUE
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </section>
 

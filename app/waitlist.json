@@ -1,0 +1,16 @@
+{
+  "entries": [
+    {
+      "email": "hackathon@truva.dev",
+      "role": "DEVELOPER",
+      "joinedAt": "2026-04-27T08:56:48.148Z"
+    },
+    {
+      "email": "rajan@truva.dev",
+      "name": "Rajan Panth",
+      "telegram": "@truvaprotocol",
+      "role": "EARLY_ACCESS",
+      "joinedAt": "2026-04-27T09:06:52.008Z"
+    }
+  ]
+}
