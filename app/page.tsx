@@ -147,8 +147,8 @@ export default function LandingPage() {
               Deterministic compliance and security infrastructure for autonomous financial operations. Validating every machine-to-machine transaction in real-time.
             </p>
             <div className="flex gap-3 mt-7">
-              <Link href="/registry"><TruvaButton variant="primary">INITIATE_PROTOCOL</TruvaButton></Link>
-              <Link href="/sdk-docs"><TruvaButton variant="outlined">VIEW_SPEC_V2.0</TruvaButton></Link>
+              <Link href="/waitlist"><TruvaButton variant="primary">GET_EARLY_ACCESS</TruvaButton></Link>
+              <Link href="/registry"><TruvaButton variant="outlined">INITIATE_PROTOCOL</TruvaButton></Link>
             </div>
           </div>
           <LiveBarChart />

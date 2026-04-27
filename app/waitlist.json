@@ -11,6 +11,20 @@
       "telegram": "@truvaprotocol",
       "role": "EARLY_ACCESS",
       "joinedAt": "2026-04-27T09:06:52.008Z"
+    },
+    {
+      "email": "pantharajan0@gmail.com",
+      "name": "Test",
+      "twitter": "@test",
+      "role": "EARLY_ACCESS",
+      "joinedAt": "2026-04-27T10:03:18.326Z"
+    },
+    {
+      "email": "pantharanjan2005@outlook.com",
+      "name": "Rajan",
+      "twitter": "rajanpantha",
+      "role": "EARLY_ACCESS",
+      "joinedAt": "2026-04-27T10:46:31.201Z"
     }
   ]
 }
