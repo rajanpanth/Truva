@@ -6,6 +6,7 @@ const tierStyles: Record<TrustTier, string> = {
   Bronze: "bg-orange-500/8 text-orange-400 border-orange-500/20",
   Silver: "bg-slate-400/8 text-slate-400 border-slate-400/20",
   Gold: "bg-yellow-400/8 text-yellow-400 border-yellow-400/20",
+  Platinum: "bg-purple-400/8 text-purple-400 border-purple-400/20",
 };
 
 export function TrustBadge({ tier }: { tier: TrustTier }) {
