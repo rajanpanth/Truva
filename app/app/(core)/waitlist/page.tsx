@@ -7,7 +7,7 @@ import { ArrowRight, ArrowLeft } from "lucide-react";
 export default function WaitlistPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [telegram, setTelegram] = useState("");
+  const [twitter, setTwitter] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [msg, setMsg] = useState("");
   const [position, setPosition] = useState<number | null>(null);
@@ -39,7 +39,7 @@ export default function WaitlistPage() {
       const res = await fetch("/api/waitlist", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, name, telegram, role: "EARLY_ACCESS" }),
+        body: JSON.stringify({ email, name, twitter, role: "EARLY_ACCESS" }),
       });
       const data = await res.json();
       if (data.success) {
@@ -186,7 +186,7 @@ export default function WaitlistPage() {
             <div className="mb-8">
               <div className="flex items-center justify-between mb-2">
                 <label className="text-[12px] font-bold tracking-[0.2em] text-zinc-400">
-                  TELEGRAM
+                  TWITTER / X
                 </label>
                 <span className="text-[11px] font-mono tracking-[0.15em] text-zinc-600">
                   OPTIONAL
@@ -194,9 +194,9 @@ export default function WaitlistPage() {
               </div>
               <input
                 type="text"
-                placeholder="@ username"
-                value={telegram}
-                onChange={(e) => setTelegram(e.target.value)}
+                placeholder="@ handle"
+                value={twitter}
+                onChange={(e) => setTwitter(e.target.value)}
                 className="w-full bg-[#0d0d0d] border border-white/[0.08] rounded-lg px-4 py-4 text-[14px] font-mono text-white placeholder-zinc-700 focus:outline-none focus:border-[#14F195]/40 transition-all"
               />
             </div>
