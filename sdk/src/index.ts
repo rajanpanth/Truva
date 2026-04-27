@@ -144,7 +144,7 @@ export class Truva {
 
       if (!idl) return null;
 
-      this.program = new Program(idl, TRUSTGATE_PROGRAM_ID, provider);
+      this.program = new (Program as any)(idl, TRUSTGATE_PROGRAM_ID, provider);
       return this.program;
     } catch {
       return null;
@@ -170,7 +170,7 @@ export class Truva {
     const program = await this.getProgram();
     if (program) {
       try {
-        const account = await program.account.agentPassport.fetch(pda);
+        const account = await (program.account as any).agentPassport.fetch(pda);
         const tierKey = Object.keys(account.trustTier as object)[0];
         const tierMap: Record<string, TrustTier> = {
           bronze: "Bronze",
