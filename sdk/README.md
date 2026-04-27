@@ -5,7 +5,7 @@ TypeScript SDK for the **Truva Protocol** — trust-gated AI agent payments on S
 ## Install
 
 ```bash
-npm install github:rajanpanth/Truva
+npm install @truva-protocol/sdk
 ```
 
 ## Quick Start
