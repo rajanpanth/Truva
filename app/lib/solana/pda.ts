@@ -1,42 +1,29 @@
 import { PublicKey } from '@solana/web3.js';
 import { Buffer } from 'buffer';
+import { TRUSTGATE_PROGRAM_ID } from '@/lib/solana';
 
-// Use a valid base58 public key for the "program ID" placeholder
-// This is a deterministic keypair derived from the seed "truva" — not a real deployed program
-const TRUVA_PROGRAM_ID_STR = '11111111111111111111111111111112';
-
-let _programId: PublicKey | null = null;
-function getProgramId(): PublicKey {
-  if (!_programId) {
-    _programId = new PublicKey(TRUVA_PROGRAM_ID_STR);
-  }
-  return _programId;
-}
-
-export function deriveAgentPDA(agentPublicKey: string, seed: string): string {
+/**
+ * Derive the Passport PDA for a given agent pubkey.
+ * Uses the SAME seeds as the Anchor program: ["passport", agent_pubkey]
+ */
+export function deriveAgentPDA(agentPublicKey: string): string {
   try {
     const agentKey = new PublicKey(agentPublicKey);
     const [pda] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from('truva_agent'),
-        agentKey.toBuffer(),
-        Buffer.from(seed),
-      ],
-      getProgramId()
+      [Buffer.from('passport'), agentKey.toBuffer()],
+      TRUSTGATE_PROGRAM_ID
     );
     return pda.toBase58();
   } catch {
-    const hash = Array.from(
-      new Uint8Array(
-        Buffer.from(`truva_pda_${agentPublicKey}_${seed}`)
-      )
-    )
-      .map((b) => b.toString(16).padStart(2, '0'))
-      .join('');
-    return `PDA_${hash.slice(0, 40)}`;
+    // Fallback for invalid pubkeys (e.g., during form input)
+    return `PDA_PENDING_${agentPublicKey.slice(0, 16)}`;
   }
 }
 
+/**
+ * Generate a simulated PDA address for demo/development use.
+ * In production, always use deriveAgentPDA() instead.
+ */
 export function generateSimulatedPDA(agentName: string): string {
   const timestamp = Date.now().toString(36);
   const random = Math.random().toString(36).substring(2, 10);

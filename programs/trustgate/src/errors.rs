@@ -1,25 +1,22 @@
 use anchor_lang::prelude::*;
 
 #[error_code]
-pub enum TrustGateError {
-    #[msg("Agent is not authorized to perform this action")]
-    UnauthorizedAgent,
-
-    #[msg("Agent's trust tier is insufficient for this operation")]
-    InsufficientTrust,
-
-    #[msg("Trust score must be between 0 and 100")]
-    InvalidTrustScore,
-
-    #[msg("Insufficient funds for this payment")]
-    InsufficientFunds,
-
-    #[msg("Payment amount exceeds the maximum allowed for this trust tier")]
-    AmountExceedsTierLimit,
-
-    #[msg("Passport is frozen and cannot be modified")]
+pub enum TruvaError {
+    #[msg("Agent passport is frozen")]
     PassportFrozen,
 
-    #[msg("Only the passport authority can close this passport")]
-    UnauthorizedClose,
+    #[msg("Insufficient trust tier for this operation")]
+    InsufficientTrustTier,
+
+    #[msg("Payment amount exceeds tier limit")]
+    ExceedsTierLimit,
+
+    #[msg("Unauthorized: caller is not the authority")]
+    Unauthorized,
+
+    #[msg("Invalid trust score: must be between 0 and 100")]
+    InvalidTrustScore,
+
+    #[msg("Arithmetic overflow")]
+    ArithmeticOverflow,
 }

@@ -1,10 +1,10 @@
 use anchor_lang::prelude::*;
 use anchor_lang::system_program;
-use crate::errors::TrustGateError;
+use crate::errors::TruvaError;
 use crate::state::passport::{AgentPassport, TrustTier, PaymentProcessed};
 
 #[derive(Accounts)]
-pub struct ProcessPayment<'info> {
+pub struct ProcessPaymentSol<'info> {
     #[account(
         mut,
         seeds = [b"passport", agent.key().as_ref()],
@@ -25,32 +25,33 @@ pub struct ProcessPayment<'info> {
 }
 
 pub fn handler(
-    ctx: Context<ProcessPayment>,
+    ctx: Context<ProcessPaymentSol>,
     required_tier: TrustTier,
     amount: u64,
 ) -> Result<()> {
     let passport = &mut ctx.accounts.passport;
 
     // Block frozen passports
-    require!(!passport.is_frozen, TrustGateError::PassportFrozen);
+    require!(!passport.frozen, TruvaError::PassportFrozen);
 
     // Trust tier gate: check if agent's tier meets the requirement
     require!(
         passport.trust_tier >= required_tier,
-        TrustGateError::InsufficientTrust
+        TruvaError::InsufficientTrustTier
     );
 
     // Enforce tier-based amount limits (in lamports)
-    // Bronze: 5 SOL, Silver: 100 SOL, Gold: 1000 SOL
+    // Bronze: 5 SOL, Silver: 100 SOL, Gold+Platinum: unlimited
     let max_amount: u64 = match passport.trust_tier {
-        TrustTier::Bronze => 5_000_000_000,      // 5 SOL
-        TrustTier::Silver => 100_000_000_000,     // 100 SOL
-        TrustTier::Gold => 1_000_000_000_000,     // 1000 SOL
+        TrustTier::Bronze => 5_000_000_000,       // 5 SOL
+        TrustTier::Silver => 100_000_000_000,      // 100 SOL
+        TrustTier::Gold => u64::MAX,               // unlimited
+        TrustTier::Platinum => u64::MAX,            // unlimited
     };
 
     require!(
         amount <= max_amount,
-        TrustGateError::AmountExceedsTierLimit
+        TruvaError::ExceedsTierLimit
     );
 
     // Execute SOL transfer
@@ -63,17 +64,18 @@ pub fn handler(
     );
     system_program::transfer(transfer_ctx, amount)?;
 
-    // Increment transaction count
+    // Update transaction counts
     let timestamp = Clock::get()?.unix_timestamp;
-    passport.transaction_count = passport.transaction_count.saturating_add(1);
-    passport.last_updated = timestamp;
+    passport.tx_count = passport.tx_count.checked_add(1).ok_or(TruvaError::ArithmeticOverflow)?;
+    passport.success_count = passport.success_count.checked_add(1).ok_or(TruvaError::ArithmeticOverflow)?;
+    passport.updated_at = timestamp;
 
     emit!(PaymentProcessed {
         agent: ctx.accounts.agent.key(),
         recipient: ctx.accounts.recipient.key(),
         amount,
         trust_tier: passport.trust_tier as u8,
-        transaction_count: passport.transaction_count,
+        tx_count: passport.tx_count,
         timestamp,
     });
 

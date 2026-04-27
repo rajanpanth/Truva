@@ -5,6 +5,7 @@ pub enum TrustTier {
     Bronze = 0,
     Silver = 1,
     Gold = 2,
+    Platinum = 3,
 }
 
 impl TrustTier {
@@ -12,7 +13,8 @@ impl TrustTier {
         match score {
             0..=49 => TrustTier::Bronze,
             50..=79 => TrustTier::Silver,
-            80..=100 => TrustTier::Gold,
+            80..=94 => TrustTier::Gold,
+            95..=100 => TrustTier::Platinum,
             _ => TrustTier::Bronze,
         }
     }
@@ -22,6 +24,7 @@ impl TrustTier {
             TrustTier::Bronze => "Bronze",
             TrustTier::Silver => "Silver",
             TrustTier::Gold => "Gold",
+            TrustTier::Platinum => "Platinum",
         }
     }
 }
@@ -29,33 +32,39 @@ impl TrustTier {
 #[account]
 pub struct AgentPassport {
     /// The public key of the agent this passport belongs to
-    pub agent_pubkey: Pubkey,
-    /// Trust score from 0 to 100
-    pub trust_score: u8,
-    /// Computed trust tier based on score
-    pub trust_tier: TrustTier,
-    /// Number of successful transactions
-    pub transaction_count: u32,
+    pub agent: Pubkey,           // 32 bytes
     /// Authority that can update this passport
-    pub authority: Pubkey,
-    /// Timestamp of last update
-    pub last_updated: i64,
+    pub authority: Pubkey,       // 32 bytes
+    /// Trust score from 0 to 100
+    pub trust_score: u8,         // 1 byte
+    /// Computed trust tier based on score
+    pub trust_tier: TrustTier,   // 1 byte
+    /// Total number of transactions
+    pub tx_count: u64,           // 8 bytes
+    /// Number of successful transactions
+    pub success_count: u64,      // 8 bytes
     /// Whether this passport is frozen (blocked from transactions)
-    pub is_frozen: bool,
+    pub frozen: bool,            // 1 byte
+    /// Timestamp when passport was created
+    pub created_at: i64,         // 8 bytes
+    /// Timestamp of last update
+    pub updated_at: i64,         // 8 bytes
     /// Bump seed for the PDA
-    pub bump: u8,
+    pub bump: u8,                // 1 byte
 }
 
 impl AgentPassport {
-    pub const LEN: usize = 8  // discriminator
-        + 32  // agent_pubkey
-        + 1   // trust_score
-        + 1   // trust_tier (enum)
-        + 4   // transaction_count
-        + 32  // authority
-        + 8   // last_updated
-        + 1   // is_frozen
-        + 1;  // bump
+    pub const LEN: usize = 8    // discriminator
+        + 32   // agent
+        + 32   // authority
+        + 1    // trust_score
+        + 1    // trust_tier (enum)
+        + 8    // tx_count
+        + 8    // success_count
+        + 1    // frozen
+        + 8    // created_at
+        + 8    // updated_at
+        + 1;   // bump
 }
 
 // ── Events ──
@@ -70,7 +79,7 @@ pub struct PassportInitialized {
 }
 
 #[event]
-pub struct TrustUpdated {
+pub struct TrustTierUpdated {
     pub agent: Pubkey,
     pub old_score: u8,
     pub new_score: u8,
@@ -85,7 +94,7 @@ pub struct PaymentProcessed {
     pub recipient: Pubkey,
     pub amount: u64,
     pub trust_tier: u8,
-    pub transaction_count: u32,
+    pub tx_count: u64,
     pub timestamp: i64,
 }
 

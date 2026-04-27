@@ -1,4 +1,4 @@
-export type TrustTier = "Bronze" | "Silver" | "Gold";
+export type TrustTier = "Bronze" | "Silver" | "Gold" | "Platinum";
 
 export interface Agent {
   pubkey: string;
@@ -18,8 +18,8 @@ export const MOCK_AGENTS: Agent[] = [
     name: "TradeBot X",
     description: "Autonomous DeFi arbitrage engine with cross-protocol MEV",
     category: "DEFI",
-    tier: "Gold",
-    trustScore: 92,
+    tier: "Platinum",
+    trustScore: 97,
     transactionCount: 247,
     successRate: 0.998,
     builder: "SolanaLabs",
@@ -29,10 +29,10 @@ export const MOCK_AGENTS: Agent[] = [
     name: "Liquid Flow",
     description: "Cross-pool liquidity management for concentrated positions",
     category: "DEFI",
-    tier: "Gold",
-    trustScore: 85,
+    tier: "Platinum",
+    trustScore: 95,
     transactionCount: 142,
-    successRate: 0.942,
+    successRate: 0.962,
     builder: "Orca Team",
   },
   {
@@ -40,10 +40,10 @@ export const MOCK_AGENTS: Agent[] = [
     name: "Oracle Eye",
     description: "Real-time price feed aggregation across 40+ sources",
     category: "ORACLE",
-    tier: "Silver",
-    trustScore: 68,
+    tier: "Gold",
+    trustScore: 88,
     transactionCount: 89,
-    successRate: 0.885,
+    successRate: 0.935,
     builder: "Pyth Network",
   },
   {
