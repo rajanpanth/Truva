@@ -132,6 +132,7 @@ desktop.ini
 # ===========================
 scripts/seeded-agents.json
 public/assets/generated/
+graphify-out/
 
 # ===========================
 # Miscellaneous
