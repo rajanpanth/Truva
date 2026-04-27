@@ -2,13 +2,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 
 // ── Config ──
-const WAITLIST_FILE = path.join(process.cwd(), 'waitlist.json');
+const IS_VERCEL = !!process.env.VERCEL;
+const WAITLIST_FILE = IS_VERCEL
+  ? path.join(os.tmpdir(), 'truva-waitlist.json')
+  : path.join(process.cwd(), 'waitlist.json');
+
 const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
-const NOTIFY_EMAIL = process.env.NOTIFY_EMAIL || ''; // Your personal email
+const NOTIFY_EMAIL = process.env.NOTIFY_EMAIL || '';
 
 const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
+
+// In-memory fallback for serverless (persists within warm instances)
+let memoryWaitlist: WaitlistEntry[] = [];
 
 // ── Waitlist Storage ──
 
@@ -23,14 +31,22 @@ interface WaitlistEntry {
 function readWaitlist(): { entries: WaitlistEntry[] } {
   try {
     const data = fs.readFileSync(WAITLIST_FILE, 'utf-8');
-    return JSON.parse(data);
+    const parsed = JSON.parse(data);
+    memoryWaitlist = parsed.entries || [];
+    return parsed;
   } catch {
-    return { entries: [] };
+    return { entries: [...memoryWaitlist] };
   }
 }
 
 function writeWaitlist(data: { entries: WaitlistEntry[] }) {
-  fs.writeFileSync(WAITLIST_FILE, JSON.stringify(data, null, 2));
+  memoryWaitlist = data.entries;
+  try {
+    fs.writeFileSync(WAITLIST_FILE, JSON.stringify(data, null, 2));
+  } catch {
+    // Silently fail on read-only filesystems — data is in memory + emails go out
+    console.log('⚠️  Filesystem write failed — using in-memory store');
+  }
 }
 
 // ── Email Templates ──
