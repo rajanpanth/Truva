@@ -1,9 +1,9 @@
 import { Connection, PublicKey, clusterApiUrl } from "@solana/web3.js";
 import { Program, AnchorProvider, Idl } from "@coral-xyz/anchor";
 
-// Program ID - update after `anchor build`
+// Program ID - deployed to devnet
 export const TRUSTGATE_PROGRAM_ID = new PublicKey(
-  "TRSTgateXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+  "BTgy2r8R85Jknq3JetNiVt1x9grdccm7pTV2LyUmDzG5"
 );
 
 export const SOLANA_CLUSTER = "devnet";

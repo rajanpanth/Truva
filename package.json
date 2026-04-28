@@ -14,7 +14,8 @@
     "dev:backend": "cd backend/reputation-engine && npm run dev",
     "build:backend": "cd backend/reputation-engine && npm run build",
     "start:backend": "cd backend/reputation-engine && npm run start",
-    "db:migrate": "cd backend/reputation-engine && npm run db:migrate"
+    "db:migrate": "cd backend/reputation-engine && npm run db:migrate",
+    "db:migrate:status": "cd backend/reputation-engine && npm run db:migrate:status"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.30.1",

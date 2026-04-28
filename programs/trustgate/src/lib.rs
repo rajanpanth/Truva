@@ -6,7 +6,7 @@ pub mod state;
 
 use instructions::*;
 
-declare_id!("TRSTgateXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+declare_id!("BTgy2r8R85Jknq3JetNiVt1x9grdccm7pTV2LyUmDzG5");
 
 #[program]
 pub mod trustgate {

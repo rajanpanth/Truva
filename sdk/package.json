@@ -1,12 +1,14 @@
 {
-  "name": "@truva-protocol/sdk",
+  "name": "@truva/sdk",
   "version": "0.1.0",
   "description": "TypeScript SDK for interacting with the Truva Protocol — trust-gated AI agent payments on Solana",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "keywords": [
     "solana",
@@ -27,11 +29,14 @@
   },
   "homepage": "https://truva-x.tech",
   "dependencies": {
-    "@coral-xyz/anchor": "^0.30.1",
+    "@anchor-lang/core": "^1.0.0",
     "@solana/web3.js": "^1.95.3"
   },
   "devDependencies": {
-    "typescript": "^5.6.2"
+    "typescript": "^5.6.2",
+    "vitest": "^1.6.0",
+    "@vitest/coverage-v8": "^1.6.0",
+    "@types/node": "^20.0.0"
   },
   "files": [
     "dist",

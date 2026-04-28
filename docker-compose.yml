@@ -48,7 +48,7 @@ services:
       DATABASE_URL: postgresql://truva:truva_dev_password@postgres:5432/truva
       REDIS_URL: redis://redis:6379
       SOLANA_RPC_URL: https://api.devnet.solana.com
-      TRUVA_PROGRAM_ID: TRSTgateXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+      TRUVA_PROGRAM_ID: BTgy2r8R85Jknq3JetNiVt1x9grdccm7pTV2LyUmDzG5
     ports:
       - "3001:3001"
     volumes:
