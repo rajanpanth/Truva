@@ -25,6 +25,7 @@
   "scripts": {
     "build": "tsup",
     "build:types": "tsc --emitDeclarationOnly",
+    "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run build",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -49,20 +50,27 @@
     "directory": "sdk"
   },
   "homepage": "https://truva-x.tech",
-  "dependencies": {
+  "dependencies": {},
+  "peerDependencies": {
     "@anchor-lang/core": "^1.0.0",
     "@solana/web3.js": "^1.95.3"
+  },
+  "peerDependenciesMeta": {
+    "@anchor-lang/core": { "optional": true }
   },
   "devDependencies": {
     "typescript": "^5.6.2",
     "tsup": "^8.0.0",
     "vitest": "^1.6.0",
     "@vitest/coverage-v8": "^1.6.0",
-    "@types/node": "^20.0.0"
+    "@types/node": "^20.0.0",
+    "@anchor-lang/core": "^1.0.0",
+    "@solana/web3.js": "^1.95.3"
   },
   "files": [
     "dist",
     "README.md",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "LICENSE"
   ]
 }
