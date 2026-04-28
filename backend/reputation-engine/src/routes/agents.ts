@@ -11,7 +11,7 @@ import { query } from "../db/client";
 import { recalculateScore } from "../services/scorer";
 import { backfillAgent } from "../services/backfill";
 import { getCachedScore } from "../cache/redis";
-import { requireApiKey, writeLimiter } from "../index";
+import { requireApiKey, writeLimiter } from "../middleware";
 
 const router = Router();
 
