@@ -19,8 +19,8 @@ export { AgentWallet, wrapWithTrustGate } from "./agent";
 // PDA utilities
 export { TRUSTGATE_PROGRAM_ID, derivePassportPDA } from "./pda";
 
-// Error
-export { TruvaError } from "./errors";
+// Errors
+export { TruvaError, InsufficientTierError, AgentFrozenError } from "./errors";
 
 // Types
 export type {
@@ -35,3 +35,11 @@ export { TIER_RANK, TIER_LIMITS_LAMPORTS } from "./types";
 // ── Backward-compatibility alias ──────────────────────────────────────────────
 // `Truva` was the original class name. Prefer `TruvaClient` in new code.
 export { TruvaClient as Truva } from "./client";
+
+// ── Framework integrations ────────────────────────────────────────────────────
+// Imported separately to avoid bundling framework deps in the core bundle.
+// Usage: import { truvaPlugin }    from "@truva/sdk/eliza";
+//        import { createTruvaTool } from "@truva/sdk/langchain";
+export { truvaPlugin } from "./eliza";
+export { createTruvaTool } from "./langchain";
+export type { TruvaToolInput, TruvaToolResult, LangChainToolLike } from "./langchain";
