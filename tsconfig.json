@@ -1,28 +1,13 @@
 {
   "compilerOptions": {
-    "types": [
-      "mocha",
-      "chai"
-    ],
-    "typeRoots": [
-      "./node_modules/@types"
-    ],
-    "lib": [
-      "es2015"
-    ],
-    "module": "commonjs",
-    "target": "es6",
+    "lib": ["es2020"],
+    "module": "node16",
+    "target": "es2020",
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "moduleResolution": "node",
+    "moduleResolution": "node16",
     "sourceMap": true,
     "outDir": "./dist",
-    "baseUrl": ".",
-    "paths": {
-      "@/*": [
-        "./*"
-      ]
-    },
     "strict": true,
     "skipLibCheck": true,
     "allowJs": true,
@@ -37,14 +22,14 @@
     ]
   },
   "include": [
-    "tests/**/*.ts",
     "scripts/**/*.ts",
-    "sdk/**/*.ts",
-    "backend/**/*.ts",
     ".next/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
-    "app"
+    "app",
+    "sdk",
+    "backend",
+    "tests"
   ]
 }
