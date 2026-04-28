@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { ArrowRight, ArrowLeft } from "lucide-react";
+import { ArrowRight, ArrowLeft, Check, Zap, Users, Lock } from "lucide-react";
+import "./waitlist.css";
 
 export default function WaitlistPage() {
   const [name, setName] = useState("");
@@ -12,6 +13,8 @@ export default function WaitlistPage() {
   const [msg, setMsg] = useState("");
   const [position, setPosition] = useState<number | null>(null);
   const [count, setCount] = useState(0);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     fetch("/api/waitlist")
@@ -22,15 +25,68 @@ export default function WaitlistPage() {
       .catch(() => {});
   }, []);
 
+  /* ── Particle canvas ── */
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let animId: number;
+    const particles: { x: number; y: number; vx: number; vy: number; size: number; opacity: number; }[] = [];
+
+    const resize = () => {
+      canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+      canvas.height = canvas.offsetHeight * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    for (let i = 0; i < 50; i++) {
+      particles.push({
+        x: Math.random() * canvas.offsetWidth,
+        y: Math.random() * canvas.offsetHeight,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
+        size: Math.random() * 2 + 0.5,
+        opacity: Math.random() * 0.5 + 0.1,
+      });
+    }
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
+      particles.forEach((p) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0) p.x = canvas.offsetWidth;
+        if (p.x > canvas.offsetWidth) p.x = 0;
+        if (p.y < 0) p.y = canvas.offsetHeight;
+        if (p.y > canvas.offsetHeight) p.y = 0;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(20, 241, 149, ${p.opacity})`;
+        ctx.fill();
+      });
+      animId = requestAnimationFrame(animate);
+    };
+    animate();
+
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener("resize", resize);
+    };
+  }, []);
+
   const handleSubmit = async () => {
     if (!email) {
       setStatus("error");
-      setMsg("EMAIL_REQUIRED");
+      setMsg("Please enter your email address");
       return;
     }
     if (!name) {
       setStatus("error");
-      setMsg("NAME_REQUIRED");
+      setMsg("Please enter your name");
       return;
     }
 
@@ -50,200 +106,235 @@ export default function WaitlistPage() {
         setStatus("error");
         setMsg(
           data.error === "Already on the waitlist"
-            ? "ALREADY_REGISTERED"
-            : data.error?.toUpperCase() || "SUBMISSION_FAILED"
+            ? "You're already on the waitlist!"
+            : data.error || "Something went wrong. Please try again."
         );
       }
     } catch {
       setStatus("error");
-      setMsg("NETWORK_ERROR");
+      setMsg("Network error — please try again later");
     }
   };
 
-  return (
-    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4 py-12 relative overflow-hidden">
-      {/* Subtle gradient glow */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[#14F195]/[0.03] blur-[120px] rounded-full" />
-        <div className="absolute bottom-0 left-1/4 w-[400px] h-[200px] bg-[#14F195]/[0.02] blur-[100px] rounded-full" />
-      </div>
+  const isValidEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-      <div className="w-full max-w-[520px] relative z-10">
-        {/* Header bar */}
-        <div className="flex items-center justify-between mb-10">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-[#14F195] rounded-full animate-pulse" />
-            <span className="text-[12px] font-bold tracking-[0.2em] text-[#14F195]">
-              EARLY ACCESS
-            </span>
+  return (
+    <div className="waitlist-page">
+      {/* Background canvas */}
+      <canvas ref={canvasRef} className="waitlist-canvas" />
+
+      {/* Gradient orbs */}
+      <div className="waitlist-orb waitlist-orb-1" />
+      <div className="waitlist-orb waitlist-orb-2" />
+      <div className="waitlist-orb waitlist-orb-3" />
+
+      {/* Grid overlay */}
+      <div className="waitlist-grid-overlay" />
+
+      <div className="waitlist-container">
+        {/* Left: Visual hero */}
+        <div className="waitlist-hero">
+          <div className="waitlist-hero-content">
+            {/* Orbital rings */}
+            <div className="waitlist-orbital">
+              <div className="waitlist-ring waitlist-ring-1" />
+              <div className="waitlist-ring waitlist-ring-2" />
+              <div className="waitlist-ring waitlist-ring-3" />
+              <div className="waitlist-core">
+                <img src="/mainlogo.png" alt="Truva" className="waitlist-core-logo" />
+              </div>
+              {/* Orbiting dots */}
+              <div className="waitlist-orbit-dot waitlist-orbit-dot-1" />
+              <div className="waitlist-orbit-dot waitlist-orbit-dot-2" />
+              <div className="waitlist-orbit-dot waitlist-orbit-dot-3" />
+            </div>
+
+            <h1 className="waitlist-hero-title">
+              The Trust Layer
+              <br />
+              <span className="waitlist-hero-accent">for AI Agents</span>
+            </h1>
+            <p className="waitlist-hero-desc">
+              On-chain verification, reputation scoring, and programmable trust gates — built natively on Solana.
+            </p>
+
+            {/* Stats row */}
+            <div className="waitlist-stats">
+              <div className="waitlist-stat">
+                <Zap size={14} />
+                <span>Sub-second verification</span>
+              </div>
+              <div className="waitlist-stat">
+                <Lock size={14} />
+                <span>On-chain trust scores</span>
+              </div>
+              <div className="waitlist-stat">
+                <Users size={14} />
+                <span>{count > 0 ? `${count} in queue` : "Join early"}</span>
+              </div>
+            </div>
           </div>
-          <span className="text-[12px] font-mono tracking-[0.15em] text-zinc-600">
-            TRUVA / V1
-          </span>
         </div>
 
-        {status === "success" ? (
-          /* ── Success State ── */
-          <div>
-            <h1 className="text-[42px] md:text-[56px] font-black text-white leading-[1.05] tracking-tight mb-1">
-              YOU&apos;RE IN
-            </h1>
-            <h2 className="text-[42px] md:text-[56px] font-black leading-[1.05] tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-[#14F195] to-[#0FBE76] mb-4">
-              THE QUEUE
-            </h2>
-            <p className="text-[13px] font-mono tracking-[0.15em] text-zinc-500 mb-10">
-              POSITION #{String(position).padStart(4, "0")} OF {count}
-            </p>
-
-            <div className="bg-[#0d0d0d] border border-white/[0.06] rounded-lg p-5 font-mono text-[13px] mb-8">
-              <div className="text-zinc-600">$ truva waitlist --status</div>
-              <div className="text-[#14F195] mt-2">
-                ✓ REGISTRATION_CONFIRMED
+        {/* Right: Form card */}
+        <div className="waitlist-form-wrapper">
+          <div className="waitlist-card">
+            {/* Card header */}
+            <div className="waitlist-card-header">
+              <div className="waitlist-card-badge">
+                <div className="waitlist-pulse-dot" />
+                Early Access
               </div>
-              <div className="text-zinc-400 mt-1">
-                QUEUE_POSITION: #{String(position).padStart(4, "0")}
-              </div>
-              <div className="text-zinc-400 mt-1">
-                TOTAL_OPERATORS: {count}
-              </div>
-              <div className="text-zinc-600 mt-1">
-                ETA: MAINNET_LAUNCH_Q3_2026
-              </div>
-              <span className="inline-block w-2 h-4 bg-[#14F195] animate-pulse mt-2" />
+              <span className="waitlist-card-version">v1.0</span>
             </div>
 
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 text-[13px] font-mono tracking-[0.15em] text-zinc-500 hover:text-[#14F195] transition-colors"
-            >
-              <ArrowLeft size={14} />
-              BACK_TO_PROTOCOL
-            </Link>
-          </div>
-        ) : (
-          /* ── Form ── */
-          <div>
-            <h1 className="text-[42px] md:text-[56px] font-black text-white leading-[1.05] tracking-tight mb-1">
-              JOIN THE
-            </h1>
-            <h2 className="text-[42px] md:text-[56px] font-black leading-[1.05] tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-[#14F195] to-[#0FBE76] mb-4">
-              WAITLIST
-            </h2>
-            <p className="text-[13px] font-mono tracking-[0.15em] text-zinc-500 mb-10">
-              BE FIRST TO BUILD ON TRUVA
-            </p>
+            {status === "success" ? (
+              /* ── Success State ── */
+              <div className="waitlist-success">
+                <div className="waitlist-success-icon">
+                  <div className="waitlist-success-ring" />
+                  <Check size={32} strokeWidth={2.5} />
+                </div>
+                <h2 className="waitlist-success-title">You&apos;re on the list!</h2>
+                <p className="waitlist-success-position">
+                  Position <span>#{String(position).padStart(4, "0")}</span>
+                </p>
+                <div className="waitlist-success-details">
+                  <div className="waitlist-success-row">
+                    <span>Queue position</span>
+                    <span>#{String(position).padStart(4, "0")}</span>
+                  </div>
+                  <div className="waitlist-success-row">
+                    <span>Total signups</span>
+                    <span>{count}</span>
+                  </div>
+                  <div className="waitlist-success-row">
+                    <span>Expected launch</span>
+                    <span>Q3 2026</span>
+                  </div>
+                </div>
+                <p className="waitlist-success-note">
+                  We&apos;ll reach out when your spot is ready. Follow us on X for updates.
+                </p>
+                <Link href="/" className="waitlist-back-link">
+                  <ArrowLeft size={14} />
+                  Back to home
+                </Link>
+              </div>
+            ) : (
+              /* ── Form ── */
+              <div className="waitlist-form">
+                <h2 className="waitlist-form-title">Request early access</h2>
+                <p className="waitlist-form-subtitle">
+                  Be among the first developers to build on Truva Protocol.
+                </p>
 
-            {/* Name */}
-            <div className="mb-6">
-              <label className="block text-[12px] font-bold tracking-[0.2em] text-zinc-400 mb-2">
-                NAME
-              </label>
-              <input
-                type="text"
-                placeholder="your name"
-                value={name}
-                onChange={(e) => {
-                  setName(e.target.value);
-                  if (status === "error") setStatus("idle");
-                }}
-                className="w-full bg-[#0d0d0d] border border-white/[0.08] rounded-lg px-4 py-4 text-[14px] font-mono text-white placeholder-zinc-700 focus:outline-none focus:border-[#14F195]/40 transition-all"
-              />
-            </div>
+                {/* Name */}
+                <div className={`waitlist-field ${focusedField === "name" ? "focused" : ""}`}>
+                  <label htmlFor="waitlist-name">Name</label>
+                  <input
+                    id="waitlist-name"
+                    type="text"
+                    placeholder="Your name"
+                    value={name}
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      if (status === "error") setStatus("idle");
+                    }}
+                    onFocus={() => setFocusedField("name")}
+                    onBlur={() => setFocusedField(null)}
+                  />
+                </div>
 
-            {/* Email */}
-            <div className="mb-6">
-              <label className="block text-[12px] font-bold tracking-[0.2em] text-zinc-400 mb-2">
-                EMAIL
-              </label>
-              <div className="relative">
-                <input
-                  type="email"
-                  placeholder="you@domain.com"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    if (status === "error") setStatus("idle");
-                  }}
-                  className="w-full bg-[#0d0d0d] border border-white/[0.08] rounded-lg px-4 py-4 text-[14px] font-mono text-white placeholder-zinc-700 focus:outline-none focus:border-[#14F195]/40 transition-all pr-10"
-                />
-                {email && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    {/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? (
-                      <div className="w-5 h-5 rounded-full bg-[#14F195]/20 flex items-center justify-center">
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#14F195" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                      </div>
-                    ) : (
-                      <div className="w-5 h-5 rounded-full bg-red-500/20 flex items-center justify-center">
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>
+                {/* Email */}
+                <div className={`waitlist-field ${focusedField === "email" ? "focused" : ""}`}>
+                  <label htmlFor="waitlist-email">Email</label>
+                  <div className="waitlist-field-input-wrap">
+                    <input
+                      id="waitlist-email"
+                      type="email"
+                      placeholder="you@example.com"
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (status === "error") setStatus("idle");
+                      }}
+                      onFocus={() => setFocusedField("email")}
+                      onBlur={() => setFocusedField(null)}
+                      onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+                    />
+                    {email && (
+                      <div className={`waitlist-email-indicator ${isValidEmail ? "valid" : "invalid"}`}>
+                        {isValidEmail ? (
+                          <Check size={12} strokeWidth={3} />
+                        ) : (
+                          <span>×</span>
+                        )}
                       </div>
                     )}
                   </div>
+                </div>
+
+                {/* Twitter */}
+                <div className={`waitlist-field ${focusedField === "twitter" ? "focused" : ""}`}>
+                  <div className="waitlist-field-label-row">
+                    <label htmlFor="waitlist-twitter">Twitter / X</label>
+                    <span className="waitlist-optional">Optional</span>
+                  </div>
+                  <input
+                    id="waitlist-twitter"
+                    type="text"
+                    placeholder="@handle"
+                    value={twitter}
+                    onChange={(e) => setTwitter(e.target.value)}
+                    onFocus={() => setFocusedField("twitter")}
+                    onBlur={() => setFocusedField(null)}
+                  />
+                </div>
+
+                {/* Error */}
+                {status === "error" && (
+                  <div className="waitlist-error">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    {msg}
+                  </div>
                 )}
-              </div>
-            </div>
 
-            {/* Telegram */}
-            <div className="mb-8">
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-[12px] font-bold tracking-[0.2em] text-zinc-400">
-                  TWITTER / X
-                </label>
-                <span className="text-[11px] font-mono tracking-[0.15em] text-zinc-600">
-                  OPTIONAL
-                </span>
-              </div>
-              <input
-                type="text"
-                placeholder="@ handle"
-                value={twitter}
-                onChange={(e) => setTwitter(e.target.value)}
-                className="w-full bg-[#0d0d0d] border border-white/[0.08] rounded-lg px-4 py-4 text-[14px] font-mono text-white placeholder-zinc-700 focus:outline-none focus:border-[#14F195]/40 transition-all"
-              />
-            </div>
+                {/* Submit */}
+                <button
+                  onClick={handleSubmit}
+                  disabled={status === "loading"}
+                  className="waitlist-submit"
+                >
+                  {status === "loading" ? (
+                    <div className="waitlist-spinner" />
+                  ) : (
+                    <>
+                      Request Access
+                      <ArrowRight size={16} className="waitlist-submit-arrow" />
+                    </>
+                  )}
+                </button>
 
-            {/* Error */}
-            {status === "error" && (
-              <div className="text-[12px] font-bold tracking-[0.2em] text-red-400 mb-4">
-                ⚠ {msg}
-              </div>
-            )}
-
-            {/* Submit */}
-            <button
-              onClick={handleSubmit}
-              disabled={status === "loading"}
-              className="w-full py-4 bg-zinc-800/80 border border-white/[0.06] rounded-lg text-[13px] font-mono font-bold tracking-[0.2em] text-zinc-300 hover:bg-zinc-700/80 hover:text-white hover:border-[#14F195]/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 group"
-            >
-              {status === "loading" ? (
-                "PROCESSING..."
-              ) : (
-                <>
-                  REQUEST ACCESS
-                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                </>
-              )}
-            </button>
-
-            {/* Count */}
-            {count > 0 && (
-              <div className="text-center text-[11px] font-mono tracking-[0.2em] text-zinc-700 mt-4">
-                {count} OPERATOR{count !== 1 ? "S" : ""} ALREADY IN QUEUE
+                {count > 0 && (
+                  <p className="waitlist-count">
+                    <span className="waitlist-count-dot" />
+                    {count} developer{count !== 1 ? "s" : ""} already joined
+                  </p>
+                )}
               </div>
             )}
           </div>
-        )}
 
-        {/* Footer */}
-        <div className="flex items-center justify-between mt-16">
-          <Link
-            href="/"
-            className="text-[11px] font-mono tracking-[0.2em] text-zinc-600 hover:text-[#14F195] transition-colors"
-          >
-            TRUVA
-          </Link>
-          <span className="text-[11px] font-mono tracking-[0.2em] text-zinc-600">
-            SOLANA
-          </span>
+          {/* Footer */}
+          <div className="waitlist-footer">
+            <Link href="/" className="waitlist-footer-link">
+              ← truva.protocol
+            </Link>
+            <span className="waitlist-footer-chain">Solana</span>
+          </div>
         </div>
       </div>
     </div>

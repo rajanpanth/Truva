@@ -1,0 +1,828 @@
+/* ═══════════════════════════════════════════════════
+   TRUVA WAITLIST — Premium Futuristic Design
+   ═══════════════════════════════════════════════════ */
+
+/* ── Page Shell ── */
+.waitlist-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #060608;
+  position: relative;
+  overflow: hidden;
+  padding: 24px;
+}
+
+/* ── Canvas (particles) ── */
+.waitlist-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Grid overlay ── */
+.waitlist-grid-overlay {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(20, 241, 149, 0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(20, 241, 149, 0.015) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  z-index: 0;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, black, transparent);
+}
+
+/* ── Gradient orbs ── */
+.waitlist-orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(100px);
+}
+.waitlist-orb-1 {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(20, 241, 149, 0.08), transparent 70%);
+  top: -15%;
+  right: -5%;
+  animation: orb-float-1 12s ease-in-out infinite;
+}
+.waitlist-orb-2 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.06), transparent 70%);
+  bottom: -10%;
+  left: -5%;
+  animation: orb-float-2 15s ease-in-out infinite;
+}
+.waitlist-orb-3 {
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(20, 241, 149, 0.04), transparent 70%);
+  top: 50%;
+  left: 40%;
+  animation: orb-float-3 18s ease-in-out infinite;
+}
+
+@keyframes orb-float-1 {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-30px, 20px); }
+}
+@keyframes orb-float-2 {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(20px, -30px); }
+}
+@keyframes orb-float-3 {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-15px, -20px); }
+}
+
+/* ── Main container (split layout) ── */
+.waitlist-container {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  max-width: 1100px;
+  width: 100%;
+  align-items: center;
+}
+
+/* ═════════ LEFT HERO ═════════ */
+.waitlist-hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.waitlist-hero-content {
+  animation: hero-reveal 0.8s ease forwards;
+}
+
+@keyframes hero-reveal {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Orbital animation ── */
+.waitlist-orbital {
+  position: relative;
+  width: 280px;
+  height: 280px;
+  margin-bottom: 48px;
+  margin-top: -20px;
+}
+
+.waitlist-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(20, 241, 149, 0.06);
+}
+
+.waitlist-ring-1 {
+  inset: 0;
+  border-style: dashed;
+  border-color: rgba(20, 241, 149, 0.07);
+  animation: ring-spin 30s linear infinite;
+}
+.waitlist-ring-2 {
+  inset: 30px;
+  border-color: rgba(20, 241, 149, 0.1);
+  animation: ring-spin 20s linear infinite reverse;
+}
+.waitlist-ring-3 {
+  inset: 60px;
+  border-color: rgba(20, 241, 149, 0.15);
+  animation: ring-spin 12s linear infinite;
+}
+
+@keyframes ring-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.waitlist-core {
+  position: absolute;
+  inset: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 24px;
+  background: rgba(20, 241, 149, 0.04);
+  border: 1px solid rgba(20, 241, 149, 0.12);
+  animation: core-float 4s ease-in-out infinite;
+  box-shadow:
+    0 0 40px rgba(20, 241, 149, 0.06),
+    0 0 80px rgba(20, 241, 149, 0.03),
+    inset 0 0 30px rgba(20, 241, 149, 0.02);
+  overflow: hidden;
+}
+
+.waitlist-core::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 24px;
+  background: linear-gradient(135deg, rgba(20, 241, 149, 0.15), transparent, rgba(20, 241, 149, 0.08));
+  z-index: 0;
+  animation: core-glow-rotate 6s linear infinite;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+  padding: 1px;
+}
+
+@keyframes core-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes core-glow-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ── Logo inside the core ── */
+.waitlist-core-logo {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 0 12px rgba(20, 241, 149, 0.3))
+          drop-shadow(0 0 24px rgba(20, 241, 149, 0.1));
+  animation: logo-pulse 3s ease-in-out infinite;
+}
+
+@keyframes logo-pulse {
+  0%, 100% { filter: drop-shadow(0 0 12px rgba(20, 241, 149, 0.3)) drop-shadow(0 0 24px rgba(20, 241, 149, 0.1)); transform: scale(1); }
+  50% { filter: drop-shadow(0 0 20px rgba(20, 241, 149, 0.5)) drop-shadow(0 0 40px rgba(20, 241, 149, 0.15)); transform: scale(1.04); }
+}
+
+.waitlist-orbit-dot {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: #14F195;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(20, 241, 149, 0.6);
+}
+
+.waitlist-orbit-dot-1 {
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: orbit-1 30s linear infinite;
+  transform-origin: 50% 140px;
+}
+.waitlist-orbit-dot-2 {
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: orbit-2 20s linear infinite reverse;
+  transform-origin: 50% 110px;
+}
+.waitlist-orbit-dot-3 {
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: orbit-3 12s linear infinite;
+  transform-origin: 50% 80px;
+}
+
+@keyframes orbit-1 { from { transform: translateX(-50%) rotate(0deg); } to { transform: translateX(-50%) rotate(360deg); } }
+@keyframes orbit-2 { from { transform: translateX(-50%) rotate(0deg); } to { transform: translateX(-50%) rotate(360deg); } }
+@keyframes orbit-3 { from { transform: translateX(-50%) rotate(0deg); } to { transform: translateX(-50%) rotate(360deg); } }
+
+/* ── Hero text ── */
+.waitlist-hero-title {
+  font-family: var(--font-inter), Inter, system-ui, sans-serif;
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: #f0f0f0;
+  margin-bottom: 16px;
+}
+
+.waitlist-hero-accent {
+  background: linear-gradient(135deg, #14F195, #0FBE76, #14F195);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-shift 4s ease-in-out infinite;
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.waitlist-hero-desc {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #71717a;
+  max-width: 380px;
+  margin-bottom: 32px;
+}
+
+/* ── Stats ── */
+.waitlist-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.waitlist-stat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #a1a1aa;
+  font-family: var(--font-mono), ui-monospace, monospace;
+}
+
+.waitlist-stat svg {
+  color: #14F195;
+  flex-shrink: 0;
+}
+
+/* ═════════ RIGHT FORM ═════════ */
+.waitlist-form-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Glassmorphism card ── */
+.waitlist-card {
+  background: rgba(255, 255, 255, 0.02);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow:
+    0 4px 24px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+  animation: card-entrance 0.6s ease forwards;
+  animation-delay: 0.2s;
+  opacity: 0;
+}
+
+@keyframes card-entrance {
+  from { opacity: 0; transform: translateY(16px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ── Card header ── */
+.waitlist-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 28px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.waitlist-card-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #14F195;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.waitlist-pulse-dot {
+  width: 7px;
+  height: 7px;
+  background: #14F195;
+  border-radius: 50%;
+  animation: dot-pulse 2s ease-in-out infinite;
+  box-shadow: 0 0 6px rgba(20, 241, 149, 0.4);
+}
+
+@keyframes dot-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+
+.waitlist-card-version {
+  font-size: 11px;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  color: #3f3f46;
+  letter-spacing: 0.05em;
+}
+
+/* ═════════ FORM ═════════ */
+.waitlist-form {
+  padding: 28px;
+}
+
+.waitlist-form-title {
+  font-family: var(--font-inter), Inter, system-ui, sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  color: #f4f4f5;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+}
+
+.waitlist-form-subtitle {
+  font-size: 14px;
+  color: #71717a;
+  margin-bottom: 28px;
+  line-height: 1.5;
+}
+
+/* ── Fields ── */
+.waitlist-field {
+  margin-bottom: 20px;
+  transition: all 0.2s ease;
+}
+
+.waitlist-field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+  transition: color 0.2s ease;
+}
+
+.waitlist-field.focused label {
+  color: #14F195;
+}
+
+.waitlist-field input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-size: 14px;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  color: #f4f4f5;
+  transition: all 0.25s ease;
+  outline: none;
+}
+
+.waitlist-field input::placeholder {
+  color: #3f3f46;
+}
+
+.waitlist-field input:focus {
+  border-color: rgba(20, 241, 149, 0.3);
+  background: rgba(20, 241, 149, 0.02);
+  box-shadow: 0 0 0 3px rgba(20, 241, 149, 0.06);
+}
+
+.waitlist-field-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.waitlist-field-label-row label {
+  margin-bottom: 0;
+}
+
+.waitlist-optional {
+  font-size: 11px;
+  color: #3f3f46;
+  font-family: var(--font-mono), ui-monospace, monospace;
+}
+
+.waitlist-field-input-wrap {
+  position: relative;
+}
+
+.waitlist-field-input-wrap input {
+  padding-right: 44px;
+}
+
+/* ── Email indicator ── */
+.waitlist-email-indicator {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.waitlist-email-indicator.valid {
+  background: rgba(20, 241, 149, 0.12);
+  color: #14F195;
+  box-shadow: 0 0 8px rgba(20, 241, 149, 0.15);
+}
+
+.waitlist-email-indicator.invalid {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444;
+}
+
+/* ── Error ── */
+.waitlist-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
+  font-size: 13px;
+  margin-bottom: 20px;
+  animation: error-shake 0.4s ease;
+}
+
+@keyframes error-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+/* ── Submit button ── */
+.waitlist-submit {
+  width: 100%;
+  padding: 16px 24px;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: var(--font-inter), Inter, system-ui, sans-serif;
+  color: #000;
+  background: linear-gradient(135deg, #14F195, #0FBE76);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(20, 241, 149, 0.2);
+}
+
+.waitlist-submit::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent, rgba(255,255,255,0.15), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.5s ease;
+}
+
+.waitlist-submit:hover::before {
+  transform: translateX(100%);
+}
+
+.waitlist-submit:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 28px rgba(20, 241, 149, 0.3);
+}
+
+.waitlist-submit:active {
+  transform: translateY(0);
+}
+
+.waitlist-submit:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.waitlist-submit-arrow {
+  transition: transform 0.2s ease;
+}
+
+.waitlist-submit:hover .waitlist-submit-arrow {
+  transform: translateX(3px);
+}
+
+/* ── Spinner ── */
+.waitlist-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  border-top-color: #000;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Count ── */
+.waitlist-count {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+  font-size: 12px;
+  color: #52525b;
+  font-family: var(--font-mono), ui-monospace, monospace;
+}
+
+.waitlist-count-dot {
+  width: 5px;
+  height: 5px;
+  background: #14F195;
+  border-radius: 50%;
+  opacity: 0.6;
+}
+
+/* ═════════ SUCCESS STATE ═════════ */
+.waitlist-success {
+  padding: 40px 28px;
+  text-align: center;
+}
+
+.waitlist-success-icon {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #14F195;
+  animation: success-pop 0.5s ease forwards;
+}
+
+@keyframes success-pop {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.waitlist-success-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(20, 241, 149, 0.2);
+  background: rgba(20, 241, 149, 0.06);
+  animation: ring-pulse 2s ease-in-out infinite;
+}
+
+@keyframes ring-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.5; }
+}
+
+.waitlist-success-title {
+  font-family: var(--font-inter), Inter, system-ui, sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: #f4f4f5;
+  margin-bottom: 4px;
+  letter-spacing: -0.02em;
+}
+
+.waitlist-success-position {
+  font-size: 14px;
+  color: #71717a;
+  margin-bottom: 24px;
+}
+
+.waitlist-success-position span {
+  color: #14F195;
+  font-weight: 700;
+  font-family: var(--font-mono), ui-monospace, monospace;
+}
+
+.waitlist-success-details {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+  padding: 4px 0;
+  margin-bottom: 20px;
+}
+
+.waitlist-success-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-family: var(--font-mono), ui-monospace, monospace;
+}
+
+.waitlist-success-row span:first-child {
+  color: #52525b;
+}
+
+.waitlist-success-row span:last-child {
+  color: #a1a1aa;
+  font-weight: 600;
+}
+
+.waitlist-success-row + .waitlist-success-row {
+  border-top: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.waitlist-success-note {
+  font-size: 13px;
+  color: #52525b;
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+
+/* ── Back link ── */
+.waitlist-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #71717a;
+  text-decoration: none;
+  transition: color 0.2s ease;
+  font-family: var(--font-mono), ui-monospace, monospace;
+}
+
+.waitlist-back-link:hover {
+  color: #14F195;
+}
+
+/* ═════════ FOOTER ═════════ */
+.waitlist-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4px;
+}
+
+.waitlist-footer-link {
+  font-size: 12px;
+  color: #3f3f46;
+  text-decoration: none;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  transition: color 0.2s ease;
+}
+
+.waitlist-footer-link:hover {
+  color: #14F195;
+}
+
+.waitlist-footer-chain {
+  font-size: 11px;
+  color: #27272a;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* ═════════ RESPONSIVE ═════════ */
+@media (max-width: 900px) {
+  .waitlist-container {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    max-width: 480px;
+  }
+
+  .waitlist-hero {
+    text-align: center;
+  }
+
+  .waitlist-hero-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .waitlist-hero-title {
+    font-size: 34px;
+    text-align: center;
+  }
+
+  .waitlist-hero-desc {
+    text-align: center;
+  }
+
+  .waitlist-stats {
+    align-items: center;
+  }
+
+  .waitlist-orbital {
+    width: 200px;
+    height: 200px;
+    margin-bottom: 28px;
+    margin-top: 0;
+  }
+
+  .waitlist-core {
+    inset: 56px;
+  }
+
+  .waitlist-core-logo {
+    width: 48px;
+    height: 48px;
+  }
+
+  .waitlist-ring-2 {
+    inset: 22px;
+  }
+
+  .waitlist-ring-3 {
+    inset: 42px;
+  }
+
+  .waitlist-orbit-dot-1 {
+    transform-origin: 50% 100px;
+  }
+
+  .waitlist-orbit-dot-2 {
+    top: 22px;
+    transform-origin: 50% 78px;
+  }
+
+  .waitlist-orbit-dot-3 {
+    top: 42px;
+    transform-origin: 50% 58px;
+  }
+}
+
+@media (max-width: 480px) {
+  .waitlist-page {
+    padding: 16px;
+  }
+
+  .waitlist-form {
+    padding: 20px;
+  }
+
+  .waitlist-card-header {
+    padding: 14px 20px;
+  }
+
+  .waitlist-hero-title {
+    font-size: 28px;
+  }
+
+  .waitlist-form-title {
+    font-size: 20px;
+  }
+}
