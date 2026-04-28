@@ -83,3 +83,71 @@ jobs:
         env:
           NEXT_PUBLIC_SUPABASE_URL: "https://placeholder.supabase.co"
           NEXT_PUBLIC_SUPABASE_ANON_KEY: "placeholder_key"
+
+  # DB migration dry-run (TypeScript compilation only — no live DB needed)
+  db-migrations:
+    name: DB Migration Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install reputation engine dependencies
+        run: cd backend/reputation-engine && npm install
+
+      - name: Typecheck migration runner
+        run: cd backend/reputation-engine && npx tsc --noEmit
+
+      - name: Lint migration SQL files
+        run: |
+          # Fail if any migration file is missing an UP statement
+          for f in backend/reputation-engine/src/db/migrations/*.sql; do
+            if ! grep -qiE "(CREATE|ALTER|INSERT)" "$f"; then
+              echo "Migration $f appears empty or invalid"
+              exit 1
+            fi
+          done
+          echo "All migration files look valid"
+
+  # Reputation engine unit tests (no DB needed — pure functions)
+  backend-tests:
+    name: Backend Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install reputation engine dependencies
+        run: cd backend/reputation-engine && npm install
+
+      - name: Run scorer unit tests
+        run: cd backend/reputation-engine && npm run test:scorer
+
+  # SDK unit tests
+  sdk-tests:
+    name: SDK Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install SDK dependencies
+        run: cd sdk && npm install
+
+      - name: Run SDK tests
+        run: cd sdk && npm test

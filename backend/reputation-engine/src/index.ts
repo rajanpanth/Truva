@@ -8,9 +8,11 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
-import morgan from "morgan";
 import rateLimit from "express-rate-limit";
+import pinoHttp from "pino-http";
+import { Connection } from "@solana/web3.js";
 
+import { logger } from "./logger";
 import { checkDbConnection, pool } from "./db/client";
 import { runMigrations } from "./db/schema";
 import { redis, checkRedisConnection } from "./cache/redis";
@@ -40,20 +42,16 @@ function validateEnv(): void {
     { name: "API_KEY", set: !!process.env.API_KEY, required: false, feature: "API auth" },
   ];
 
-  console.log("\n  Environment:");
   for (const v of vars) {
-    const icon = v.set ? "✅" : v.required ? "❌" : "⚠️ ";
     const status = v.set ? "configured" : `not set (${v.feature} disabled)`;
-    console.log(`   ${icon} ${v.name} = ${status}`);
+    logger.debug({ var: v.name, configured: v.set, required: v.required }, status);
   }
 
   const missing = vars.filter((v) => v.required && !v.set);
   if (missing.length > 0) {
-    console.error(`\n❌ Missing required: ${missing.map((v) => v.name).join(", ")}`);
-    console.error("   Copy .env.example to .env and fill in the values.");
+    logger.fatal({ missing: missing.map((v) => v.name) }, "Missing required environment variables. Copy .env.example to .env");
     process.exit(1);
   }
-  console.log("");
 }
 
 // ── Auth Middleware ──
@@ -94,7 +92,7 @@ const PORT = parseInt(process.env.PORT || "3001", 10);
 // Middleware
 app.use(helmet());
 app.use(cors());
-app.use(morgan("dev"));
+app.use(pinoHttp({ logger, autoLogging: process.env.NODE_ENV !== "test" }));
 app.use(express.json({ limit: "10mb" }));
 
 // Rate limiters
@@ -126,13 +124,29 @@ app.use("/webhook", webhookLimiter);
 
 // ── Health Check ──
 
+async function checkSolanaRpc(): Promise<boolean> {
+  const rpcUrl = process.env.SOLANA_RPC_URL;
+  if (!rpcUrl) return false;
+  try {
+    const conn = new Connection(rpcUrl, "processed");
+    await conn.getVersion();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 app.get("/health", async (_req, res) => {
-  const dbOk = await checkDbConnection();
-  const redisOk = await checkRedisConnection();
+  const [dbOk, redisOk, solanaOk] = await Promise.all([
+    checkDbConnection(),
+    checkRedisConnection(),
+    checkSolanaRpc(),
+  ]);
 
-  const status = dbOk ? "healthy" : "degraded";
+  const healthy = dbOk && solanaOk;
+  const status = healthy ? "healthy" : "degraded";
 
-  res.status(dbOk ? 200 : 503).json({
+  res.status(healthy ? 200 : 503).json({
     success: true,
     data: {
       status,
@@ -141,6 +155,7 @@ app.get("/health", async (_req, res) => {
       services: {
         database: dbOk ? "connected" : "disconnected",
         redis: redisOk ? "connected" : "disconnected",
+        solana: solanaOk ? "reachable" : "unreachable",
       },
     },
   });
@@ -157,11 +172,11 @@ app.use("/webhook", heliusWebhook);
 app.use(
   (
     err: Error,
-    _req: express.Request,
+    req: express.Request,
     res: express.Response,
     _next: express.NextFunction
   ) => {
-    console.error("Unhandled error:", err);
+    logger.error({ err, path: req.path, method: req.method }, "Unhandled error");
     res.status(500).json({
       success: false,
       error: "Internal server error",
@@ -181,23 +196,23 @@ app.use((_req, res) => {
 // ── Graceful Shutdown ──
 
 async function shutdown(signal: string): Promise<void> {
-  console.log(`\n📛 ${signal} received — shutting down gracefully...`);
+  logger.info({ signal }, "Shutdown signal received — draining connections");
 
   try {
     await pool.end();
-    console.log("   ✅ PostgreSQL pool closed");
+    logger.info("PostgreSQL pool closed");
   } catch (err) {
-    console.error("   ❌ Error closing PostgreSQL pool:", err);
+    logger.error({ err }, "Error closing PostgreSQL pool");
   }
 
   try {
     await redis.quit();
-    console.log("   ✅ Redis disconnected");
+    logger.info("Redis disconnected");
   } catch (err) {
-    console.error("   ❌ Error closing Redis:", err);
+    logger.error({ err }, "Error closing Redis");
   }
 
-  console.log("   👋 Goodbye\n");
+  logger.info("Shutdown complete");
   process.exit(0);
 }
 
@@ -207,42 +222,38 @@ process.on("SIGINT", () => shutdown("SIGINT"));
 // ── Start Server ──
 
 async function start(): Promise<void> {
-  console.log("═══════════════════════════════════════════");
-  console.log("  🛡️  Truva Reputation Engine");
-  console.log("═══════════════════════════════════════════");
+  logger.info("Truva Reputation Engine starting");
 
   validateEnv();
 
   // Connect to Redis
   try {
     await redis.connect();
-    console.log("  ✅ Redis connected");
+    logger.info("Redis connected");
   } catch (err) {
-    console.warn("  ⚠️  Redis not available — running without cache");
+    logger.warn({ err }, "Redis not available — running without cache");
   }
 
   // Run database migrations
   try {
     await runMigrations();
-    console.log("  ✅ Database ready");
+    logger.info("Database migrations complete");
   } catch (err) {
-    console.error("  ❌ Database migration failed:", err);
+    logger.fatal({ err }, "Database migration failed");
     process.exit(1);
   }
 
   // Start listening
   app.listen(PORT, () => {
-    console.log(`  ✅ Server running on http://localhost:${PORT}`);
-    console.log(`     Health:  http://localhost:${PORT}/health`);
-    console.log(`     API:     http://localhost:${PORT}/api/agents`);
-    console.log(`     Stats:   http://localhost:${PORT}/api/stats`);
-    console.log(`     Webhook: http://localhost:${PORT}/webhook/helius`);
-    console.log("═══════════════════════════════════════════\n");
+    logger.info(
+      { port: PORT, health: `/health`, api: `/api/agents`, webhook: `/webhook/helius` },
+      `Server listening on port ${PORT}`
+    );
   });
 }
 
 start().catch((err) => {
-  console.error("Fatal startup error:", err);
+  logger.fatal({ err }, "Fatal startup error");
   process.exit(1);
 });
 

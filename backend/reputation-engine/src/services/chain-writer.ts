@@ -24,7 +24,7 @@ import * as fs from "fs";
 // ── Config ──
 
 const SOLANA_RPC_URL = process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com";
-const TRUVA_PROGRAM_ID = process.env.TRUVA_PROGRAM_ID || "TRSTgateXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+const TRUVA_PROGRAM_ID = process.env.TRUVA_PROGRAM_ID || "BTgy2r8R85Jknq3JetNiVt1x9grdccm7pTV2LyUmDzG5";
 const BACKEND_AUTHORITY_KEY = process.env.BACKEND_AUTHORITY_KEY;
 
 const MAX_RETRIES = 3;
