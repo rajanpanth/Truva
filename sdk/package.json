@@ -1,11 +1,30 @@
 {
-  "name": "@truva/sdk",
+  "name": "@truva/solana",
   "version": "0.1.0",
   "description": "TypeScript SDK for interacting with the Truva Protocol — trust-gated AI agent payments on Solana",
   "main": "dist/index.js",
+  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types":   "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "import":  "./dist/index.mjs"
+    },
+    "./eliza": {
+      "types":   "./dist/eliza.d.ts",
+      "require": "./dist/eliza.js",
+      "import":  "./dist/eliza.mjs"
+    },
+    "./langchain": {
+      "types":   "./dist/langchain.d.ts",
+      "require": "./dist/langchain.js",
+      "import":  "./dist/langchain.mjs"
+    }
+  },
   "scripts": {
-    "build": "tsc",
+    "build": "tsup",
+    "build:types": "tsc --emitDeclarationOnly",
     "prepublishOnly": "npm run build",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -18,7 +37,9 @@
     "trust-score",
     "payments",
     "web3",
-    "anchor"
+    "anchor",
+    "elizaos",
+    "langchain"
   ],
   "author": "Rajan Panth",
   "license": "MIT",
@@ -34,12 +55,14 @@
   },
   "devDependencies": {
     "typescript": "^5.6.2",
+    "tsup": "^8.0.0",
     "vitest": "^1.6.0",
     "@vitest/coverage-v8": "^1.6.0",
     "@types/node": "^20.0.0"
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "CHANGELOG.md"
   ]
 }

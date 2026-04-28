@@ -44,6 +44,37 @@ export class AgentWallet {
     return new AgentWallet(Keypair.fromSecretKey(secretKey));
   }
 
+  /**
+   * Load an agent wallet from an environment variable.
+   * The variable must contain a JSON array of 64 bytes (standard `solana-keygen` format).
+   *
+   * Node.js / server-side only — not available in browser environments.
+   *
+   * @example
+   * ```ts
+   * // .env
+   * // AGENT_PRIVATE_KEY=[12,34,56,...] (64 bytes from solana-keygen)
+   *
+   * const wallet = AgentWallet.fromEnv('AGENT_PRIVATE_KEY');
+   * ```
+   */
+  static fromEnv(envVar: string): AgentWallet {
+    const val =
+      typeof process !== "undefined" ? process.env[envVar] : undefined;
+    if (!val) {
+      throw new Error(`Environment variable "${envVar}" is not set.`);
+    }
+    let bytes: number[];
+    try {
+      bytes = JSON.parse(val) as number[];
+    } catch {
+      throw new Error(
+        `Cannot parse "${envVar}". Expected a JSON array of 64 bytes (e.g. from solana-keygen).`
+      );
+    }
+    return AgentWallet.fromSecretKey(Uint8Array.from(bytes));
+  }
+
   get publicKey(): PublicKey {
     return this.keypair.publicKey;
   }
