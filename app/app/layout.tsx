@@ -16,7 +16,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TRUVA — Trust Gate for AI Agent Payments on Solana",
+  title: "TRUVA | Trust Gate for AI Agents",
   description:
     "Verify WHO an AI agent is, WHAT it has done, and WHETHER it can execute a payment. Solana-native programmable trust gate.",
 };

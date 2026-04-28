@@ -12,7 +12,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'TRUVA_CORE — Trust Infrastructure for Solana AI Agents',
+  title: 'TRUVA | Trust Gate for AI Agents',
   description:
     'The trust & enforcement layer for the Solana AI Agent economy. Register agents, enforce policies, and monitor transactions through the TrustGate.',
 };
