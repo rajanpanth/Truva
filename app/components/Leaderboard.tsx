@@ -1,18 +1,15 @@
 "use client";
 
-import { MOCK_AGENTS } from "@/lib/mockData";
 import Link from "next/link";
+import { useAgents } from "@/lib/hooks/useAgents";
+import { TIER_LABELS } from "@/backend/types/agent";
+import type { Agent } from "@/backend/types/agent";
 
 const tierDot: Record<string, string> = {
+  Platinum: "bg-purple-400",
   Gold: "bg-yellow-400",
   Silver: "bg-slate-400",
   Bronze: "bg-orange-400",
-};
-
-const statusBadge: Record<string, string> = {
-  LIVE: "live-badge",
-  DEV: "dev-badge",
-  IDEA: "idea-badge",
 };
 
 function Countdown() {
@@ -30,8 +27,8 @@ function Countdown() {
 }
 
 export function Leaderboard() {
-  const topFive = [...MOCK_AGENTS].sort((a, b) => b.trustScore - a.trustScore).slice(0, 5);
-  const statuses = ["LIVE", "LIVE", "DEV", "DEV", "IDEA"];
+  const { data: agents = [], isLoading } = useAgents();
+  const topFive = [...agents].sort((a: Agent, b: Agent) => b.trust_score - a.trust_score).slice(0, 5);
 
   return (
     <div className="grid grid-cols-1 lg:max-w-[50%] gap-4">
@@ -49,17 +46,28 @@ export function Leaderboard() {
           <span className="live-badge">LIVE</span>
         </div>
         <div>
-          {topFive.map((agent, i) => (
-            <Link key={agent.pubkey} href={`/agent/${agent.pubkey}`}>
-              <div className={`flex items-center gap-3 px-5 py-2 row-hover group ${i < 4 ? "border-b border-white/[0.04]" : ""}`}>
-                <span className="text-[13px] font-bold text-zinc-600 w-4 text-center shrink-0">{i + 1}</span>
-                <div className={`w-2 h-2 rounded-full shrink-0 ${tierDot[agent.tier]}`} />
-                <span className="flex-1 text-[12px] font-semibold text-white group-hover:text-[#14F195] transition-colors truncate">{agent.name}</span>
-                <span className="open-link text-[13px]">↗</span>
-                <span className="text-[13px] font-bold text-[#14F195] shrink-0">🛡 {agent.trustScore}</span>
-              </div>
-            </Link>
-          ))}
+          {isLoading
+            ? Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-3 px-5 py-2 border-b border-white/[0.04] animate-pulse">
+                  <div className="w-4 h-3 bg-zinc-800 rounded" />
+                  <div className="w-2 h-2 rounded-full bg-zinc-800" />
+                  <div className="flex-1 h-3 bg-zinc-800 rounded" />
+                </div>
+              ))
+            : topFive.map((agent: Agent, i: number) => {
+                const tierName = TIER_LABELS[agent.tier];
+                return (
+                  <Link key={agent.id} href={`/agent/${agent.id}`}>
+                    <div className={`flex items-center gap-3 px-5 py-2 row-hover group ${i < 4 ? "border-b border-white/[0.04]" : ""}`}>
+                      <span className="text-[13px] font-bold text-zinc-600 w-4 text-center shrink-0">{i + 1}</span>
+                      <div className={`w-2 h-2 rounded-full shrink-0 ${tierDot[tierName] ?? "bg-zinc-600"}`} />
+                      <span className="flex-1 text-[12px] font-semibold text-white group-hover:text-[#14F195] transition-colors truncate">{agent.name}</span>
+                      <span className="open-link text-[13px]">↗</span>
+                      <span className="text-[13px] font-bold text-[#14F195] shrink-0">🛡 {agent.trust_score}</span>
+                    </div>
+                  </Link>
+                );
+              })}
         </div>
       </div>
     </div>

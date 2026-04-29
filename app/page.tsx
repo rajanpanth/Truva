@@ -4,6 +4,12 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { TruvaButton, TruvaStatusPill, TruvaProgressBar, TruvaPulsingDot, TruvaInput } from '@/components/ui/truva';
 import { Shield, CheckCircle, Zap } from 'lucide-react';
+import { useAgents } from '@/lib/hooks/useAgents';
+import { useTrustGateLogs } from '@/lib/hooks/useTrustGateLogs';
+import { useStats } from '@/lib/hooks/useStats';
+import { TIER_LABELS } from '@/backend/types/agent';
+import type { Agent } from '@/backend/types/agent';
+import type { TrustGateLog } from '@/backend/types/trustgate';
 
 /* ─── Animated bar chart ─── */
 function LiveBarChart() {
@@ -39,35 +45,28 @@ function LiveBarChart() {
   );
 }
 
-const logRows = [
-  { ts: '2024-05-24T32:04:012', agent: 'TRD_BOT_X_69', hash: 'hx72n...Fb09', status: 'passed' as const, latency: '12ms' },
-  { ts: '2024-05-24T32:03:552', agent: 'ARB_SCAN_4', hash: 'mw33n...e0a1', status: 'blocked' as const, latency: '45ms' },
-  { ts: '2024-05-24T12:03:522', agent: 'SENT_ANALYTICS', hash: 'p00x2...x01D', status: 'passed' as const, latency: '8ms' },
-];
-
-const agents = [
-  { name: 'TRADEBOT X', id: '0xAF2...FFC2', tier: 'platinum' as const, score: 99.8 },
-  { name: 'LIQUID_FLOW', id: '0x9h6...CA29', tier: 'gold' as const, score: 94.2 },
-  { name: 'ORACLE_EYE', id: '0xB412...1000', tier: 'silver' as const, score: 88.5 },
-  { name: 'GUARD_PROTO', id: '0x8483...9F5D', tier: 'bronze' as const, score: 62.1 },
-];
-
 const tierColors: Record<string, string> = {
-  platinum: 'var(--tier-platinum)', gold: 'var(--tier-gold)',
-  silver: 'var(--tier-silver)', bronze: 'var(--tier-bronze)',
+  Platinum: 'var(--tier-platinum)', Gold: 'var(--tier-gold)',
+  Silver: 'var(--tier-silver)', Bronze: 'var(--tier-bronze)',
 };
 
 const tiers = [
-  { name: 'SANDBOX_ACCESS', desc: 'Testnet operations only.', color: 'var(--text-muted)' },
-  { name: 'MAINNET_BRONZE', desc: 'For Low-Trust Trading.', color: 'var(--tier-bronze)' },
-  { name: 'MAINNET_SILVER', desc: 'Key-Value Verification.', color: 'var(--tier-silver)' },
-  { name: 'ELITE_PLATINUM', desc: 'For Ultra-Compliant Oracle Flows.', color: 'var(--tier-platinum)' },
+  { name: 'BRONZE', desc: 'Low-trust operations. Up to 5 SOL per transaction.', color: 'var(--tier-bronze)' },
+  { name: 'SILVER', desc: 'Standard operations. Up to 100 SOL per transaction.', color: 'var(--tier-silver)' },
+  { name: 'GOLD', desc: 'High-trust operations. Unlimited transaction size.', color: 'var(--tier-gold)' },
+  { name: 'PLATINUM', desc: 'Ultra-compliant oracle flows. Priority routing.', color: 'var(--tier-platinum)' },
 ];
 
 export default function LandingPage() {
   const [formName, setFormName] = useState('');
   const [formKey, setFormKey] = useState('');
   const [formCategory, setFormCategory] = useState('FINANCIAL_ARBITRAGE');
+
+  const { data: agentsData = [], isLoading: agentsLoading } = useAgents({});
+  const { data: logsData } = useTrustGateLogs({ limit: 3 });
+  const { data: stats } = useStats();
+  const logRows: TrustGateLog[] = logsData?.data ?? [];
+  const displayAgents = agentsData.slice(0, 4);
 
   /* ─── Waitlist state ─── */
   const [waitlistEmail, setWaitlistEmail] = useState('');
@@ -174,13 +173,13 @@ export default function LandingPage() {
             </tr>
           </thead>
           <tbody>
-            {logRows.map((r, i) => (
-              <tr key={i} className="border-b border-[var(--border-subtle)] h-[44px] hover:bg-[var(--bg-card)]">
-                <td className="px-4 py-2.5 text-[13px] text-[var(--text-muted)]">{r.ts}</td>
-                <td className="px-4 py-2.5 text-[13px] text-[var(--accent-green)]">{r.agent}</td>
-                <td className="px-4 py-2.5 text-[13px] text-[var(--text-secondary)]">{r.hash}</td>
+            {logRows.map((r: TrustGateLog, i: number) => (
+              <tr key={r.id ?? i} className="border-b border-[var(--border-subtle)] h-[44px] hover:bg-[var(--bg-card)]">
+                <td className="px-4 py-2.5 text-[13px] text-[var(--text-muted)]">{new Date(r.created_at).toISOString().substring(0, 19).replace('T', ' ')}</td>
+                <td className="px-4 py-2.5 text-[13px] text-[var(--accent-green)]">{r.agent_name ?? r.agent_id?.slice(0, 12)}</td>
+                <td className="px-4 py-2.5 text-[13px] text-[var(--text-secondary)]">{r.action}</td>
                 <td className="px-4 py-2.5"><TruvaStatusPill variant={r.status} /></td>
-                <td className="px-4 py-2.5 text-[13px] text-[var(--text-secondary)]">{r.latency}</td>
+                <td className="px-4 py-2.5 text-[13px] text-[var(--text-secondary)]">{r.latency_ms != null ? `${r.latency_ms}ms` : '—'}</td>
               </tr>
             ))}
           </tbody>
@@ -193,7 +192,7 @@ export default function LandingPage() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-[24px] font-bold">AGENT_REGISTRY</h2>
-            <p className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mt-1">VERIFIED_AUTONOMOUS_ENTITIES_V1.0.4</p>
+            <p className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mt-1">VERIFIED_AUTONOMOUS_ENTITIES_V2.0.0</p>
           </div>
           <div className="relative">
             <input placeholder="FILTER_BY_HASH_OR_NAME" className="pl-8 pr-3 py-2 bg-[var(--bg-input)] border border-[var(--border-default)] rounded-[2px] text-[13px] text-[var(--text-primary)] font-mono placeholder:text-[var(--text-dim)] w-full sm:w-[260px] focus:border-[var(--accent-green)] focus:outline-none" />
@@ -201,30 +200,37 @@ export default function LandingPage() {
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {agents.map((a) => (
-            <div key={a.name} className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-4">
-              <div className="flex items-start justify-between mb-1">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 bg-[var(--border-default)] rounded-[2px] flex items-center justify-center">
-                    <Shield size={14} className="text-[var(--text-muted)]" />
+          {agentsLoading
+            ? Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="h-40 bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] animate-pulse" />
+              ))
+            : displayAgents.map((a: Agent) => {
+                const tierName = TIER_LABELS[a.tier];
+                return (
+                  <div key={a.id} className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-4">
+                    <div className="flex items-start justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 bg-[var(--border-default)] rounded-[2px] flex items-center justify-center">
+                          <Shield size={14} className="text-[var(--text-muted)]" />
+                        </div>
+                        <div>
+                          <div className="text-[12px] font-bold">{a.name}</div>
+                          <div className="text-[12px] text-[var(--text-muted)]">ID: {a.public_key.slice(0, 10)}...</div>
+                        </div>
+                      </div>
+                      <TruvaStatusPill variant={tierName.toLowerCase() as 'gold' | 'silver' | 'bronze'} />
+                    </div>
+                    <div className="mt-3 flex items-center justify-between text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mb-1">
+                      <span>TRUST SCORE</span>
+                      <span style={{ color: tierColors[tierName] }}>{a.trust_score}%</span>
+                    </div>
+                    <TruvaProgressBar value={a.trust_score} color={tierColors[tierName]} />
+                    <Link href={`/agent/${a.id}`}>
+                      <TruvaButton variant="ghost" className="w-full mt-3 text-[12px]">VIEW_PASSPORT</TruvaButton>
+                    </Link>
                   </div>
-                  <div>
-                    <div className="text-[12px] font-bold">{a.name}</div>
-                    <div className="text-[12px] text-[var(--text-muted)]">ID: {a.id}</div>
-                  </div>
-                </div>
-                <TruvaStatusPill variant={a.tier} />
-              </div>
-              <div className="mt-3 flex items-center justify-between text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mb-1">
-                <span>TRUST SCORE</span>
-                <span style={{ color: tierColors[a.tier] }}>{a.score}%</span>
-              </div>
-              <TruvaProgressBar value={a.score} color={tierColors[a.tier]} />
-              <Link href={`/agent/${a.name.toLowerCase().replace(/[\s_]/g, '-')}`}>
-                <TruvaButton variant="ghost" className="w-full mt-3 text-[12px]">VIEW_PASSPORT</TruvaButton>
-              </Link>
-            </div>
-          ))}
+                );
+              })}
         </div>
       </section>
 
@@ -259,7 +265,7 @@ export default function LandingPage() {
             <div className="flex justify-between"><span className="text-[var(--text-secondary)]">KYA_STATUS</span><span className="font-bold text-[var(--accent-green)]">VERIFIED</span></div>
             <div className="flex justify-between"><span className="text-[var(--text-secondary)]">OPERATING_LIMIT</span><span className="font-bold">$10.0M DAILY</span></div>
             <div className="flex justify-between"><span className="text-[var(--text-secondary)]">JURISDICTION</span><span className="font-bold">GLOBAL_MESH</span></div>
-            <div className="flex justify-between"><span className="text-[var(--text-secondary)]">LAST_AUDIT</span><span className="font-bold">2024-05-23</span></div>
+            <div className="flex justify-between"><span className="text-[var(--text-secondary)]">LAST_AUDIT</span><span className="font-bold">2026-04-29</span></div>
           </div>
         </div>
       </section>

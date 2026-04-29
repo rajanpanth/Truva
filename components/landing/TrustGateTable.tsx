@@ -1,9 +1,9 @@
 'use client';
 
 const logRows = [
-  { timestamp: '2024-05-24T12:04:012', agent: 'TRD_BOT_X_09', hash: '0x73n...f60c', status: 'PASSED', latency: '32ms' },
-  { timestamp: '2024-05-24T12:05:502', agent: 'ARB_SCAN_4', hash: '0x3d0...e4a1', status: 'BLOCKED', latency: '45ms' },
-  { timestamp: '2024-05-24T12:05:522', agent: 'SENTI_ANALYTICS', hash: '0x9f0...301b', status: 'PASSED', latency: '0ms' },
+  { timestamp: '2026-04-29T12:04:01Z', agent: 'TRD_BOT_X_09', hash: '0x73n...f60c', status: 'PASSED', latency: '32ms' },
+  { timestamp: '2026-04-29T12:05:50Z', agent: 'ARB_SCAN_4', hash: '0x3d0...e4a1', status: 'BLOCKED', latency: '45ms' },
+  { timestamp: '2026-04-29T12:05:52Z', agent: 'SENTI_ANALYTICS', hash: '0x9f0...301b', status: 'PASSED', latency: '0ms' },
 ];
 
 export function TrustGateTable() {

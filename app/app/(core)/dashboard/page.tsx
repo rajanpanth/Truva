@@ -30,9 +30,9 @@ const logData = [
 ];
 
 const payments = [
-  { date: '2024-05-24', desc: 'Validator Reward · Epoch 412', amount: '+2,450 TRU', status: 'passed' as const },
-  { date: '2024-05-23', desc: 'Agent Registration Fee', amount: '-500 TRU', status: 'passed' as const },
-  { date: '2024-05-22', desc: 'Slashing Penalty · Oracle Eye', amount: '-120 TRU', status: 'blocked' as const },
+  { date: '2026-04-29', desc: 'Validator Reward · Epoch 412', amount: '+2,450 TRU', status: 'passed' as const },
+  { date: '2026-04-28', desc: 'Agent Registration Fee', amount: '-500 TRU', status: 'passed' as const },
+  { date: '2026-04-27', desc: 'Slashing Penalty · Oracle Eye', amount: '-120 TRU', status: 'blocked' as const },
 ];
 
 export default function DashboardPage() {

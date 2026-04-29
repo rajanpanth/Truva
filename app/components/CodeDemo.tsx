@@ -15,25 +15,28 @@ export function CodeDemo() {
         <pre className="px-5 py-4 text-[12px] leading-[1.8] font-mono text-zinc-400 overflow-x-auto">
           <code>
             <span className="text-purple-400">import</span>
-            {" { requireTrustTier } "}
+            {" { TruvaSDK, TruvaError } "}
             <span className="text-purple-400">from</span>
-            <span className="text-[#14F195]"> &apos;@agent-passport/solana&apos;</span>;{"\n\n"}
+            <span className="text-[#14F195]"> &apos;truva-sdk&apos;</span>;{"\n\n"}
+            <span className="text-purple-400">const</span> truva = <span className="text-purple-400">new</span>{" "}
+            <span className="text-blue-400">TruvaSDK</span>
+            ({"{ rpcUrl, apiUrl }"});{"\n\n"}
             <span className="text-zinc-600 italic">{"// Gate any payment with one line"}</span>{"\n"}
-            <span className="text-purple-400">await</span>{" "}
+            <span className="text-purple-400">await</span>{" truva."}
             <span className="text-blue-400">requireTrustTier</span>
             (<span className="text-[#14F195]">&apos;Gold&apos;</span>, agentPublicKey);{"\n"}
-            <span className="text-zinc-600 italic">{"// \u2705 Payment proceeds \u2014 or \u274c transaction reverted"}</span>{"\n\n"}
+            <span className="text-zinc-600 italic">{"// \u2705 Payment proceeds \u2014 or \u274c TruvaError thrown"}</span>{"\n\n"}
             <span className="text-zinc-600 italic">{"// Get live trust score"}</span>{"\n"}
-            <span className="text-purple-400">const</span> score = <span className="text-purple-400">await</span>{" "}
-            <span className="text-blue-400">getAgentTrustScore</span>(agentPublicKey);{"\n"}
-            <span className="text-zinc-600 italic">{"// \u2192 { tier: 'Gold', score: 94.2, txCount: 147 }"}</span>
+            <span className="text-purple-400">const</span> score = <span className="text-purple-400">await</span>{" truva."}
+            <span className="text-blue-400">getAgentScore</span>(agentPublicKey);{"\n"}
+            <span className="text-zinc-600 italic">{"// \u2192 { tier: 'Gold', score: 94, frozen: false }"}</span>
           </code>
         </pre>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 max-w-[780px] mx-auto">
         {[
-          { num: "1", title: "Install SDK", desc: "npm install @agent-passport/solana" },
+          { num: "1", title: "Install SDK", desc: "npm install @truva-protocol/sdk" },
           { num: "2", title: "Gate Payments", desc: "Call requireTrustTier() before any transaction" },
           { num: "3", title: "Ship It", desc: "TrustGate handles verification in <400ms" },
         ].map((step) => (
