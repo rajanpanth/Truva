@@ -8,7 +8,6 @@
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
-import rateLimit from "express-rate-limit";
 import pinoHttp from "pino-http";
 import { Connection } from "@solana/web3.js";
 
@@ -16,6 +15,7 @@ import { logger } from "./logger";
 import { checkDbConnection, pool } from "./db/client";
 import { runMigrations } from "./db/schema";
 import { redis, checkRedisConnection } from "./cache/redis";
+import { requireApiKey, apiLimiter, webhookLimiter, writeLimiter } from "./middleware";
 
 import agentRoutes from "./routes/agents";
 import statsRoutes from "./routes/scores";
@@ -54,70 +54,30 @@ function validateEnv(): void {
   }
 }
 
-// ── Auth Middleware ──
-
-const API_KEY = process.env.API_KEY;
-
-export function requireApiKey(
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-): void {
-  if (!API_KEY) {
-    // No API key configured — allow all requests (dev mode)
-    next();
-    return;
-  }
-
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    res.status(401).json({ success: false, error: "Missing Authorization header" });
-    return;
-  }
-
-  const token = authHeader.slice(7);
-  if (token !== API_KEY) {
-    res.status(403).json({ success: false, error: "Invalid API key" });
-    return;
-  }
-
-  next();
-}
-
 // ── Create Express App ──
 
 const app = express();
 const PORT = parseInt(process.env.PORT || "3001", 10);
 
+// ── CORS ──
+const allowedOrigins = process.env.CORS_ORIGINS
+  ? process.env.CORS_ORIGINS.split(",").map((o) => o.trim())
+  : ["http://localhost:3000", "https://truva-x.tech"];
+
 // Middleware
 app.use(helmet());
-app.use(cors());
+app.use(
+  cors({
+    origin: (origin, cb) => {
+      // Allow requests with no origin (server-to-server, curl, etc.)
+      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+      cb(new Error(`CORS: origin ${origin} not allowed`));
+    },
+    credentials: true,
+  })
+);
 app.use(pinoHttp({ logger, autoLogging: process.env.NODE_ENV !== "test" }));
 app.use(express.json({ limit: "10mb" }));
-
-// Rate limiters
-const apiLimiter = rateLimit({
-  windowMs: 60_000,
-  max: 100,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { success: false, error: "Too many requests, try again later" },
-});
-
-const webhookLimiter = rateLimit({
-  windowMs: 60_000,
-  max: 500,
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-const writeLimiter = rateLimit({
-  windowMs: 60_000,
-  max: 30,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { success: false, error: "Too many write requests" },
-});
 
 app.use("/api", apiLimiter);
 app.use("/webhook", webhookLimiter);
@@ -257,5 +217,5 @@ start().catch((err) => {
   process.exit(1);
 });
 
-export { requireApiKey as authMiddleware, writeLimiter };
+export { requireApiKey, writeLimiter };
 export default app;
