@@ -1,0 +1,20 @@
+# Development override — use with:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+#
+# Differences from production:
+# - Rebuilds from the builder stage (ts-node hot reload via nodemon)
+# - Source code is volume-mounted so changes reload without rebuilding
+# - NODE_ENV = development
+
+version: "3.8"
+
+services:
+  engine:
+    build:
+      target: builder
+    container_name: truva-engine-dev
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./backend/reputation-engine/src:/build/src
+    command: ["npx", "nodemon", "--exec", "ts-node", "src/index.ts"]

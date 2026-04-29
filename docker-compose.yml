@@ -36,6 +36,7 @@ services:
     build:
       context: ./backend/reputation-engine
       dockerfile: Dockerfile
+      target: production
     container_name: truva-engine
     depends_on:
       postgres:
@@ -44,16 +45,25 @@ services:
         condition: service_healthy
     environment:
       PORT: "3001"
-      NODE_ENV: development
+      NODE_ENV: production
       DATABASE_URL: postgresql://truva:truva_dev_password@postgres:5432/truva
       REDIS_URL: redis://redis:6379
-      SOLANA_RPC_URL: https://api.devnet.solana.com
-      TRUVA_PROGRAM_ID: BTgy2r8R85Jknq3JetNiVt1x9grdccm7pTV2LyUmDzG5
+      SOLANA_RPC_URL: ${SOLANA_RPC_URL:-https://api.devnet.solana.com}
+      TRUVA_PROGRAM_ID: ${TRUVA_PROGRAM_ID:-BTgy2r8R85Jknq3JetNiVt1x9grdccm7pTV2LyUmDzG5}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,https://truva-x.tech}
+      API_KEY: ${API_KEY:-}
+      HELIUS_API_KEY: ${HELIUS_API_KEY:-}
+      HELIUS_WEBHOOK_SECRET: ${HELIUS_WEBHOOK_SECRET:-}
+      BACKEND_AUTHORITY_KEY: ${BACKEND_AUTHORITY_KEY:-}
     ports:
       - "3001:3001"
-    volumes:
-      - ./backend/reputation-engine/src:/app/src
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3001/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
 volumes:
   postgres_data:
