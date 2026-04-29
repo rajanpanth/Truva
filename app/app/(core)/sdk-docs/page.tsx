@@ -3,14 +3,14 @@ import { CodeBlock } from '@/components/ui/truva/CodeBlock';
 import { Book, Shield, Zap, Globe, Terminal } from 'lucide-react';
 
 const apiEndpoints = [
-  { method: 'GET', path: '/api/v1/agents', desc: 'List all registered agents', auth: 'API_KEY' },
-  { method: 'GET', path: '/api/v1/agents/:id', desc: 'Get agent passport by ID', auth: 'API_KEY' },
-  { method: 'POST', path: '/api/v1/agents/register', desc: 'Register a new agent', auth: 'API_KEY + SIGNATURE' },
-  { method: 'GET', path: '/api/v1/trustgate/logs', desc: 'Stream TrustGate validation logs', auth: 'API_KEY' },
-  { method: 'POST', path: '/api/v1/trustgate/validate', desc: 'Submit transaction for validation', auth: 'API_KEY + ZK_PROOF' },
-  { method: 'GET', path: '/api/v1/reputation/:agentId', desc: 'Get reputation score & history', auth: 'API_KEY' },
-  { method: 'POST', path: '/api/v1/reputation/attest', desc: 'Submit validator attestation', auth: 'VALIDATOR_KEY' },
-  { method: 'GET', path: '/api/v1/validators/status', desc: 'Current validator node status', auth: 'NONE' },
+  { method: 'GET', path: '/api/agents', desc: 'List all registered agents', auth: 'API_KEY' },
+  { method: 'GET', path: '/api/agents/:id', desc: 'Get agent passport + score', auth: 'API_KEY' },
+  { method: 'POST', path: '/api/agents', desc: 'Register a new agent', auth: 'API_KEY + SIGNATURE' },
+  { method: 'GET', path: '/api/trustgate', desc: 'Stream TrustGate validation logs', auth: 'API_KEY' },
+  { method: 'GET', path: '/api/reputation', desc: 'Get global reputation stats', auth: 'API_KEY' },
+  { method: 'GET', path: '/api/transactions', desc: 'List verified transactions', auth: 'API_KEY' },
+  { method: 'POST', path: '/api/transactions/enforce', desc: 'Submit transaction for enforcement', auth: 'API_KEY + ZK_PROOF' },
+  { method: 'POST', path: '/api/waitlist', desc: 'Join the waitlist', auth: 'NONE' },
 ];
 
 const methodColors: Record<string, string> = {
@@ -26,11 +26,11 @@ export default function SDKDocsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-[24px] font-bold">SDK_DOCUMENTATION</h1>
-          <p className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mt-1">TRUVA PROTOCOL SDK · VERSION 2.4.0 · TYPESCRIPT</p>
+          <p className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mt-1">TRUVA PROTOCOL SDK · VERSION 0.1.0 · TYPESCRIPT</p>
         </div>
         <div className="flex items-center gap-2">
           <TruvaStatusPill variant="verified" />
-          <span className="text-[12px] uppercase tracking-[2px] text-[var(--text-muted)]">LAST_UPDATED: 2024-05-24</span>
+          <span className="text-[12px] uppercase tracking-[2px] text-[var(--text-muted)]">LAST_UPDATED: 2026-04-29</span>
         </div>
       </div>
 
@@ -43,31 +43,25 @@ export default function SDKDocsPage() {
 
         <div className="mb-4">
           <div className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mb-2">1. INSTALL_PACKAGE</div>
-          <CodeBlock code="npm install @truva/sdk @truva/core" language="bash" />
+          <CodeBlock code="npm install @truva-protocol/sdk" language="bash" />
         </div>
 
         <div className="mb-4">
           <div className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mb-2">2. INITIALIZE_CLIENT</div>
           <CodeBlock
             language="typescript"
-            code={`import { TruvaClient } from '@truva/sdk';
+            code={`import { TruvaSDK, TruvaError } from 'truva-sdk';
 
-const client = new TruvaClient({
-  apiKey: process.env.TRUVA_API_KEY,
-  network: 'mainnet',
-  region: 'global',
+const truva = new TruvaSDK({
+  rpcUrl: 'https://api.devnet.solana.com',
+  apiUrl: 'http://localhost:4000',
 });
 
-// Validate a transaction
-const result = await client.trustgate.validate({
-  agentId: '0xAF2C...FFC2',
-  txHash: '0xB5Fe01...',
-  amount: 1500.00,
-  currency: 'USDC',
-});
-
-console.log(result.status); // 'PASSED'
-console.log(result.latency); // '12ms'`}
+// Check agent score
+const score = await truva.getAgentScore(agentPubkey);
+console.log(score.tier);   // 'Gold'
+console.log(score.score);  // 94
+console.log(score.frozen); // false`}
           />
         </div>
 
@@ -75,17 +69,23 @@ console.log(result.latency); // '12ms'`}
           <div className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mb-2">3. REGISTER_AN_AGENT</div>
           <CodeBlock
             language="typescript"
-            code={`const agent = await client.agents.register({
-  name: 'ALPHA_LIQUIDITY_BOT',
-  publicKey: '0x...',
-  category: 'FINANCIAL_ARBITRAGE',
-  capabilities: ['SWAP_EXECUTION', 'LP_MANAGEMENT'],
-  stakeAmount: 50000,
-});
+            code={`// Gate a payment by trust tier
+try {
+  await truva.requireTrustTier('Gold', agentPubkey);
+  // ✅ Agent meets Gold tier — proceed
+} catch (err) {
+  if (err instanceof TruvaError) {
+    console.error(err.message); // 'Agent tier Bronze < required Gold'
+  }
+}
 
-console.log(agent.id);     // '0xNEW...ID'
-console.log(agent.tier);   // 'SANDBOX_ACCESS'
-console.log(agent.status); // 'PENDING_VALIDATION'`}
+// Register a new agent
+await truva.register(agentPubkey);
+
+// Get full profile
+const profile = await truva.getAgentProfile(agentPubkey);
+console.log(profile.tier);   // 'Bronze'
+console.log(profile.score);  // 42`}
           />
         </div>
       </div>

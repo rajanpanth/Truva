@@ -3,9 +3,9 @@
 import { useRealtimeLogs } from "@/lib/hooks/useRealtimeLogs";
 
 const FALLBACK_LOGS = [
-  { time: "2024-05-24T12:04:01Z", agent: "TRD_BOT_X_09", hash: "0x72a...f92c", status: "PASSED", latency: "12ms" },
-  { time: "2024-05-24T12:03:58Z", agent: "ARB_SCAN_4", hash: "0x31b...c4a1", status: "BLOCKED", latency: "45ms" },
-  { time: "2024-05-24T12:03:52Z", agent: "SENT_ANALYTICS", hash: "0x99c...331b", status: "PASSED", latency: "8ms" },
+  { time: "2026-04-29T12:04:01Z", agent: "TRD_BOT_X_09", hash: "0x72a...f92c", status: "PASSED", latency: "12ms" },
+  { time: "2026-04-29T12:03:58Z", agent: "ARB_SCAN_4", hash: "0x31b...c4a1", status: "BLOCKED", latency: "45ms" },
+  { time: "2026-04-29T12:03:52Z", agent: "SENT_ANALYTICS", hash: "0x99c...331b", status: "PASSED", latency: "8ms" },
 ];
 
 export function RealTimeLogs() {

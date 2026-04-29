@@ -42,13 +42,13 @@ Truva Protocol provides programmable, on-chain trust gates for AI agent payments
 │  └─────────────────────────────────────────────────────┘ │
 │                                                          │
 │  ┌─────────────────────────────────────────────────────┐ │
-│  │                  SDK (@truva/sdk)                   │ │
+│  │           SDK (@truva-protocol/sdk)                 │ │
 │  │                                                     │ │
-│  │  Truva.getAgentScore()    → on-chain PDA read      │ │
-│  │  Truva.requireTrustTier() → throws if insufficient  │ │
-│  │  Truva.register()         → REST API               │ │
-│  │  Truva.getAgentProfile()  → REST API               │ │
-│  │  Truva.isEligible()       → REST API               │ │
+│  │  truva.getAgentScore()    → on-chain PDA read      │ │
+│  │  truva.requireTrustTier() → throws if insufficient  │ │
+│  │  truva.register()         → REST API               │ │
+│  │  truva.getAgentProfile()  → REST API               │ │
+│  │  truva.isEligible()       → REST API               │ │
 │  └─────────────────────────────────────────────────────┘ │
 └──────────────────────────────────────────────────────────┘
 ```
@@ -326,23 +326,24 @@ All endpoints return:
 ### Installation
 
 ```bash
-npm install @truva/sdk
+npm install @truva-protocol/sdk
 ```
 
 ### Quick Start
 
 ```typescript
-import { Truva, TruvaError } from '@truva/sdk';
-import { Connection, PublicKey } from '@solana/web3.js';
-import { Wallet } from '@coral-xyz/anchor';
+import { TruvaSDK, TruvaError } from 'truva-sdk';
+import { PublicKey } from '@solana/web3.js';
 
-const connection = new Connection('https://api.devnet.solana.com');
-const truva = new Truva(connection, wallet, 'http://localhost:3001');
+const truva = new TruvaSDK({
+  rpcUrl: 'https://api.mainnet-beta.solana.com',
+  apiUrl: 'http://localhost:3001',
+});
 
 // Check agent score (reads from on-chain PDA)
 const score = await truva.getAgentScore(agentPubkey);
-console.log(score.tier);  // "Gold"
-console.log(score.score); // 92
+console.log(score.tier);       // "Gold"
+console.log(score.score);      // 87
 
 // Gate a payment — throws TruvaError if insufficient
 try {

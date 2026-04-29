@@ -1,30 +1,67 @@
+'use client';
+
+import { useAgent } from '@/lib/hooks/useAgents';
+import { TIER_LABELS } from '@/backend/types/agent';
 import { TruvaStatCard, TruvaStatusPill, TruvaTerminal, TruvaProgressBar, TruvaBadge, TruvaButton, TruvaCheckTag } from '@/components/ui/truva';
-import { Shield, ShieldCheck, Zap, TrendingUp, Activity } from 'lucide-react';
-
-const terminalLines = [
-  '[AUTH] Session initiated for TRADEBOT_X · NODE_SOLANA_01',
-  '[TX] SWAP_VALIDATED · 0xB5Fe01 · 12ms · PASS',
-  '[SYS] Heartbeat OK · Latency 4ms · Memory 62%',
-  '[TX] CROSS_CHAIN_BRIDGE · 0xC29e0D · 22ms · PASS',
-  '[AUTH] Re-authentication cycle · TOKEN_REFRESH',
-  '[TX] LP_REBALANCE · 0x91Ab45 · 15ms · PASS',
-  '[WARN] Rate limit approaching · 85% of 10k/min',
-  '[TX] ARBITRAGE_EXECUTE · 0xD47b2F · 9ms · PASS',
-  '[SYS] Epoch 412 checkpoint · All validators confirmed',
-];
-
-const complianceData = [
-  { label: 'KYA_STATUS', value: 'VERIFIED', color: 'var(--accent-green)' },
-  { label: 'OPERATING_LIMIT', value: '$10.0M DAILY', color: 'var(--text-primary)' },
-  { label: 'JURISDICTION', value: 'GLOBAL_MESH', color: 'var(--text-primary)' },
-  { label: 'LAST_AUDIT', value: '2024-05-23', color: 'var(--text-primary)' },
-  { label: 'RISK_CLASSIFICATION', value: 'LOW', color: 'var(--accent-green)' },
-  { label: 'REGISTRATION_EPOCH', value: '389', color: 'var(--text-primary)' },
-];
+import { Shield, ShieldCheck, Zap, TrendingUp, Activity, AlertTriangle } from 'lucide-react';
+import Link from 'next/link';
 
 export default function AgentProfilePage({ params }: { params: { id: string } }) {
-  const slug = params.id || 'tradebot-x';
-  const agentName = slug.replace(/-/g, '_').toUpperCase();
+  const { data: agent, isLoading, isError } = useAgent(params.id);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4 animate-pulse">
+        <div className="h-16 bg-[var(--bg-card)] rounded-[2px]" />
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="h-28 bg-[var(--bg-card)] rounded-[2px]" />
+          ))}
+        </div>
+        <div className="h-64 bg-[var(--bg-card)] rounded-[2px]" />
+      </div>
+    );
+  }
+
+  if (isError || !agent) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 text-center">
+        <AlertTriangle size={40} className="text-[var(--status-blocked)] mb-4 opacity-60" />
+        <h1 className="text-[20px] font-bold mb-2">AGENT_NOT_FOUND</h1>
+        <p className="text-[13px] uppercase tracking-[2px] text-[var(--text-muted)] mb-6">
+          No passport registered for ID: {params.id}
+        </p>
+        <Link href="/registry">
+          <TruvaButton variant="outlined" className="text-[12px]">BACK_TO_REGISTRY</TruvaButton>
+        </Link>
+      </div>
+    );
+  }
+
+  const tierName = TIER_LABELS[agent.tier];
+  const tierLower = tierName.toLowerCase() as 'bronze' | 'silver' | 'gold' | 'platinum';
+  const agentStatus = agent.is_flagged ? 'flagged' : agent.is_active ? 'active' : 'inactive';
+  const successPct = agent.success_rate != null ? agent.success_rate * 100 : 0;
+
+  const terminalLines = [
+    `[AUTH] Session initiated for ${agent.name.toUpperCase()} · NODE_SOLANA_01`,
+    `[SYS] Trust score: ${agent.trust_score} · Tier: ${tierName}`,
+    `[SYS] Task type: ${agent.task_type.toUpperCase()} · Status: ${agentStatus.toUpperCase()}`,
+    `[TX] Success rate: ${successPct.toFixed(2)}% · Max TX: ${agent.max_tx_size.toLocaleString()}`,
+    `[AUTH] Rate limit: ${agent.rate_limit}/min`,
+    agent.pda_address ? `[CHAIN] PDA: ${agent.pda_address}` : '[CHAIN] PDA: pending on-chain registration',
+    `[SYS] Registered: ${new Date(agent.registered_at ?? agent.created_at).toLocaleDateString()}`,
+    `[SYS] Last updated: ${new Date(agent.updated_at).toLocaleDateString()}`,
+  ];
+
+  const complianceData = [
+    { label: 'KYA_STATUS', value: agent.is_flagged ? 'FLAGGED' : 'VERIFIED', color: agent.is_flagged ? 'var(--status-blocked)' : 'var(--accent-green)' },
+    { label: 'OPERATING_LIMIT', value: `${agent.max_tx_size.toLocaleString()} MAX_TX`, color: 'var(--text-primary)' },
+    { label: 'RATE_LIMIT', value: `${agent.rate_limit}/MIN`, color: 'var(--text-primary)' },
+    { label: 'REGISTERED', value: new Date(agent.registered_at ?? agent.created_at).toLocaleDateString(), color: 'var(--text-primary)' },
+    { label: 'RISK_CLASSIFICATION', value: agent.is_flagged ? 'HIGH' : successPct >= 90 ? 'LOW' : 'MEDIUM', color: agent.is_flagged ? 'var(--status-blocked)' : 'var(--accent-green)' },
+    { label: 'TASK_TYPE', value: agent.task_type.toUpperCase(), color: 'var(--text-primary)' },
+  ];
 
   return (
     <div>
@@ -36,11 +73,13 @@ export default function AgentProfilePage({ params }: { params: { id: string } })
           </div>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-[24px] font-bold">{agentName}</h1>
-              <TruvaBadge variant="platinum" />
-              <TruvaStatusPill variant="active" />
+              <h1 className="text-[24px] font-bold">{agent.name.toUpperCase().replace(/\s+/g, '_')}</h1>
+              <TruvaBadge variant={tierLower} />
+              <TruvaStatusPill variant={agentStatus as 'active' | 'inactive'} />
             </div>
-            <p className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mt-1">ID: 0xAF2C...FFC2 · REPUTATION_STAMP: AF-9283-TR-001</p>
+            <p className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mt-1">
+              ID: {agent.public_key.slice(0, 8)}...{agent.public_key.slice(-4)} · OPERATOR: {agent.operator_name}
+            </p>
           </div>
         </div>
         <TruvaButton variant="outlined" className="text-[12px]">EXPORT_PASSPORT</TruvaButton>
@@ -48,26 +87,27 @@ export default function AgentProfilePage({ params }: { params: { id: string } })
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-        {/* Trust Score - tall card */}
         <div className="bg-[var(--bg-card)] border border-[var(--accent-green)] rounded-[2px] p-5 row-span-1 flex flex-col items-center justify-center text-center">
           <Shield size={32} className="text-[var(--accent-green)] mb-2" />
           <div className="text-[13px] uppercase tracking-[2px] text-[var(--accent-green)] mb-1">TRUST_SCORE</div>
-          <div className="text-[36px] font-bold">99.8</div>
-          <div className="text-[12px] text-[var(--text-muted)] mt-1">PERCENTILE: TOP 0.1%</div>
+          <div className="text-[36px] font-bold">{agent.trust_score}</div>
+          <div className="text-[12px] text-[var(--text-muted)] mt-1">TIER: {tierName.toUpperCase()}</div>
         </div>
-        <TruvaStatCard label="RELIABILITY" value="99.98%" sub="UPTIME LAST 90 DAYS" icon={<ShieldCheck size={16} className="text-[var(--accent-green)]" />} />
-        <TruvaStatCard label="AVG_LATENCY" value="4.2ms" sub="P99: 12ms" icon={<Zap size={16} className="text-[var(--accent-green)]" />} />
-        <TruvaStatCard label="TX_PROCESSED" value="142,847" sub="LAST 30 DAYS" icon={<Activity size={16} className="text-[var(--accent-green)]" />} />
-        <TruvaStatCard label="STAKED_AMOUNT" value="500K TRU" sub="LOCKED UNTIL EPOCH 500" icon={<TrendingUp size={16} className="text-[var(--accent-green)]" />} />
+        <TruvaStatCard label="SUCCESS_RATE" value={`${successPct.toFixed(1)}%`} sub="TRANSACTION SUCCESS" icon={<ShieldCheck size={16} className="text-[var(--accent-green)]" />} />
+        <TruvaStatCard label="RATE_LIMIT" value={`${agent.rate_limit}/m`} sub="MAX REQUESTS/MIN" icon={<Zap size={16} className="text-[var(--accent-green)]" />} />
+        <TruvaStatCard label="MAX_TX_SIZE" value={agent.max_tx_size.toLocaleString()} sub="LAMPORTS" icon={<Activity size={16} className="text-[var(--accent-green)]" />} />
+        <TruvaStatCard label="CHAINS" value={String(agent.chains?.length ?? 1)} sub="SUPPORTED CHAINS" icon={<TrendingUp size={16} className="text-[var(--accent-green)]" />} />
       </div>
 
       {/* Capabilities */}
       <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-5 mb-6">
         <h3 className="text-[13px] uppercase tracking-[2px] font-bold mb-3">DECLARED_CAPABILITIES</h3>
         <div className="flex flex-wrap gap-2">
-          {['SWAP_EXECUTION', 'CROSS_CHAIN_BRIDGE', 'ARBITRAGE_DETECTION', 'LP_MANAGEMENT', 'ORACLE_READING', 'RISK_ASSESSMENT'].map((c) => (
-            <TruvaCheckTag key={c} label={c} />
+          {(agent.chains ?? ['SOLANA']).map((c: string) => (
+            <TruvaCheckTag key={c} label={c.toUpperCase()} />
           ))}
+          <TruvaCheckTag label={agent.task_type.toUpperCase()} />
+          {agent.spending_behavior && <TruvaCheckTag label={agent.spending_behavior.toUpperCase()} />}
         </div>
       </div>
 
@@ -98,17 +138,17 @@ export default function AgentProfilePage({ params }: { params: { id: string } })
             <div className="space-y-2">
               <div>
                 <div className="flex justify-between text-[13px] mb-1">
-                  <span className="text-[var(--text-secondary)]">VIOLATION_RATE</span>
-                  <span className="text-[var(--accent-green)]">0.02%</span>
+                  <span className="text-[var(--text-secondary)]">SUCCESS_RATE</span>
+                  <span className="text-[var(--accent-green)]">{successPct.toFixed(2)}%</span>
                 </div>
-                <TruvaProgressBar value={0.02} color="var(--accent-green)" />
+                <TruvaProgressBar value={successPct} color="var(--accent-green)" />
               </div>
               <div>
                 <div className="flex justify-between text-[13px] mb-1">
-                  <span className="text-[var(--text-secondary)]">COMPLIANCE_SCORE</span>
-                  <span className="text-[var(--accent-green)]">100%</span>
+                  <span className="text-[var(--text-secondary)]">TRUST_SCORE</span>
+                  <span className="text-[var(--accent-green)]">{agent.trust_score}%</span>
                 </div>
-                <TruvaProgressBar value={100} color="var(--accent-green)" />
+                <TruvaProgressBar value={agent.trust_score} color="var(--accent-green)" />
               </div>
             </div>
           </div>
@@ -116,4 +156,4 @@ export default function AgentProfilePage({ params }: { params: { id: string } })
       </div>
     </div>
   );
-}
+}

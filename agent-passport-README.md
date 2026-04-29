@@ -48,11 +48,12 @@ Agent wants to pay → TrustGate checks passport → Tier sufficient? → ✅ Ex
 
 ### Trust Tiers
 
-| Tier   | Score   | Color  | Access Level             |
-|--------|---------|--------|--------------------------|
-| Bronze | 0–49    | 🟠 Gray | Basic ops, $5K limit     |
-| Silver | 50–79   | 🔵 Blue | Standard flows, $100K    |
-| Gold   | 80–100  | 🟡 Gold | Full DeFi access, $1M+   |
+| Tier     | Score   | Access Level                      |
+|----------|---------|-----------------------------------|
+| Bronze   | 0–49    | Basic ops, 5 SOL max per tx       |
+| Silver   | 50–79   | Standard flows, 100 SOL max per tx|
+| Gold     | 80–94   | Full DeFi access, unlimited       |
+| Platinum | 95–100  | Ultra-compliant, priority routing |
 
 ---
 
@@ -170,9 +171,14 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000)
 
 Pages:
-- `/` — Dashboard with agent registry
-- `/agent/[pubkey]` — Agent detail + transaction history
-- `/demo` — Interactive TrustGate demo
+- `/` — Landing page with agent registry + waitlist
+- `/registry` — Full agent registry with tier filters
+- `/agent/[id]` — Agent passport detail + transaction history
+- `/live-demo` — Interactive TrustGate demo
+- `/trustgate-logs` — Real-time verification logs
+- `/reputation` — Reputation explorer
+- `/validator` — Validator dashboard
+- `/sdk-docs` — SDK documentation
 
 ---
 
@@ -192,12 +198,17 @@ This is the **gate nobody else has built**. Any Solana protocol can integrate th
 ### SDK Usage
 
 ```typescript
-import { requireTrustTier } from '@agent-passport/sdk';
+import { TruvaSDK, TruvaError } from 'truva-sdk';
+
+const truva = new TruvaSDK({
+  rpcUrl: 'https://api.devnet.solana.com',
+  apiUrl: 'http://localhost:4000',
+});
 
 // One line to gate any payment
-await requireTrustTier('Gold', agentPublicKey, connection, program);
+await truva.requireTrustTier('Gold', agentPublicKey);
 // ✅ Passes → continue with payment
-// ❌ Throws → agent doesn't meet tier
+// ❌ Throws TruvaError → agent doesn't meet tier
 ```
 
 ---
@@ -214,19 +225,25 @@ await requireTrustTier('Gold', agentPublicKey, connection, program);
 
 ## 🧠 Reputation Engine
 
-Simplified scoring formula:
+Simplified scoring formula (6 signals, 100 pts total):
 
 ```
-volume   = min(tx_count, 200) / 200 × 40   → max 40 pts
-reliability = success_rate × 60              → max 60 pts
-score    = volume + reliability              → 0-100
+tx_volume    = min(tx_count / 100, 1.0)            × 25 pts
+success_rate = (success_count / tx_count)           × 25 pts
+diversity    = min(unique_counterparties / 20, 1.0) × 20 pts
+age          = min(account_age_days / 60, 1.0)      × 15 pts
+zk_proofs    = min(zk_proof_count / 5, 1.0)         × 10 pts
+attestations = min(attestation_count / 3, 1.0)      ×  5 pts
+───────────────────────────────────────────────────────────
+score        = sum of all signals                 → 0–100
 ```
 
-| Score Range | Tier   |
-|-------------|--------|
-| 0–49        | Bronze |
-| 50–79       | Silver |
-| 80–100      | Gold   |
+| Score Range | Tier     |
+|-------------|----------|
+| 0–49        | Bronze   |
+| 50–79       | Silver   |
+| 80–94       | Gold     |
+| 95–100      | Platinum |
 
 ---
 

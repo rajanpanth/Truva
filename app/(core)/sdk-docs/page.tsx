@@ -3,14 +3,16 @@ import { CodeBlock } from '@/components/ui/truva/CodeBlock';
 import { Book, Shield, Zap, Globe, Terminal } from 'lucide-react';
 
 const apiEndpoints = [
-  { method: 'GET', path: '/api/v1/agents', desc: 'List all registered agents', auth: 'API_KEY' },
-  { method: 'GET', path: '/api/v1/agents/:id', desc: 'Get agent passport by ID', auth: 'API_KEY' },
-  { method: 'POST', path: '/api/v1/agents/register', desc: 'Register a new agent', auth: 'API_KEY + SIGNATURE' },
-  { method: 'GET', path: '/api/v1/trustgate/logs', desc: 'Stream TrustGate validation logs', auth: 'API_KEY' },
-  { method: 'POST', path: '/api/v1/trustgate/validate', desc: 'Submit transaction for validation', auth: 'API_KEY + ZK_PROOF' },
-  { method: 'GET', path: '/api/v1/reputation/:agentId', desc: 'Get reputation score & history', auth: 'API_KEY' },
-  { method: 'POST', path: '/api/v1/reputation/attest', desc: 'Submit validator attestation', auth: 'VALIDATOR_KEY' },
-  { method: 'GET', path: '/api/v1/validators/status', desc: 'Current validator node status', auth: 'NONE' },
+  { method: 'GET',  path: '/api/agents',               desc: 'List all registered agents (supports ?tier= filter)', auth: 'API_KEY' },
+  { method: 'GET',  path: '/api/agents/:pubkey',        desc: 'Full agent profile with stats',                       auth: 'API_KEY' },
+  { method: 'POST', path: '/api/agents/register',       desc: 'Register new agent, triggers score backfill',         auth: 'API_KEY + SIGNATURE' },
+  { method: 'GET',  path: '/api/agents/:pubkey/score',  desc: 'Current trust score and tier',                        auth: 'API_KEY' },
+  { method: 'GET',  path: '/api/agents/:pubkey/history','desc': 'Score history over time',                           auth: 'API_KEY' },
+  { method: 'GET',  path: '/api/agents/:pubkey/txs',    desc: 'Transaction history (paginated)',                     auth: 'API_KEY' },
+  { method: 'POST', path: '/api/agents/:pubkey/attest', desc: 'Submit validator attestation',                        auth: 'VALIDATOR_KEY' },
+  { method: 'POST', path: '/api/agents/:pubkey/zkproof','desc': 'Submit ZK proof record',                            auth: 'VALIDATOR_KEY' },
+  { method: 'GET',  path: '/api/stats',                 desc: 'Aggregate stats — total agents, avg score, tiers',   auth: 'NONE' },
+  { method: 'GET',  path: '/health',                    desc: 'Server health — DB and Redis status',                 auth: 'NONE' },
 ];
 
 const methodColors: Record<string, string> = {
@@ -26,11 +28,11 @@ export default function SDKDocsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-[24px] font-bold">SDK_DOCUMENTATION</h1>
-          <p className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mt-1">TRUVA PROTOCOL SDK · VERSION 2.4.0 · TYPESCRIPT</p>
+          <p className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mt-1">TRUVA PROTOCOL SDK · VERSION 0.1.0 · TYPESCRIPT</p>
         </div>
         <div className="flex items-center gap-2">
           <TruvaStatusPill variant="verified" />
-          <span className="text-[12px] uppercase tracking-[2px] text-[var(--text-muted)]">LAST_UPDATED: 2024-05-24</span>
+          <span className="text-[12px] uppercase tracking-[2px] text-[var(--text-muted)]">LAST_UPDATED: 2026-04-29</span>
         </div>
       </div>
 
@@ -43,49 +45,50 @@ export default function SDKDocsPage() {
 
         <div className="mb-4">
           <div className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mb-2">1. INSTALL_PACKAGE</div>
-          <CodeBlock code="npm install @truva/sdk @truva/core" language="bash" />
+          <CodeBlock code="npm install @truva-protocol/sdk" language="bash" />
         </div>
 
         <div className="mb-4">
-          <div className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mb-2">2. INITIALIZE_CLIENT</div>
+          <div className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mb-2">2. GATE_A_PAYMENT</div>
           <CodeBlock
             language="typescript"
-            code={`import { TruvaClient } from '@truva/sdk';
+            code={`import { TruvaSDK, TruvaError } from 'truva-sdk';
+import { PublicKey } from '@solana/web3.js';
 
-const client = new TruvaClient({
-  apiKey: process.env.TRUVA_API_KEY,
-  network: 'mainnet',
-  region: 'global',
+const truva = new TruvaSDK({
+  rpcUrl: 'https://api.mainnet-beta.solana.com',
+  apiUrl: process.env.TRUVA_API_URL,
 });
 
-// Validate a transaction
-const result = await client.trustgate.validate({
-  agentId: '0xAF2C...FFC2',
-  txHash: '0xB5Fe01...',
-  amount: 1500.00,
-  currency: 'USDC',
-});
-
-console.log(result.status); // 'PASSED'
-console.log(result.latency); // '12ms'`}
+// Gate a payment \u2014 throws TruvaError if insufficient tier
+try {
+  await truva.requireTrustTier('Gold', agentPubkey);
+  // ✅ Safe to proceed
+} catch (err) {
+  if (err instanceof TruvaError) {
+    console.log(err.currentTier); // 'Bronze'
+    console.log(err.requiredTier); // 'Gold'
+  }
+}`}
           />
         </div>
 
         <div>
-          <div className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mb-2">3. REGISTER_AN_AGENT</div>
+          <div className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mb-2">3. READ_TRUST_SCORE</div>
           <CodeBlock
             language="typescript"
-            code={`const agent = await client.agents.register({
-  name: 'ALPHA_LIQUIDITY_BOT',
-  publicKey: '0x...',
-  category: 'FINANCIAL_ARBITRAGE',
-  capabilities: ['SWAP_EXECUTION', 'LP_MANAGEMENT'],
-  stakeAmount: 50000,
-});
+            code={`// Read trust score directly from on-chain PDA
+const score = await truva.getAgentScore(agentPubkey);
 
-console.log(agent.id);     // '0xNEW...ID'
-console.log(agent.tier);   // 'SANDBOX_ACCESS'
-console.log(agent.status); // 'PENDING_VALIDATION'`}
+console.log(score.tier);       // 'Gold'
+console.log(score.score);      // 87
+console.log(score.frozen);     // false
+
+// Check eligibility for a specific amount (in lamports)
+const eligible = await truva.isEligible(
+  agentPubkey, 'Silver', 50_000_000_000
+);
+console.log(eligible); // true`}
           />
         </div>
       </div>

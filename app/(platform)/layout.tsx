@@ -29,7 +29,8 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
   return (
     <div className="flex min-h-screen bg-[var(--bg-base)]">
       {/* Left sidebar */}
-      <aside className="hidden lg:flex w-[180px] bg-[var(--bg-base)] border-r border-[var(--border-default)] flex-col p-4 shrink-0">
+      <aside className="hidden lg:flex w-[200px] flex-col p-4 shrink-0"
+        style={{ background: 'linear-gradient(180deg,#0b1118 0%,#070b10 100%)', borderRight: '1px solid var(--border-default)' }}>
         <div className="mb-8">
           <img src="/assets/logo/truva-logo.png" alt="Truva" className="site-logo" />
         </div>
@@ -41,11 +42,12 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
               <Link
                 key={item.label}
                 href={item.href}
-                className={`flex items-center gap-2.5 px-3 py-2 text-[13px] rounded-[2px] transition-colors ${
+                className={`flex items-center gap-2.5 mx-0 px-3 py-2.5 rounded-lg text-[12px] transition-all duration-200 ${
                   isActive
-                    ? 'text-[var(--accent-green)]'
-                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                    ? 'text-[var(--accent-green)] font-medium'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]'
                 }`}
+                style={isActive ? { background: 'linear-gradient(90deg,rgba(0,232,122,0.12),rgba(0,232,122,0.03))', boxShadow: 'inset 2px 0 0 var(--accent-green)' } : undefined}
               >
                 <span className={isActive ? 'text-[var(--accent-green)]' : 'text-[var(--text-muted)]'}>
                   {item.icon}
@@ -56,12 +58,12 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
           })}
         </nav>
 
-        <div className="space-y-1 mt-auto">
-          <Link href="#" className="flex items-center gap-2.5 px-3 py-2 text-[13px] text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
-            <Settings size={16} className="text-[var(--text-muted)]" /> Settings
+        <div className="space-y-1 mt-auto" style={{ borderTop: '1px solid var(--border-default)', paddingTop: '12px' }}>
+          <Link href="#" className="flex items-center gap-2 px-3 py-2 text-[12px] rounded-lg text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] transition-all">
+            <Settings size={14} /> Settings
           </Link>
-          <Link href="#" className="flex items-center gap-2.5 px-3 py-2 text-[13px] text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
-            <HelpCircle size={16} className="text-[var(--text-muted)]" /> Support
+          <Link href="#" className="flex items-center gap-2 px-3 py-2 text-[12px] rounded-lg text-[var(--text-muted)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-elevated)] transition-all">
+            <HelpCircle size={14} /> Support
           </Link>
         </div>
       </aside>
@@ -69,18 +71,21 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
       {/* Main content area */}
       <div className="flex-1 flex flex-col">
         {/* Topbar */}
-        <header className="h-14 border-b border-[var(--border-default)] flex items-center px-6 gap-4">
-          <div className="flex items-center gap-2 text-[13px]">
-            <span className="text-[var(--text-secondary)]">SYSTEM STATUS</span>
-            <TruvaPulsingDot size={6} />
-            <span className="font-bold text-[var(--text-primary)]">Platform Dashboard</span>
+        <header className="h-14 flex items-center px-6 gap-4 shrink-0"
+          style={{ background: 'rgba(6,9,13,0.85)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--border-default)' }}>
+          <div className="flex items-center gap-2 text-[12px]">
+            <TruvaPulsingDot size={5} />
+            <span className="text-[var(--accent-green)] font-semibold uppercase tracking-widest">Platform Dashboard</span>
           </div>
           <div className="flex-1" />
           <div className="relative">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
             <input
               placeholder="Search nodes..."
-              className="pl-8 pr-3 py-1.5 bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] text-[12px] text-[var(--text-primary)] font-mono placeholder:text-[var(--text-muted)] w-full sm:w-[200px] focus:border-[var(--accent-green)] focus:outline-none"
+              className="pl-8 pr-3 py-1.5 rounded-lg text-[12px] text-[var(--text-primary)] font-mono placeholder:text-[var(--text-muted)] w-full sm:w-[200px] focus:outline-none transition-all"
+              style={{ background: 'var(--bg-card)', border: '1px solid var(--border-default)' }}
+              onFocus={(e) => (e.currentTarget.style.borderColor = 'var(--accent-green)')}
+              onBlur={(e) => (e.currentTarget.style.borderColor = 'var(--border-default)')}
             />
           </div>
           <div className="relative flex items-center gap-1">
@@ -179,7 +184,7 @@ export default function PlatformLayout({ children }: { children: React.ReactNode
         </header>
 
         {/* Page content */}
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-5 lg:p-8 bg-[var(--bg-base)]">
           {children}
         </main>
       </div>

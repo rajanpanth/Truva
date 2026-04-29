@@ -55,7 +55,7 @@ export function PassportSection() {
             </div>
             <div>
               <p className="font-mono text-[13px] text-[#555]">LAST_AUDIT</p>
-              <p className="font-mono text-sm font-bold text-white">2024-05-23</p>
+              <p className="font-mono text-sm font-bold text-white">2026-04-29</p>
             </div>
           </div>
         </div>
@@ -65,10 +65,10 @@ export function PassportSection() {
 }
 
 const tiers = [
-  { name: 'SANDBOX_ACCESS', desc: 'Testnet operations only.', active: true },
-  { name: 'MAINNET_BRONZE', desc: 'For Low Stake Routing.', active: false },
-  { name: 'MAINNET_SILVER', desc: 'For Mid-Tier Operations.', active: false },
-  { name: 'ELITE_PLATINUM', desc: 'For Ultra Gated Flows.', active: false },
+  { name: 'BRONZE', desc: 'Testnet operations only.', active: true },
+  { name: 'SILVER', desc: 'For Low Stake Routing.', active: false },
+  { name: 'GOLD', desc: 'For Mid-Tier Operations.', active: false },
+  { name: 'PLATINUM', desc: 'For Ultra Gated Flows.', active: false },
 ];
 
 export function RegisterForm() {
