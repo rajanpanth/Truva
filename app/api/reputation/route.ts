@@ -9,10 +9,10 @@ import type { Agent } from '@/backend/types/agent';
 
 const createReputationEventSchema = z.object({
   agent_id: z.string().uuid('Invalid agent ID'),
-  event_type: z.enum(['task_success', 'task_fail', 'blocked', 'attested'], {
+  event_type: z.enum(['success', 'fail', 'blocked', 'attested'], {
     required_error: 'Event type is required',
   }),
-  note: z.string().max(500).optional(),
+  description: z.string().max(500).optional(),
 });
 
 export async function GET(request: NextRequest) {
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { agent_id, event_type, note } = parsed.data;
+    const { agent_id, event_type, description } = parsed.data;
 
     const { data: agent, error: agentError } = await supabase
       .from('agents')
@@ -80,8 +80,7 @@ export async function POST(request: NextRequest) {
       agent_id,
       event_type,
       score_delta: scoreDelta,
-      score_after: scoreAfter,
-      note: note ?? null,
+      description: description ?? null,
     };
 
     const { data: insertedEvent, error: insertError } = await supabase

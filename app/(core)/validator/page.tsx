@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState } from 'react';
 import { TruvaStatCard, TruvaStatusPill, TruvaTerminal, TruvaProgressBar, TruvaButton, TruvaPulsingDot } from '@/components/ui/truva';
@@ -180,7 +180,7 @@ export default function ValidatorDashboard() {
 
 function AttestationForm() {
   const [agentId, setAgentId] = useState('');
-  const [note, setNote] = useState('');
+  const [description, setDescription] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
 
@@ -191,14 +191,14 @@ function AttestationForm() {
       const res = await fetch('/api/reputation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ agent_id: agentId.trim(), event_type: 'attested', note: note.trim() || undefined }),
+        body: JSON.stringify({ agent_id: agentId.trim(), event_type: 'attested', description: description.trim() || undefined }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? 'Request failed');
       setStatus('success');
-      setMessage(`Attestation recorded. New score: ${json.data?.score_after ?? '—'}`);
+      setMessage(`Attestation recorded. Score delta: ${json.data?.score_delta >= 0 ? '+' : ''}${json.data?.score_delta ?? '—'}`);
       setAgentId('');
-      setNote('');
+      setDescription('');
     } catch (err: unknown) {
       setStatus('error');
       setMessage(err instanceof Error ? err.message : 'Unknown error');
@@ -235,9 +235,9 @@ function AttestationForm() {
           />
         </div>
         <div>
-          <label className="block text-[10px] uppercase tracking-[3px] text-[var(--text-muted)] mb-2">Note (optional)</label>
+          <label className="block text-[10px] uppercase tracking-[3px] text-[var(--text-muted)] mb-2">Description (optional)</label>
           <input
-            value={note} onChange={(e) => setNote(e.target.value)}
+            value={description} onChange={(e) => setDescription(e.target.value)}
             placeholder="Observed behaviour, source of attestation..."
             className="w-full px-4 py-2.5 rounded-lg text-[12px] font-mono placeholder:text-[var(--text-dim)]"
             style={inputStyle}

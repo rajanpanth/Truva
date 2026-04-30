@@ -12,13 +12,13 @@ export function isScoreSufficientForTier(score: number, tier: TrustTier): boolea
 }
 
 export function calculateScoreDelta(
-  eventType: 'task_success' | 'task_fail' | 'blocked' | 'attested',
+  eventType: 'success' | 'fail' | 'blocked' | 'attested',
   currentScore: number
 ): number {
   switch (eventType) {
-    case 'task_success':
+    case 'success':
       return Math.min(3, 100 - currentScore);
-    case 'task_fail':
+    case 'fail':
       return -Math.min(5, currentScore);
     case 'blocked':
       return -Math.min(10, currentScore);

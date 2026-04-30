@@ -78,9 +78,10 @@ function TrustHeatmap() {
 
 /* Volume chart using bars */
 function VolumeChart() {
-  const [data, setData] = useState(Array.from({ length: 24 }, () => Math.random() * 80 + 20));
+  const [data, setData] = useState<number[]>([]);
 
   useEffect(() => {
+    setData(Array.from({ length: 24 }, () => Math.random() * 80 + 20));
     const id = setInterval(() => {
       setData((prev) => [...prev.slice(1), Math.random() * 80 + 20]);
     }, 5000);
@@ -91,7 +92,7 @@ function VolumeChart() {
     <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-5">
       <h3 className="text-[13px] uppercase tracking-[2px] font-bold mb-3">TX_VOLUME_24H</h3>
       <div className="flex items-end gap-[2px] h-[100px]">
-        {data.map((v, i) => (
+        {(data.length > 0 ? data : Array.from({ length: 24 }, () => 50)).map((v, i) => (
           <div key={i} className="flex-1 bg-[var(--accent-green)] rounded-[1px]" style={{ height: `${v}%`, opacity: i === data.length - 1 ? 1 : 0.5 }} />
         ))}
       </div>

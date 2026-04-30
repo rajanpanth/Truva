@@ -3,7 +3,7 @@
 import { useMemo, type ComponentType } from 'react';
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
-import { PhantomWalletAdapter, SolflareWalletAdapter } from '@solana/wallet-adapter-wallets';
+
 import type { ConnectionProviderProps } from '@solana/wallet-adapter-react';
 import type { WalletProviderProps } from '@solana/wallet-adapter-react';
 
@@ -17,10 +17,7 @@ const WMP = WalletModalProvider as ComponentType<{ children: React.ReactNode }>;
 export function SolanaWalletProvider({ children }: { children: React.ReactNode }) {
   const endpoint = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api.devnet.solana.com';
 
-  const wallets = useMemo(() => [
-    new PhantomWalletAdapter(),
-    new SolflareWalletAdapter(),
-  ], []);
+  const wallets = useMemo(() => [], []);
 
   return (
     <CP endpoint={endpoint}>
