@@ -77,7 +77,11 @@ jobs:
         run: npm install
 
       - name: Build Anchor program
-        run: anchor build
+        run: |
+          # Ensure system Rust 1.85 cargo takes priority over Solana's bundled Cargo
+          export PATH="$HOME/.rustup/toolchains/1.85.0-x86_64-unknown-linux-gnu/bin:$PATH"
+          rustc --version && cargo --version
+          anchor build
 
   # Frontend build
   frontend-build:
