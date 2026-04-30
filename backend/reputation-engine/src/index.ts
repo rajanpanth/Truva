@@ -194,13 +194,12 @@ async function start(): Promise<void> {
     logger.warn({ err }, "Redis not available — running without cache");
   }
 
-  // Run database migrations
+  // Run database migrations (non-fatal — Supabase schema is managed externally)
   try {
     await runMigrations();
     logger.info("Database migrations complete");
   } catch (err) {
-    logger.fatal({ err }, "Database migration failed");
-    process.exit(1);
+    logger.warn({ err }, "Database migration skipped — schema may be managed externally");
   }
 
   // Start listening
