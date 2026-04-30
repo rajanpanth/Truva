@@ -158,9 +158,8 @@ export interface Database {
           agent_id: string;
           event_type: string;
           score_delta: number;
-          score_after: number;
-          validator_id: string | null;
-          note: string | null;
+          description: string | null;
+          metadata: Json;
           created_at: string;
         };
         Insert: {
@@ -168,15 +167,14 @@ export interface Database {
           agent_id: string;
           event_type: string;
           score_delta: number;
-          score_after: number;
-          validator_id?: string | null;
-          note?: string | null;
+          description?: string | null;
+          metadata?: Json;
           created_at?: string;
         };
         Update: {
           score_delta?: number;
-          score_after?: number;
-          note?: string | null;
+          description?: string | null;
+          metadata?: Json;
         };
       };
       attestations: {

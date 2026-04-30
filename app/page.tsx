@@ -13,8 +13,9 @@ import type { TrustGateLog } from '@/backend/types/trustgate';
 
 /* ─── Animated bar chart ─── */
 function LiveBarChart() {
-  const [bars, setBars] = useState<number[]>(Array.from({ length: 18 }, () => Math.random() * 80 + 20));
+  const [bars, setBars] = useState<number[]>([]);
   useEffect(() => {
+    setBars(Array.from({ length: 18 }, () => Math.random() * 80 + 20));
     const id = setInterval(() => {
       setBars((prev) => prev.map((_, i) => {
         const base = Math.sin(Date.now() / 1000 + i * 0.5) * 30 + 50;
@@ -28,7 +29,7 @@ function LiveBarChart() {
     <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-4">
       <div className="text-[13px] uppercase tracking-[2px] text-[var(--text-muted)] mb-3">FREESPOT_REGISTER</div>
       <div className="flex items-end gap-[3px] h-[140px]">
-        {bars.map((h, i) => (
+        {(bars.length > 0 ? bars : Array.from({ length: 18 }, () => 50)).map((h, i) => (
           <div
             key={i}
             className="flex-1 bg-[var(--accent-green)] rounded-[1px] transition-all duration-500"

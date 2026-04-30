@@ -21,11 +21,10 @@ export interface Transaction {
 export interface ReputationEvent {
   id: string;
   agent_id: string;
-  event_type: 'task_success' | 'task_fail' | 'blocked' | 'attested';
+  event_type: 'success' | 'fail' | 'blocked' | 'attested';
   score_delta: number;
-  score_after: number;
-  validator_id?: string;
-  note?: string;
+  description?: string;
+  metadata?: Record<string, unknown>;
   created_at: string;
 }
 

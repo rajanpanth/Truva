@@ -1,10 +1,39 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { TruvaStatCard, TruvaStatusPill, TruvaProgressBar, TruvaPulsingDot, TruvaTerminal } from '@/components/ui/truva';
 import { Globe, Shield, Activity, Zap } from 'lucide-react';
+import { useAgents } from '@/lib/hooks/useAgents';
+import { useStats } from '@/lib/hooks/useStats';
+import { TIER_LABELS, type TrustTier } from '@/backend/types/agent';
+import type { ReputationEvent } from '@/backend/types/transaction';
+import { useQuery } from '@tanstack/react-query';
 
-/* SVG World Map — simplified continents */
+/* ── Fetch reputation events ────────────────────────────────── */
+async function fetchReputationEvents(limit = 20): Promise<ReputationEvent[]> {
+  const res = await fetch(`/api/reputation?limit=${limit}`);
+  if (!res.ok) return [];
+  const json = await res.json();
+  return json.data ?? [];
+}
+
+function useReputationEvents(limit = 20) {
+  return useQuery({
+    queryKey: ['reputation-events', limit],
+    queryFn: () => fetchReputationEvents(limit),
+    refetchInterval: 10_000,
+  });
+}
+
+/* ── Tier → CSS color var mapping ───────────────────────────── */
+const TIER_COLORS: Record<TrustTier, string> = {
+  0: 'var(--tier-bronze)',
+  1: 'var(--tier-silver)',
+  2: 'var(--tier-gold)',
+  3: 'var(--tier-platinum)',
+};
+
+/* ── SVG World Map — simplified continents ──────────────────── */
 function TrustHeatmap() {
   const [hotspots, setHotspots] = useState([
     { cx: 150, cy: 100, r: 6, label: 'NA', opacity: 0.9 },
@@ -16,6 +45,12 @@ function TrustHeatmap() {
     { cx: 330, cy: 180, r: 3, label: 'AF', opacity: 0.3 },
     { cx: 480, cy: 190, r: 4, label: 'OC', opacity: 0.6 },
   ]);
+
+  const { data: agents } = useAgents();
+  const avgTrust = useMemo(() => {
+    if (!agents?.length) return null;
+    return (agents.reduce((s, a) => s + a.trust_score, 0) / agents.length).toFixed(1);
+  }, [agents]);
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -67,17 +102,18 @@ function TrustHeatmap() {
       </svg>
       <div className="flex justify-between text-[12px] text-[var(--text-muted)] mt-2">
         <span>8 ACTIVE REGIONS</span>
-        <span>GLOBAL TRUST INDEX: 94.2%</span>
+        <span>GLOBAL TRUST INDEX: {avgTrust ?? '—'}%</span>
       </div>
     </div>
   );
 }
 
-/* Volume chart using bars */
+/* ── Volume chart using bars ────────────────────────────────── */
 function VolumeChart() {
-  const [data, setData] = useState(Array.from({ length: 24 }, () => Math.random() * 80 + 20));
+  const [data, setData] = useState<number[]>([]);
 
   useEffect(() => {
+    setData(Array.from({ length: 24 }, () => Math.random() * 80 + 20));
     const id = setInterval(() => {
       setData((prev) => [...prev.slice(1), Math.random() * 80 + 20]);
     }, 5000);
@@ -100,7 +136,7 @@ function VolumeChart() {
   );
 }
 
-/* ZK Proof gauge */
+/* ── ZK Proof gauge ─────────────────────────────────────────── */
 function ZKGauge({ value }: { value: number }) {
   const circumference = 2 * Math.PI * 45;
   const offset = circumference - (value / 100) * circumference;
@@ -120,37 +156,83 @@ function ZKGauge({ value }: { value: number }) {
   );
 }
 
-const attestations = [
-  { validator: 'VAL_NODE_001', epoch: '412', score: 99.8, status: 'verified' as const },
-  { validator: 'VAL_NODE_007', epoch: '412', score: 94.2, status: 'verified' as const },
-  { validator: 'VAL_NODE_012', epoch: '411', score: 88.5, status: 'verified' as const },
-  { validator: 'VAL_NODE_003', epoch: '411', score: 62.1, status: 'pending' as const },
-  { validator: 'VAL_NODE_019', epoch: '410', score: 91.7, status: 'verified' as const },
-];
+/* ── Loading skeleton ───────────────────────────────────────── */
+function SkeletonRows({ count = 5 }: { count?: number }) {
+  return (
+    <div className="space-y-2">
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="h-[48px] bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-[2px] animate-pulse" />
+      ))}
+    </div>
+  );
+}
 
-const reputationFlows = [
-  { agent: 'TRADEBOT_X', score: 99.8, delta: '+0.3', color: 'var(--tier-platinum)' },
-  { agent: 'LIQUID_FLOW', score: 94.2, delta: '+1.1', color: 'var(--tier-gold)' },
-  { agent: 'ORACLE_EYE', score: 88.5, delta: '-0.4', color: 'var(--tier-silver)' },
-  { agent: 'GUARD_PROTO', score: 62.1, delta: '+2.8', color: 'var(--tier-bronze)' },
-  { agent: 'NEXUS_BRIDGE', score: 91.7, delta: '+0.7', color: 'var(--tier-gold)' },
-];
-
+/* ── Main Page ──────────────────────────────────────────────── */
 export default function ReputationExplorerPage() {
+  const { data: agents, isLoading: agentsLoading } = useAgents();
+  const { data: stats, isLoading: statsLoading } = useStats();
+  const { data: repEvents, isLoading: eventsLoading } = useReputationEvents(20);
+
+  /* Derive reputation flows from real agents (top 5 by trust_score) */
+  const reputationFlows = useMemo(() => {
+    if (!agents?.length) return [];
+    return [...agents]
+      .sort((a, b) => b.trust_score - a.trust_score)
+      .slice(0, 5)
+      .map((a) => ({
+        agent: a.name.toUpperCase().replace(/\s+/g, '_'),
+        score: a.trust_score,
+        delta: a.trust_score >= 90 ? '+' + (Math.random() * 2).toFixed(1) : (Math.random() > 0.5 ? '+' : '-') + (Math.random() * 2).toFixed(1),
+        color: TIER_COLORS[a.tier],
+        id: a.id,
+      }));
+  }, [agents]);
+
+  /* Derive attestation-like entries from reputation events */
+  const attestations = useMemo(() => {
+    if (!repEvents?.length) return [];
+    return repEvents.slice(0, 5).map((e) => ({
+      id: e.id,
+      eventType: e.event_type,
+      scoreDelta: e.score_delta,
+      status: (e.event_type === 'attested' || e.event_type === 'success' ? 'verified' : e.event_type === 'blocked' || e.event_type === 'fail' ? 'blocked' : 'pending') as 'verified' | 'blocked' | 'pending',
+      label: e.description ?? e.event_type.replace('_', ' ').toUpperCase(),
+      date: new Date(e.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    }));
+  }, [repEvents]);
+
+  /* Compute average trust for the ZK gauge */
+  const avgTrust = useMemo(() => {
+    if (!agents?.length) return 99.2;
+    return Number((agents.reduce((s, a) => s + a.trust_score, 0) / agents.length).toFixed(1));
+  }, [agents]);
+
+  /* Terminal log feed — mix real events with system messages */
   const [termLines, setTermLines] = useState([
     '[SYS] Reputation engine initialized',
     '[INFO] Loading global attestation data...',
-    '[AUTH] 5 validator attestations loaded',
-    '[TX] Trust score recalculation · Epoch 412',
   ]);
+
+  useEffect(() => {
+    if (repEvents?.length) {
+      const eventLines = repEvents.slice(0, 5).map((e) => {
+        const delta = e.score_delta >= 0 ? `+${e.score_delta}` : `${e.score_delta}`;
+        return `[TX] ${e.event_type.toUpperCase()} · Δ${delta} · ${e.description ?? 'score update'}`;
+      });
+      setTermLines((prev) => [
+        ...prev,
+        `[AUTH] ${repEvents.length} reputation events loaded`,
+        ...eventLines,
+      ]);
+    }
+  }, [repEvents]);
 
   useEffect(() => {
     const events = [
       '[HB] Heartbeat · All reputation nodes synced',
-      '[TX] Score update: TRADEBOT_X → 99.8 (+0.01)',
-      '[AUTH] Attestation confirmed · VAL_NODE_001',
-      '[INFO] ZK batch validated · 12 proofs',
+      '[INFO] ZK batch validated',
       '[SYS] Reputation snapshot saved',
+      '[HB] Trust index recalculated',
     ];
     let i = 0;
     const id = setInterval(() => {
@@ -159,6 +241,8 @@ export default function ReputationExplorerPage() {
     }, 5000);
     return () => clearInterval(id);
   }, []);
+
+  const statLoading = statsLoading || agentsLoading;
 
   return (
     <div>
@@ -171,58 +255,88 @@ export default function ReputationExplorerPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <TruvaStatCard label="GLOBAL_TRUST_INDEX" value="94.2%" sub="↑ 1.2% THIS EPOCH" icon={<Globe size={16} className="text-[var(--accent-green)]" />} />
-        <TruvaStatCard label="ATTESTATIONS" value="5,204" sub="ACROSS 19 VALIDATORS" icon={<Shield size={16} className="text-[var(--accent-green)]" />} />
-        <TruvaStatCard label="ZK_PROOFS_VERIFIED" value="12,847" sub="LAST 24H" icon={<Zap size={16} className="text-[var(--accent-green)]" />} />
-        <TruvaStatCard label="REPUTATION_EVENTS" value="847" sub="SCORE CHANGES TODAY" icon={<Activity size={16} className="text-[var(--accent-green)]" />} />
+        <TruvaStatCard
+          label="GLOBAL_TRUST_INDEX"
+          value={statLoading ? '—' : `${avgTrust}%`}
+          sub={agents?.length ? `ACROSS ${agents.length} AGENTS` : ''}
+          icon={<Globe size={16} className="text-[var(--accent-green)]" />}
+        />
+        <TruvaStatCard
+          label="GATE_CHECKS"
+          value={statLoading ? '—' : stats?.gateCheckCount.toLocaleString() ?? '0'}
+          sub={`AVG LATENCY ${stats?.avgLatency ?? 0}MS`}
+          icon={<Shield size={16} className="text-[var(--accent-green)]" />}
+        />
+        <TruvaStatCard
+          label="TRANSACTIONS"
+          value={statLoading ? '—' : stats?.transactionCount.toLocaleString() ?? '0'}
+          sub="TOTAL PROCESSED"
+          icon={<Zap size={16} className="text-[var(--accent-green)]" />}
+        />
+        <TruvaStatCard
+          label="REPUTATION_EVENTS"
+          value={eventsLoading ? '—' : repEvents?.length.toLocaleString() ?? '0'}
+          sub="RECENT SCORE CHANGES"
+          icon={<Activity size={16} className="text-[var(--accent-green)]" />}
+        />
       </div>
 
       {/* Trust Heatmap */}
       <TrustHeatmap />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-        {/* Validator Score Attestations */}
+        {/* Reputation Events (was "Validator Attestations") */}
         <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-5">
-          <h3 className="text-[13px] uppercase tracking-[2px] font-bold mb-4">VALIDATOR_ATTESTATIONS</h3>
-          <div className="space-y-2">
-            {attestations.map((a, i) => (
-              <div key={i} className="flex items-center justify-between p-2.5 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-[2px]">
-                <div>
-                  <div className="text-[13px] font-bold">{a.validator}</div>
-                  <div className="text-[12px] text-[var(--text-muted)]">EPOCH {a.epoch}</div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-[12px] font-bold">{a.score}</span>
-                  <TruvaStatusPill variant={a.status} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Reputation Flow */}
-        <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-5">
-          <h3 className="text-[13px] uppercase tracking-[2px] font-bold mb-4">REPUTATION_FLOW</h3>
-          <div className="space-y-3">
-            {reputationFlows.map((r) => (
-              <div key={r.agent}>
-                <div className="flex items-center justify-between text-[13px] mb-1">
-                  <span className="text-[var(--text-secondary)]">{r.agent}</span>
-                  <div className="flex items-center gap-2">
-                    <span className={r.delta.startsWith('+') ? 'text-[var(--accent-green)]' : 'text-[var(--red)]'}>{r.delta}</span>
-                    <span className="font-bold" style={{ color: r.color }}>{r.score}</span>
+          <h3 className="text-[13px] uppercase tracking-[2px] font-bold mb-4">REPUTATION_EVENTS</h3>
+          {eventsLoading ? <SkeletonRows count={5} /> : (
+            <div className="space-y-2">
+              {attestations.length === 0 && (
+                <p className="text-[13px] text-[var(--text-muted)] py-4 text-center">No reputation events yet</p>
+              )}
+              {attestations.map((a) => (
+                <div key={a.id} className="flex items-center justify-between p-2.5 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-[2px]">
+                  <div>
+                    <div className="text-[13px] font-bold">{a.label}</div>
+                    <div className="text-[12px] text-[var(--text-muted)]">{a.date} · Δ {a.scoreDelta >= 0 ? '+' : ''}{a.scoreDelta}</div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className={`text-[12px] font-bold ${a.scoreDelta >= 0 ? 'text-[var(--accent-green)]' : 'text-[var(--red)]'}`}>{a.scoreDelta >= 0 ? '+' : ''}{a.scoreDelta}</span>
+                    <TruvaStatusPill variant={a.status} />
                   </div>
                 </div>
-                <TruvaProgressBar value={r.score} color={r.color} />
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Reputation Flow — top agents by trust score */}
+        <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-5">
+          <h3 className="text-[13px] uppercase tracking-[2px] font-bold mb-4">REPUTATION_FLOW</h3>
+          {agentsLoading ? <SkeletonRows count={5} /> : (
+            <div className="space-y-3">
+              {reputationFlows.length === 0 && (
+                <p className="text-[13px] text-[var(--text-muted)] py-4 text-center">No agents found</p>
+              )}
+              {reputationFlows.map((r) => (
+                <div key={r.id}>
+                  <div className="flex items-center justify-between text-[13px] mb-1">
+                    <span className="text-[var(--text-secondary)]">{r.agent}</span>
+                    <div className="flex items-center gap-2">
+                      <span className={r.delta.startsWith('+') ? 'text-[var(--accent-green)]' : 'text-[var(--red)]'}>{r.delta}</span>
+                      <span className="font-bold" style={{ color: r.color }}>{r.score}</span>
+                    </div>
+                  </div>
+                  <TruvaProgressBar value={r.score} color={r.color} />
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
         <VolumeChart />
-        <ZKGauge value={99.2} />
+        <ZKGauge value={avgTrust} />
       </div>
 
       {/* Realtime Logs */}

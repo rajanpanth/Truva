@@ -10,35 +10,35 @@ import type { Agent } from '@/backend/types/agent';
 
 const createReputationEventSchema = z.object({
   agent_id: z.string().uuid('Invalid agent ID'),
-  event_type: z.enum(['task_success', 'task_fail', 'blocked', 'attested'], {
+  event_type: z.enum(['success', 'fail', 'blocked', 'attested'], {
     required_error: 'Event type is required',
   }),
-  note: z.string().max(500).optional(),
+  description: z.string().max(500).optional(),
 });
 
 export async function GET(request: NextRequest) {
   try {
     const supabase = createServerClient();
     const agentId = request.nextUrl.searchParams.get('agent_id');
+    const limit = Math.min(100, Number(request.nextUrl.searchParams.get('limit') ?? 20));
 
-    if (!agentId) {
-      return NextResponse.json(
-        { error: 'agent_id query parameter is required' },
-        { status: 400 }
-      );
-    }
-
-    const { data, error } = await supabase
+    let query = supabase
       .from('reputation_events')
       .select('*')
-      .eq('agent_id', agentId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (agentId) {
+      query = query.eq('agent_id', agentId);
+    }
+
+    const { data, error, count } = await query;
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ data: (data ?? []) as ReputationEvent[] });
+    return NextResponse.json({ data: (data ?? []) as ReputationEvent[], total: count ?? (data ?? []).length });
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { agent_id, event_type, note } = parsed.data;
+    const { agent_id, event_type, description } = parsed.data;
 
     const { data: agent, error: agentError } = await supabase
       .from('agents')
@@ -84,8 +84,7 @@ export async function POST(request: NextRequest) {
       agent_id,
       event_type,
       score_delta: scoreDelta,
-      score_after: scoreAfter,
-      note: note ?? null,
+      description: description ?? null,
     };
 
     const { data: insertedEvent, error: insertError } = await supabase
