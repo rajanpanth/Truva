@@ -48,15 +48,18 @@ ALTER TABLE trustgate_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reputation_events ENABLE ROW LEVEL SECURITY;
 
 -- Public read access for agents
-CREATE POLICY IF NOT EXISTS "agents_public_read" ON agents
+DROP POLICY IF EXISTS "agents_public_read" ON agents;
+CREATE POLICY "agents_public_read" ON agents
   FOR SELECT USING (true);
 
 -- Public read access for trustgate_logs (for realtime dashboard)
-CREATE POLICY IF NOT EXISTS "trustgate_logs_public_read" ON trustgate_logs
+DROP POLICY IF EXISTS "trustgate_logs_public_read" ON trustgate_logs;
+CREATE POLICY "trustgate_logs_public_read" ON trustgate_logs
   FOR SELECT USING (true);
 
 -- Public read access for transactions
-CREATE POLICY IF NOT EXISTS "transactions_public_read" ON transactions
+DROP POLICY IF EXISTS "transactions_public_read" ON transactions;
+CREATE POLICY "transactions_public_read" ON transactions
   FOR SELECT USING (true);
 
 -- Service role can insert/update/delete (API routes use service role key)
@@ -65,7 +68,15 @@ CREATE POLICY IF NOT EXISTS "transactions_public_read" ON transactions
 -- ============================================
 -- 7. Enable realtime for trustgate_logs (needed by useRealtimeLogs hook)
 -- ============================================
-ALTER PUBLICATION supabase_realtime ADD TABLE trustgate_logs;
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime' AND tablename = 'trustgate_logs'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE trustgate_logs;
+  END IF;
+END $$;
 
 -- ============================================
 -- 8. Add composite index for common query patterns
