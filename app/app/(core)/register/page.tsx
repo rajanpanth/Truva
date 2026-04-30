@@ -1,8 +1,7 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
-
 import { useState, useEffect, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { Transaction, TransactionInstruction, PublicKey } from '@solana/web3.js';
 import { Buffer } from 'buffer';
@@ -32,7 +31,8 @@ const RISK_TO_SPENDING: Record<string, string> = {
   HIGH: 'aggressive',
 };
 
-export default function RegisterPage() {
+/* SSR-safe wrapper — prevents WalletContext error during static generation */
+function RegisterPageInner() {
   const { publicKey: walletPubkey, sendTransaction, connected } = useWallet();
   const { connection } = useConnection();
 
@@ -496,4 +496,20 @@ export default function RegisterPage() {
       </div>
     </div>
   );
+}
+
+/* Default export — lazy-loads the inner component to avoid SSR WalletContext errors */
+export default function RegisterPage() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  if (!mounted) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-[13px] font-mono text-zinc-500 tracking-widest animate-pulse">INITIALIZING_WALLET_CONTEXT...</div>
+      </div>
+    );
+  }
+
+  return <RegisterPageInner />;
 }
