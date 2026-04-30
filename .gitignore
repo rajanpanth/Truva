@@ -54,6 +54,8 @@ app/.env.local
 app/.env.*.local
 backend/.env
 backend/.env.local
+backend/reputation-engine/.env
+backend/reputation-engine/.env.local
 
 # ===========================
 # Supabase

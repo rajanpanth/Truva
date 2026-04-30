@@ -7,6 +7,7 @@
     "dev": "nodemon --exec ts-node src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
+    "start:migrate": "node dist/db/migrate.js && node dist/index.js",
     "db:migrate": "ts-node src/db/migrate.ts",
     "db:migrate:status": "ts-node src/db/migrate.ts status",
     "test": "node --require ts-node/register --test src/__tests__/*.test.ts",

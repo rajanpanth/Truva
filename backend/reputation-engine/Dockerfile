@@ -8,6 +8,8 @@ RUN npm ci --ignore-scripts
 
 COPY src/ ./src/
 RUN npx tsc --outDir dist
+# Copy SQL migration files (not compiled by tsc) into dist
+RUN mkdir -p dist/db/migrations && cp src/db/migrations/*.sql dist/db/migrations/
 
 # ── Stage 2: Production ───────────────────────────────────────────────────────
 FROM node:20-alpine AS production
