@@ -78,9 +78,21 @@ jobs:
 
       - name: Build Anchor program
         run: |
-          # Ensure system Rust 1.85 cargo takes priority over Solana's bundled Cargo
-          export PATH="$HOME/.rustup/toolchains/1.85.0-x86_64-unknown-linux-gnu/bin:$PATH"
-          rustc --version && cargo --version
+          # Anchor runs `cargo +solana build-sbf` which needs a rustup toolchain named "solana".
+          # Solana CLI installs platform-tools with Cargo 1.79 (no edition2024).
+          # Fix: link the platform-tools as a rustup toolchain, then swap in system cargo 1.85.
+          PLATFORM_TOOLS="$HOME/.local/share/solana/install/active_release/bin/sdk/sbf/dependencies/platform-tools"
+          
+          # Register Solana's platform-tools as a rustup toolchain named "solana"
+          rustup toolchain link solana "$PLATFORM_TOOLS/rust"
+          
+          # Replace the old cargo (1.79) with the system cargo (1.85) that supports edition2024
+          SYSTEM_CARGO="$(rustup which cargo --toolchain 1.85.0)"
+          cp "$SYSTEM_CARGO" "$PLATFORM_TOOLS/rust/bin/cargo"
+          
+          echo "System cargo version:" && cargo --version
+          echo "Solana toolchain cargo:" && cargo +solana --version
+          
           anchor build
 
   # Frontend build
