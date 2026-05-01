@@ -141,6 +141,9 @@ function RegisterPageInner() {
 
       if (!res.ok) {
         const err = await res.json();
+        if (res.status === 409 || err.error === 'WALLET_ALREADY_REGISTERED') {
+          throw new Error('WALLET_ALREADY_REGISTERED — THIS_PUBLIC_KEY_IS_ALREADY_IN_THE_REGISTRY');
+        }
         throw new Error(err.error || 'REGISTRATION_FAILED');
       }
 

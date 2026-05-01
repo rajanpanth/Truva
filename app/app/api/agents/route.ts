@@ -111,6 +111,13 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
+      // Duplicate public_key → 409 Conflict
+      if (error.code === '23505' || error.message.includes('duplicate key')) {
+        return NextResponse.json(
+          { error: 'WALLET_ALREADY_REGISTERED' },
+          { status: 409 }
+        );
+      }
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
