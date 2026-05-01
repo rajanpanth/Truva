@@ -5,7 +5,11 @@ import { withRateLimit, withProtection } from '@/backend/middleware/auth';
 export const dynamic = 'force-dynamic';
 import { agentQuerySchema } from '@/backend/validators/agentSchema';
 import { registerAgentFullSchema } from '@/backend/validators/registerSchema';
-import { generateSimulatedPDA } from '@/lib/solana/pda';
+function generateSimulatedPDA(agentName: string): string {
+  const timestamp = Date.now().toString(36);
+  const random = Math.random().toString(36).substring(2, 10);
+  return `PDA_${agentName.replace(/[^a-zA-Z0-9]/g, '').slice(0, 8)}_${timestamp}_${random}`;
+}
 import type { Agent } from '@/backend/types/agent';
 
 export async function GET(request: NextRequest) {

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import Link from 'next/link';
 import { TruvaStatCard, TruvaStatusPill, TruvaTerminal, TruvaProgressBar, TruvaBadge, TruvaButton, TruvaCheckTag } from '@/components/ui/truva';
 import { Shield, ShieldCheck, Zap, TrendingUp, Activity } from 'lucide-react';
 import type { Agent } from '@/backend/types/agent';
@@ -104,7 +105,12 @@ export default function AgentProfilePage() {
             </p>
           </div>
         </div>
-        <TruvaButton variant="outlined" className="text-[12px]">EXPORT_PASSPORT</TruvaButton>
+        <div className="flex items-center gap-3">
+          <Link href={`/agents/${id}/control`}>
+            <TruvaButton variant="primary" className="text-[12px]">CONTROL_PANEL</TruvaButton>
+          </Link>
+          <TruvaButton variant="outlined" className="text-[12px]">EXPORT_PASSPORT</TruvaButton>
+        </div>
       </div>
 
       {/* Stat cards */}

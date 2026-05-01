@@ -7,13 +7,15 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  webpack: (config) => {
-    config.resolve.fallback = {
-      fs: false,
-      path: false,
-      os: false,
-      crypto: false,
-    };
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        fs: false,
+        path: false,
+        os: false,
+        crypto: false,
+      };
+    }
     // Suppress optional pino-pretty peer dep warning from @walletconnect
     config.plugins.push(
       new (require('webpack').IgnorePlugin)({

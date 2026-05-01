@@ -81,7 +81,7 @@ export default function Dashboard() {
                 GET_EARLY_ACCESS
               </Link>
               <Link href="/registry" className="px-8 py-3.5 bg-transparent border border-white/[0.2] text-white font-mono text-[14px] font-bold tracking-widest hover:border-[#14F195]/60 hover:text-[#14F195] transition-colors">
-                INITIATE_PROTOCOL
+                EXPLORE_REGISTRY
               </Link>
             </div>
           </div>
