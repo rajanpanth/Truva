@@ -13,8 +13,8 @@ function LazyWalletProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  if (WalletProvider) return <WalletProvider>{children}</WalletProvider>;
-  return <>{children}</>;
+  if (!WalletProvider) return null;
+  return <WalletProvider>{children}</WalletProvider>;
 }
 
 export function Providers({ children }: { children: ReactNode }) {
