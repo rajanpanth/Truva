@@ -45,8 +45,7 @@ function RegisterPageInner() {
   const [description, setDescription] = useState('');
   const [selectedCaps, setSelectedCaps] = useState<string[]>([]);
   const [riskTolerance, setRiskTolerance] = useState('LOW');
-  const [maxTx, setMaxTx] = useState('');
-  const [rateLimit, setRateLimit] = useState('');
+
   const [selectedChains, setSelectedChains] = useState<string[]>(['solana']);
   const [stakeAmount, setStakeAmount] = useState('');
 
@@ -74,7 +73,7 @@ function RegisterPageInner() {
       setSubmitError('CONNECT_PHANTOM_WALLET_FIRST');
       return;
     }
-    if (!name || !operatorName || !operatorEmail || !maxTx || !rateLimit || selectedChains.length === 0) {
+    if (!name || !operatorName || !operatorEmail || selectedChains.length === 0) {
       setSubmitError('FILL_ALL_REQUIRED_FIELDS');
       return;
     }
@@ -113,8 +112,8 @@ function RegisterPageInner() {
         operator_email: operatorEmail,
         task_type: CATEGORY_TO_TASK[category] || 'trading',
         description: description || undefined,
-        max_tx_size: Number(maxTx) || 1000,
-        rate_limit: Number(rateLimit) || 100,
+        max_tx_size: 1000,
+        rate_limit: 100,
         chains: selectedChains,
         spending_behavior: RISK_TO_SPENDING[riskTolerance],
         metadata: JSON.stringify({
@@ -154,7 +153,7 @@ function RegisterPageInner() {
     } finally {
       setSubmitting(false);
     }
-  }, [walletPubkey, connected, name, operatorName, operatorEmail, category, description, maxTx, rateLimit, selectedChains, riskTolerance, selectedCaps, stakeAmount, sendTransaction, connection]);
+  }, [walletPubkey, connected, name, operatorName, operatorEmail, category, description, selectedChains, riskTolerance, selectedCaps, stakeAmount, sendTransaction, connection]);
 
   if (submitted) {
     return (
@@ -331,10 +330,7 @@ function RegisterPageInner() {
                   ))}
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <TruvaInput label="MAX_TX_PER_EPOCH" placeholder="e.g. 10000" value={maxTx} onChange={(e) => setMaxTx(e.target.value)} />
-                <TruvaInput label="RATE_LIMIT / HOUR" placeholder="e.g. 100" value={rateLimit} onChange={(e) => setRateLimit(e.target.value)} />
-              </div>
+
               <div>
                 <label className="block mb-2 text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)]">SUPPORTED_CHAINS</label>
                 <div className="flex flex-wrap gap-2">
@@ -369,8 +365,7 @@ function RegisterPageInner() {
                   { label: 'CATEGORY', value: category },
                   { label: 'CAPABILITIES', value: selectedCaps.join(', ') || '—' },
                   { label: 'RISK_TOLERANCE', value: riskTolerance },
-                  { label: 'MAX_TX_EPOCH', value: maxTx || '—' },
-                  { label: 'RATE_LIMIT', value: rateLimit ? `${rateLimit}/hr` : '—' },
+
                   { label: 'CHAINS', value: selectedChains.join(', ').toUpperCase() || '—' },
                   { label: 'STAKE', value: stakeAmount ? `${stakeAmount} TRU` : '—' },
                 ].map((item) => (

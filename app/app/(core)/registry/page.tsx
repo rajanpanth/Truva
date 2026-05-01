@@ -163,9 +163,14 @@ export default function RegistryPage() {
                     <div className="text-[12px] font-bold mt-0.5">{a.success_rate != null ? `${a.success_rate.toFixed(1)}%` : 'N/A'}</div>
                   </div>
                 </div>
-                <Link href={`/agent/${a.id}`}>
-                  <TruvaButton variant="ghost" className="w-full mt-3 text-[12px]">VIEW_PASSPORT</TruvaButton>
-                </Link>
+                <div className="grid grid-cols-2 gap-2 mt-3">
+                  <Link href={`/agent/${a.id}`}>
+                    <TruvaButton variant="ghost" className="w-full text-[12px]">VIEW_PASSPORT</TruvaButton>
+                  </Link>
+                  <Link href={`/delegate/${a.id}`}>
+                    <TruvaButton variant="primary" className="w-full text-[12px]">DELEGATE</TruvaButton>
+                  </Link>
+                </div>
               </div>
             );
           })}

@@ -28,7 +28,7 @@ const CATEGORY_TO_TASK: Record<string, string> = {
 
 const RISK_TO_SPENDING: Record<string, string> = {
   LOW: 'conservative',
-  MEDIUM: 'standard',
+  MEDIUM: 'standard',~
   HIGH: 'aggressive',
 };
 
