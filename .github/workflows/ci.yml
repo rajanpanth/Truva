@@ -72,20 +72,19 @@ jobs:
 
       - name: Verify IDL exists and is valid JSON
         run: |
-          echo "Checking IDL files..."
-          for f in target/idl/trustgate.json app/lib/idl/trustgate.json; do
-            if [ ! -f "$f" ]; then
-              echo "MISSING: $f"
-              exit 1
-            fi
-            # Validate JSON
-            python3 -c "import json,sys; json.load(open('$f')); print('OK: $f')"
-          done
+          echo "Checking IDL file..."
+          IDL="app/lib/idl/trustgate.json"
+          if [ ! -f "$IDL" ]; then
+            echo "MISSING: $IDL"
+            exit 1
+          fi
+          python3 -c "import json,sys; json.load(open('$IDL')); print('OK: $IDL')"
 
       - name: Verify program ID consistency
         run: |
-          ANCHOR_ID=$(grep 'trustgate' Anchor.toml | grep -o '"[A-Za-z0-9]\{32,\}"' | tr -d '"' | head -1)
-          IDL_ID=$(python3 -c "import json; d=json.load(open('target/idl/trustgate.json')); print(d.get('address',''))")
+          IDL="app/lib/idl/trustgate.json"
+          ANCHOR_ID=$(grep -A1 '\[programs.localnet\]' Anchor.toml | grep trustgate | grep -o '"[A-Za-z0-9]\{32,\}"' | tr -d '"')
+          IDL_ID=$(python3 -c "import json; d=json.load(open('$IDL')); print(d.get('address',''))")
           echo "Anchor.toml program ID: $ANCHOR_ID"
           echo "IDL address field: $IDL_ID"
           if [ -n "$IDL_ID" ] && [ -n "$ANCHOR_ID" ] && [ "$ANCHOR_ID" != "$IDL_ID" ]; then
