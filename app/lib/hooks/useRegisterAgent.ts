@@ -3,7 +3,8 @@
 import { useCallback, useState } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey, SystemProgram } from '@solana/web3.js';
-import { TRUSTGATE_PROGRAM_ID, getPassportPDA } from '@/lib/solana';
+import { TRUSTGATE_PROGRAM_ID, getPassportPDA, getTrustGateProgram } from '@/lib/solana';
+import TRUSTGATE_IDL from '@/lib/idl/trustgate.json';
 
 interface RegisterResult {
   pdaAddress: string;
@@ -16,7 +17,8 @@ interface RegisterResult {
  */
 export function useRegisterAgent() {
   const { connection } = useConnection();
-  const { publicKey, sendTransaction } = useWallet();
+  const wallet = useWallet();
+  const { publicKey } = wallet;
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,7 +36,7 @@ export function useRegisterAgent() {
       metadata?: Record<string, unknown>;
       trust_score?: number;
     }): Promise<RegisterResult | null> => {
-      if (!publicKey || !sendTransaction) {
+      if (!publicKey || !wallet.signTransaction) {
         setError('Wallet not connected');
         return null;
       }
@@ -45,38 +47,21 @@ export function useRegisterAgent() {
       try {
         const agentPubkey = new PublicKey(agentData.public_key);
         const [passportPDA] = getPassportPDA(agentPubkey);
-        const trustScore = agentData.trust_score ?? 50;
 
-        // Build the initialize_passport instruction manually
-        // Discriminator for initialize_passport (Anchor 8-byte hash)
-        // In production, use the generated IDL/program client
-        const { Transaction, TransactionInstruction } = await import('@solana/web3.js');
-        const { BorshCoder } = await import('@coral-xyz/anchor');
+        const { AnchorProvider } = await import('@coral-xyz/anchor');
+        const provider = new AnchorProvider(connection, wallet as any, { commitment: 'confirmed' });
+        const program = getTrustGateProgram(provider, TRUSTGATE_IDL as any);
 
-        // For now, use a memo instruction as a placeholder until IDL is generated
-        // The actual on-chain call would use: program.methods.initializePassport(trustScore)
-        const memoProgram = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
-        const memoData = Buffer.from(
-          JSON.stringify({
-            action: 'initialize_passport',
-            agent: agentData.public_key,
-            trust_score: trustScore,
-            passport_pda: passportPDA.toBase58(),
+        const signature = await (program.methods as any)
+          .initializePassport()
+          .accounts({
+            passport: passportPDA,
+            agent: agentPubkey,
+            authority: publicKey,
+            systemProgram: SystemProgram.programId,
           })
-        );
+          .rpc();
 
-        const memoIx = new TransactionInstruction({
-          keys: [{ pubkey: publicKey, isSigner: true, isWritable: true }],
-          programId: memoProgram,
-          data: memoData,
-        });
-
-        const tx = new Transaction().add(memoIx);
-        tx.feePayer = publicKey;
-        const { blockhash } = await connection.getLatestBlockhash();
-        tx.recentBlockhash = blockhash;
-
-        const signature = await sendTransaction(tx, connection);
         await connection.confirmTransaction(signature, 'confirmed');
 
         // Register in backend database
@@ -85,7 +70,7 @@ export function useRegisterAgent() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             ...agentData,
-            trust_score: trustScore,
+            trust_score: agentData.trust_score ?? 50,
             tx_signature: signature,
             pda_address: passportPDA.toBase58(),
           }),
@@ -108,7 +93,7 @@ export function useRegisterAgent() {
         setIsLoading(false);
       }
     },
-    [publicKey, sendTransaction, connection]
+    [publicKey, wallet, connection]
   );
 
   return { registerAgent, isLoading, error };
