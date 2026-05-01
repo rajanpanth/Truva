@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/backend/supabase/server';
 import { calculateScoreDelta, getTierFromScore } from '@/backend/utils/trustScore';
-import { withRateLimit, withProtection } from '@/backend/middleware/auth';
+import { withRateLimit } from '@/backend/middleware/auth';
 import { z } from 'zod';
 import type { ReputationEvent } from '@/backend/types/transaction';
 
@@ -46,8 +46,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const blocked = withProtection(request);
-  if (blocked) return blocked;
+  const rateLimited = withRateLimit(request);
+  if (rateLimited) return rateLimited;
 
   try {
     const supabase = createServerClient();

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/backend/supabase/server';
-import { withRateLimit, withProtection } from '@/backend/middleware/auth';
+import { withRateLimit } from '@/backend/middleware/auth';
 
 export const dynamic = 'force-dynamic';
 import { agentQuerySchema } from '@/backend/validators/agentSchema';
@@ -61,8 +61,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const blocked = withProtection(request);
-  if (blocked) return blocked;
+  const rateLimited = withRateLimit(request);
+  if (rateLimited) return rateLimited;
 
   try {
     const supabase = createServerClient();
