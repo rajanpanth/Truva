@@ -29,6 +29,11 @@ export type {
   AgentPassportData,
   AgentProfile,
   ScoreHistory,
+  RegisterAgentConfig,
+  RegisterAgentResult,
+  TaskType,
+  SupportedChain,
+  SpendingBehavior,
 } from "./types";
 export { TIER_RANK, TIER_LIMITS_LAMPORTS } from "./types";
 
