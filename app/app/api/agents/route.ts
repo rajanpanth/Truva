@@ -98,9 +98,6 @@ export async function POST(request: NextRequest) {
       max_tx_size: input.max_tx_size,
       rate_limit: input.rate_limit,
       chains: input.chains,
-      tasks_completed: 0,
-      tasks_failed: 0,
-      success_rate: 100,
       is_active: true,
       is_flagged: false,
       pda_address: pdaAddress,
@@ -119,7 +116,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ data: data as Agent }, { status: 201 });
   } catch (err) {
-    console.error(err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('[POST /api/agents] error:', err);
+    const message = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
