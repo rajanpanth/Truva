@@ -13,7 +13,7 @@ const tierColors: Record<string, string> = {
   silver: 'var(--tier-silver)', bronze: 'var(--tier-bronze)',
 };
 
-const allTiers = ['all', 'platinum', 'gold', 'silver', 'bronze'] as const;
+const allTiers = ['all', 'gold', 'silver', 'bronze'] as const;
 const allCategories = ['ALL_TYPES', 'trading', 'yield', 'data', 'execution', 'risk', 'treasury', 'monitoring', 'payment'] as const;
 
 function tierLabel(a: Agent): string {
@@ -75,8 +75,8 @@ export default function RegistryPage() {
         />
         <TruvaStatCard
           label="ELITE AGENTS"
-          value={isLoading ? '—' : String(filtered.filter(a => a.tier === 3).length)}
-          sub="Platinum tier"
+          value={isLoading ? '—' : String(filtered.filter(a => a.tier >= 2).length)}
+          sub="Gold tier & above"
           icon={<Star size={15} className="text-[var(--tier-platinum)]" />}
         />
       </div>
