@@ -23,7 +23,14 @@ const CATEGORY_TO_TASK: Record<string, string> = {
   TRADING_BOT: 'trading',
   LIQUIDITY_PROVISION: 'yield',
   CROSS_CHAIN_BRIDGE: 'execution',
-};
+} as const;
+
+const VALID_TASK_TYPES = ['trading', 'yield', 'data', 'execution', 'risk', 'treasury', 'monitoring', 'payment'] as const;
+type TaskType = typeof VALID_TASK_TYPES[number];
+
+function toTaskType(val: string): TaskType {
+  return VALID_TASK_TYPES.includes(val as TaskType) ? (val as TaskType) : 'trading';
+}
 
 const RISK_TO_SPENDING: Record<string, string> = {
   LOW: 'conservative',
@@ -88,7 +95,7 @@ function RegisterPageInner() {
         p: 'TRUVA',
         op: 'register',
         name,
-        cat: CATEGORY_TO_TASK[category] || 'trading',
+        cat: toTaskType(CATEGORY_TO_TASK[category] || 'trading'),
         ts: Date.now(),
       });
 
@@ -111,7 +118,7 @@ function RegisterPageInner() {
         public_key: walletPubkey.toBase58(),
         operator_name: operatorName,
         operator_email: operatorEmail,
-        task_type: CATEGORY_TO_TASK[category] || 'trading',
+        task_type: toTaskType(CATEGORY_TO_TASK[category] || 'trading'),
         description: description || undefined,
         max_tx_size: Number(maxTx) || 1000,
         rate_limit: Number(rateLimit) || 100,
