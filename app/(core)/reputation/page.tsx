@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { TruvaStatCard, TruvaStatusPill, TruvaProgressBar, TruvaPulsingDot, TruvaTerminal } from '@/components/ui/truva';
 import { Globe, Shield, Activity, Zap } from 'lucide-react';
 import { useAgents } from '@/lib/hooks/useAgents';
 import { useStats } from '@/lib/hooks/useStats';
+import { useTrustGateLogs } from '@/lib/hooks/useTrustGateLogs';
 import { TIER_LABELS } from '@/backend/types/agent';
 
 /* SVG World Map — simplified continents */
@@ -76,24 +78,15 @@ function TrustHeatmap() {
   );
 }
 
-/* Volume chart using bars */
-function VolumeChart() {
-  const [data, setData] = useState<number[]>([]);
-
-  useEffect(() => {
-    setData(Array.from({ length: 24 }, () => Math.random() * 80 + 20));
-    const id = setInterval(() => {
-      setData((prev) => [...prev.slice(1), Math.random() * 80 + 20]);
-    }, 5000);
-    return () => clearInterval(id);
-  }, []);
-
+/* Volume chart using bars — driven by real log data */
+function VolumeChart({ data }: { data: number[] }) {
+  const bars = data.length > 0 ? data : Array.from({ length: 24 }, () => 50);
   return (
     <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-5">
       <h3 className="text-[13px] uppercase tracking-[2px] font-bold mb-3">TX_VOLUME_24H</h3>
       <div className="flex items-end gap-[2px] h-[100px]">
-        {(data.length > 0 ? data : Array.from({ length: 24 }, () => 50)).map((v, i) => (
-          <div key={i} className="flex-1 bg-[var(--accent-green)] rounded-[1px]" style={{ height: `${v}%`, opacity: i === data.length - 1 ? 1 : 0.5 }} />
+        {bars.map((v, i) => (
+          <div key={i} className="flex-1 bg-[var(--accent-green)] rounded-[1px]" style={{ height: `${v}%`, opacity: i === bars.length - 1 ? 1 : 0.5 }} />
         ))}
       </div>
       <div className="flex justify-between text-[12px] text-[var(--text-muted)] mt-2">
@@ -124,17 +117,46 @@ function ZKGauge({ value }: { value: number }) {
   );
 }
 
-const attestations = [
-  { validator: 'VAL_NODE_001', epoch: '412', score: 99.8, status: 'verified' as const },
-  { validator: 'VAL_NODE_007', epoch: '412', score: 94.2, status: 'verified' as const },
-  { validator: 'VAL_NODE_012', epoch: '411', score: 88.5, status: 'verified' as const },
-  { validator: 'VAL_NODE_003', epoch: '411', score: 62.1, status: 'pending' as const },
-  { validator: 'VAL_NODE_019', epoch: '410', score: 91.7, status: 'verified' as const },
-];
+interface AttestationEntry {
+  id: string;
+  agent_id: string;
+  agent_name: string;
+  score_delta: number | null;
+  description: string | null;
+  created_at: string;
+}
 
 export default function ReputationExplorerPage() {
   const { data: agents } = useAgents();
   const { data: stats } = useStats();
+  const { data: logsData } = useTrustGateLogs({ limit: 500 });
+  const rawLogs = logsData?.data ?? [];
+
+  // Fetch real attestations from API
+  const { data: attestationsData } = useQuery<{ data: AttestationEntry[] }>({
+    queryKey: ['attestations'],
+    queryFn: () => fetch('/api/attestations').then((r) => r.json()),
+    staleTime: 30_000,
+    refetchInterval: 30_000,
+  });
+  const attestations = attestationsData?.data ?? [];
+
+  // Compute 24-hour hourly volume from real logs
+  const hourlyVolume = useMemo(() => {
+    const now = Date.now();
+    const buckets = Array(24).fill(0) as number[];
+    rawLogs.forEach((l) => {
+      const hoursAgo = Math.floor((now - new Date(l.created_at).getTime()) / 3_600_000);
+      if (hoursAgo >= 0 && hoursAgo < 24) buckets[23 - hoursAgo]++;
+    });
+    const max = Math.max(...buckets, 1);
+    return buckets.map((v) => Math.max(4, Math.round((v / max) * 100)));
+  }, [rawLogs]);
+
+  // ZK validity = pass rate of logs
+  const zkValue = rawLogs.length > 0
+    ? Math.round((rawLogs.filter((l) => l.status === 'passed').length / rawLogs.length) * 100)
+    : 94;
 
   const TIER_COLORS: Record<number, string> = {
     3: 'var(--tier-platinum)',
@@ -211,18 +233,26 @@ export default function ReputationExplorerPage() {
         <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-5">
           <h3 className="text-[13px] uppercase tracking-[2px] font-bold mb-4">VALIDATOR_ATTESTATIONS</h3>
           <div className="space-y-2">
-            {attestations.map((a, i) => (
-              <div key={i} className="flex items-center justify-between p-2.5 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-[2px]">
-                <div>
-                  <div className="text-[13px] font-bold">{a.validator}</div>
-                  <div className="text-[12px] text-[var(--text-muted)]">EPOCH {a.epoch}</div>
+            {attestations.length === 0 ? (
+              <div className="text-[12px] text-[var(--text-muted)] py-4 text-center">NO_ATTESTATIONS_YET · Submit one via Validator Dashboard</div>
+            ) : (
+              attestations.map((a) => (
+                <div key={a.id} className="flex items-center justify-between p-2.5 bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-[2px]">
+                  <div>
+                    <div className="text-[13px] font-bold">{a.agent_name}</div>
+                    <div className="text-[12px] text-[var(--text-muted)]">{new Date(a.created_at).toLocaleDateString()}</div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {a.score_delta != null && (
+                      <span className="text-[12px] font-bold" style={{ color: (a.score_delta ?? 0) >= 0 ? 'var(--accent-green)' : 'var(--red)' }}>
+                        {(a.score_delta ?? 0) >= 0 ? '+' : ''}{a.score_delta}
+                      </span>
+                    )}
+                    <TruvaStatusPill variant="passed" />
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-[12px] font-bold">{a.score}</span>
-                  <TruvaStatusPill variant={a.status} />
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 
@@ -249,8 +279,8 @@ export default function ReputationExplorerPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-        <VolumeChart />
-        <ZKGauge value={99.2} />
+        <VolumeChart data={hourlyVolume} />
+        <ZKGauge value={zkValue} />
       </div>
 
       {/* Realtime Logs */}

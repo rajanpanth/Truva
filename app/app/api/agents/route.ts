@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/backend/supabase/server';
-import { withRateLimit, withProtection } from '@/backend/middleware/auth';
+import { withRateLimit } from '@/backend/middleware/auth';
 
 export const dynamic = 'force-dynamic';
 import { agentQuerySchema } from '@/backend/validators/agentSchema';
@@ -65,8 +65,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const blocked = withProtection(request);
-  if (blocked) return blocked;
+  const rateLimited = withRateLimit(request);
+  if (rateLimited) return rateLimited;
 
   try {
     const supabase = createServerClient();
@@ -102,9 +102,6 @@ export async function POST(request: NextRequest) {
       max_tx_size: input.max_tx_size,
       rate_limit: input.rate_limit,
       chains: input.chains,
-      tasks_completed: 0,
-      tasks_failed: 0,
-      success_rate: 100,
       is_active: true,
       is_flagged: false,
       pda_address: pdaAddress,
@@ -118,12 +115,20 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
+      // Duplicate public_key → 409 Conflict
+      if (error.code === '23505' || error.message.includes('duplicate key')) {
+        return NextResponse.json(
+          { error: 'WALLET_ALREADY_REGISTERED' },
+          { status: 409 }
+        );
+      }
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({ data: data as Agent }, { status: 201 });
   } catch (err) {
-    console.error(err);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('[POST /api/agents] error:', err);
+    const message = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

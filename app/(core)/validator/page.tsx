@@ -1,15 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo } from 'react';
 import { TruvaStatCard, TruvaStatusPill, TruvaTerminal, TruvaProgressBar, TruvaButton, TruvaPulsingDot } from '@/components/ui/truva';
 import { ShieldCheck, Zap, Award, TrendingUp, AlertTriangle, Server, Cpu, HardDrive, Key, Settings } from 'lucide-react';
 import { useTrustGateLogs } from '@/lib/hooks/useTrustGateLogs';
+import { useStats } from '@/lib/hooks/useStats';
 import type { TrustGateLog } from '@/backend/types/trustgate';
 
-function RewardChart() {
-  const data = [65, 72, 58, 81, 90, 85, 78, 92, 88, 95, 87, 91];
-  const labels = ['E401','E402','E403','E404','E405','E406','E407','E408','E409','E410','E411','E412'];
-  const max = Math.max(...data);
+function RewardChart({ data, labels }: { data: number[]; labels: string[] }) {
+  const max = Math.max(...data, 1);
   return (
     <div>
       <div className="flex items-end gap-1.5 h-[100px]">
@@ -42,11 +41,39 @@ function RewardChart() {
 }
 
 export default function ValidatorDashboard() {
-  const { data: logsData } = useTrustGateLogs({ limit: 10 });
+  const { data: logsData } = useTrustGateLogs({ limit: 100 });
+  const { data: stats } = useStats();
   const rawLogs: TrustGateLog[] = logsData?.data ?? [];
 
+  // Compute real stats from logs
+  const passedLogs = rawLogs.filter((l) => l.status === 'passed');
+  const blockedLogs = rawLogs.filter((l) => l.status === 'blocked');
+  const uptime = rawLogs.length > 0
+    ? ((passedLogs.length / rawLogs.length) * 100).toFixed(2)
+    : '—';
+  const totalChecks = stats?.gateCheckCount ?? rawLogs.length;
+  const avgLatency = rawLogs.length > 0
+    ? Math.round(rawLogs.reduce((s, l) => s + (l.latency_ms ?? 0), 0) / rawLogs.length)
+    : 0;
+
+  // Build 12-group reward chart from last 96 logs (8 per bucket)
+  const chartData = useMemo(() => {
+    if (rawLogs.length === 0) return [65, 72, 58, 81, 90, 85, 78, 92, 88, 95, 87, 91];
+    const bucketSize = Math.max(1, Math.floor(rawLogs.length / 12));
+    return Array.from({ length: 12 }, (_, i) => {
+      const slice = rawLogs.slice(i * bucketSize, (i + 1) * bucketSize);
+      if (slice.length === 0) return 0;
+      const passed = slice.filter((l) => l.status === 'passed').length;
+      return Math.round((passed / slice.length) * 100);
+    });
+  }, [rawLogs]);
+
+  const chartLabels = useMemo(() => {
+    return Array.from({ length: 12 }, (_, i) => `G${String(i + 1).padStart(2, '0')}`);
+  }, []);
+
   const terminalLines = rawLogs.length > 0
-    ? rawLogs.map((l: TrustGateLog) =>
+    ? rawLogs.slice(0, 10).map((l: TrustGateLog) =>
         `[${l.status === 'blocked' ? 'BLOCKED' : 'TX'}] ${l.agent_name ?? l.agent_id?.slice(0, 8)} · ${l.action} · ${l.latency_ms != null ? l.latency_ms + 'ms' : '—'}`
       )
     : ['[SYS] Awaiting log data from TrustGate...'];
@@ -75,10 +102,10 @@ export default function ValidatorDashboard() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <TruvaStatCard label="BLOCKS VALIDATED" value="8,924" sub="This epoch" icon={<ShieldCheck size={15} className="text-[var(--accent-green)]" />} />
-        <TruvaStatCard label="REWARDS EARNED" value="2,450 TRU" sub="↑ 12% vs last epoch" icon={<Award size={15} className="text-[var(--accent-green)]" />} />
-        <TruvaStatCard label="UPTIME" value="99.97%" sub="Last 30 days" icon={<TrendingUp size={15} className="text-[var(--accent-green)]" />} />
-        <TruvaStatCard label="STAKE LOCKED" value="1.2M TRU" sub="Until epoch 500" icon={<Zap size={15} className="text-[var(--accent-green)]" />} />
+        <TruvaStatCard label="CHECKS PERFORMED" value={totalChecks > 0 ? totalChecks.toLocaleString() : '—'} sub="Total gate checks" icon={<ShieldCheck size={15} className="text-[var(--accent-green)]" />} />
+        <TruvaStatCard label="BLOCKED" value={blockedLogs.length > 0 ? blockedLogs.length.toLocaleString() : '0'} sub="Threats intercepted" icon={<Award size={15} className="text-[var(--accent-green)]" />} />
+        <TruvaStatCard label="PASS RATE" value={uptime !== '—' ? `${uptime}%` : '—'} sub="Last 100 checks" icon={<TrendingUp size={15} className="text-[var(--accent-green)]" />} />
+        <TruvaStatCard label="AVG LATENCY" value={avgLatency > 0 ? `${avgLatency}ms` : '—'} sub="Enforcement speed" icon={<Zap size={15} className="text-[var(--accent-green)]" />} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
@@ -89,9 +116,15 @@ export default function ValidatorDashboard() {
         <div className="rounded-xl p-5" style={{ border: '1px solid var(--border-default)', background: 'var(--bg-card)' }}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-[13px] uppercase tracking-[2px] font-bold">Reward Trajectory</h3>
-            <span className="text-[11px] text-[var(--accent-green)] font-bold">↑ 38.4%</span>
+            <span className="text-[11px] text-[var(--accent-green)] font-bold">
+              {chartData.length >= 2 && chartData[chartData.length - 1] > chartData[0]
+                ? `↑ ${(chartData[chartData.length - 1] - chartData[0]).toFixed(0)}pts`
+                : chartData.length >= 2
+                ? `↓ ${(chartData[0] - chartData[chartData.length - 1]).toFixed(0)}pts`
+                : '—'}
+            </span>
           </div>
-          <RewardChart />
+          <RewardChart data={chartData} labels={chartLabels} />
           <div className="flex items-center justify-between text-[11px] mt-4 pt-3" style={{ borderTop: '1px solid var(--border-subtle)' }}>
             <span className="text-[var(--text-muted)] uppercase tracking-[2px]">12-Epoch Trend</span>
             <div className="flex items-center gap-1.5">
