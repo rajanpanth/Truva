@@ -57,7 +57,33 @@ export default function TrustGateLogsPage() {
             Real-time verification stream · {logs.length} entries in buffer
           </p>
         </div>
-        <TruvaButton variant="outlined" className="text-[11px] gap-2 self-start sm:self-auto">
+        <TruvaButton
+          variant="outlined"
+          className="text-[11px] gap-2 self-start sm:self-auto"
+          onClick={() => {
+            const header = 'Timestamp,Agent,Action,Block Reason,Latency (ms),Status';
+            const rows = filtered.map((l: TrustGateLog) =>
+              [
+                new Date(l.created_at).toISOString(),
+                l.agent_name ?? l.agent_id ?? '',
+                l.action ?? '',
+                l.block_reason ?? '',
+                l.latency_ms ?? '',
+                l.status,
+              ]
+                .map((v) => `"${String(v).replace(/"/g, '""')}"`)
+                .join(',')
+            );
+            const csv = [header, ...rows].join('\n');
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `trustgate-logs-${Date.now()}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+          }}
+        >
           <Download size={12} /> Export CSV
         </TruvaButton>
       </div>
@@ -201,4 +227,4 @@ export default function TrustGateLogsPage() {
       </div>
     </div>
   );
-}
+}

@@ -9,6 +9,8 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import type {
   AgentPassportData,
   AgentProfile,
+  RegisterAgentConfig,
+  RegisterAgentResult,
   ScoreHistory,
   TrustTier,
   TruvaClientConfig,
@@ -85,14 +87,69 @@ export class TruvaClient {
 
   // ── REST API Methods ──────────────────────────────────────────────────────
 
-  /** Register a new agent via the REST API. */
-  async register(agentPubkey: PublicKey): Promise<string> {
+  /**
+   * Register a new agent with the Truva Protocol.
+   *
+   * Sends the full registration payload to `POST /api/agents`.
+   * The agent starts at trust score 50 (Bronze tier).
+   *
+   * @param config - Agent registration configuration
+   * @returns The registered agent's ID, name, public key, score, and tier
+   *
+   * @example
+   * ```ts
+   * const result = await truva.register({
+   *   name: "ArbitrageBot_v2",
+   *   public_key: wallet.publicKey.toBase58(),
+   *   operator_name: "Alice Chen",
+   *   operator_email: "alice@example.com",
+   *   task_type: "trading",
+   *   description: "High-frequency DEX arbitrage agent",
+   *   max_tx_size: 10000,
+   *   rate_limit: 100,
+   *   chains: ["solana"],
+   *   spending_behavior: "aggressive",
+   * });
+   * console.log(`Agent registered: ${result.id}`);
+   * ```
+   */
+  async register(config: RegisterAgentConfig): Promise<RegisterAgentResult> {
+    // Basic client-side validation
+    if (!config.name || config.name.length < 2) {
+      throw new Error("Agent name must be at least 2 characters");
+    }
+    if (!config.public_key || !/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(config.public_key)) {
+      throw new Error("Must be a valid Solana base58 address (32-44 characters)");
+    }
+    if (!config.operator_name) {
+      throw new Error("Operator name is required");
+    }
+    if (!config.operator_email || !config.operator_email.includes("@")) {
+      throw new Error("Must be a valid email address");
+    }
+    if (!config.chains || config.chains.length === 0) {
+      throw new Error("At least one chain must be specified");
+    }
+
+    const body = {
+      name: config.name,
+      public_key: config.public_key,
+      operator_name: config.operator_name,
+      operator_email: config.operator_email,
+      task_type: config.task_type,
+      description: config.description,
+      max_tx_size: config.max_tx_size,
+      rate_limit: config.rate_limit,
+      chains: config.chains,
+      spending_behavior: config.spending_behavior ?? "standard",
+      metadata: config.metadata ? JSON.stringify(config.metadata) : undefined,
+    };
+
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const response = await this.apiCall("POST", "/api/agents/register", {
-      pubkey: agentPubkey.toBase58(),
-    });
+    const response = await this.apiCall("POST", "/api/agents", body);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    return (response.data?.pubkey as string | undefined) ?? agentPubkey.toBase58();
+    const data = response.data as RegisterAgentResult;
+    return data;
   }
 
   /** Fetch the full agent profile from the reputation engine. */

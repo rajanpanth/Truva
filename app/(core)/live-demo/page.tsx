@@ -36,16 +36,34 @@ export default function LiveDemoPage() {
     setRunning(true);
     setCompletedPhases([]);
     setTerminalLines(['[SYS] TRUVA_KERNEL_LOGGER initialized', '[ACTION] Demo sequence initiated...']);
+    addLine('[INFO] Calling TrustGate enforcement engine...');
+
+    let apiPhases: string[] = [];
+    let totalLatency: number | null = null;
+    let verdict: string | null = null;
+    try {
+      const res = await fetch('/api/demo', { method: 'POST' });
+      const json = await res.json() as { phases?: string[]; result?: { allowed: boolean; total_latency_ms: number; block_reason?: string } };
+      apiPhases = json.phases ?? [];
+      if (json.result) {
+        totalLatency = json.result.total_latency_ms;
+        verdict = json.result.allowed ? 'ALLOWED' : `BLOCKED · ${json.result.block_reason ?? 'policy violation'}`;
+      }
+    } catch {
+      addLine('[WARN] Could not reach enforcement engine — running in sandbox mode');
+    }
 
     for (let i = 0; i < phases.length; i++) {
       setCurrentPhase(i);
       addLine(`[INFO] Phase ${i + 1}: ${phases[i].name} started`);
       await new Promise((r) => { timerRef.current = setTimeout(r, phases[i].duration); });
+      if (apiPhases[i]) addLine(`[DATA] ${apiPhases[i]}`);
       addLine(`[AUTH] Phase ${i + 1}: ${phases[i].name} completed ✓`);
       setCompletedPhases((prev) => [...prev, i]);
     }
 
-    addLine('[SYS] Demo sequence complete · All phases passed');
+    if (verdict) addLine(`[VERDICT] Transaction ${verdict}${totalLatency != null ? ` · Latency: ${totalLatency}ms` : ''}`);
+    addLine('[SYS] Demo sequence complete · All phases evaluated');
     setCurrentPhase(-1);
     setRunning(false);
   };
@@ -56,11 +74,27 @@ export default function LiveDemoPage() {
     const attack = attackTypes.find((a) => a.id === selectedAttack)!;
     addLine(`[ALERT] ⚠ Attack simulation: ${attack.label}`);
     addLine(`[WARN] Incoming ${attack.desc}...`);
-    await new Promise((r) => setTimeout(r, 1500));
-    addLine(`[AUTH] TrustGate intercepted · ZK Shield active`);
-    await new Promise((r) => setTimeout(r, 1000));
-    addLine(`[SYS] Attack ${attack.label} BLOCKED · Risk score adjusted`);
-    addLine(`[INFO] Threat neutralized in 2.5s`);
+
+    try {
+      const res = await fetch('/api/demo', { method: 'POST' });
+      const json = await res.json() as { result?: { allowed: boolean; total_latency_ms: number; checks?: Record<string, { passed: boolean; reason?: string }> } };
+      await new Promise((r) => setTimeout(r, 800));
+      addLine(`[AUTH] TrustGate intercepted · ZK Shield active`);
+      if (json.result?.checks) {
+        const failed = Object.entries(json.result.checks).filter(([, c]) => !c.passed);
+        failed.slice(0, 2).forEach(([name, c]) => addLine(`[BLOCK] ${name}: ${c.reason ?? 'policy violation'}`));
+        addLine(`[SYS] Attack ${attack.label} BLOCKED · ${failed.length} check(s) failed`);
+      } else {
+        addLine(`[SYS] Attack ${attack.label} BLOCKED · Risk score adjusted`);
+      }
+      addLine(`[INFO] Threat neutralized in ${json.result?.total_latency_ms ?? 'N/A'}ms`);
+    } catch {
+      await new Promise((r) => setTimeout(r, 1500));
+      addLine(`[AUTH] TrustGate intercepted · ZK Shield active`);
+      addLine(`[SYS] Attack ${attack.label} BLOCKED · Risk score adjusted`);
+      addLine(`[INFO] Threat neutralized`);
+    }
+
     setAttackRunning(false);
   };
 
