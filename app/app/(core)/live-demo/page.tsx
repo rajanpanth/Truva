@@ -2,7 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { TruvaButton, TruvaStatCard, TruvaStatusPill, TruvaTerminal, TruvaProgressBar, TruvaPulsingDot } from '@/components/ui/truva';
-import { Shield, Activity, ShieldCheck, AlertTriangle, Play } from 'lucide-react';
+import { Shield, Activity, ShieldCheck, AlertTriangle, Play, Lock, Zap, ExternalLink } from 'lucide-react';
+import { useMagicBlockPayment } from '@/lib/hooks/useMagicBlockPayment';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 
 const phases = [
   { name: 'AGENT_REGISTRATION', desc: 'Registering agent on-chain with compliance metadata.', duration: 2000 },
@@ -26,6 +29,12 @@ export default function LiveDemoPage() {
   const [attackRunning, setAttackRunning] = useState(false);
   const [selectedAttack, setSelectedAttack] = useState(attackTypes[0].id);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // MagicBlock private payment state
+  const { connected } = useWallet();
+  const { sendPrivatePayment, status: payStatus, txSignature, logs: payLogs, reset: resetPay, isLoading: payLoading } = useMagicBlockPayment();
+  const [toAddress, setToAddress] = useState('');
+  const [payAmount, setPayAmount] = useState('1000000');
 
   const addLine = (line: string) => {
     setTerminalLines((prev) => [...prev.slice(-48), line]);
@@ -186,6 +195,132 @@ export default function LiveDemoPage() {
         showCursor
         maxHeight="240px"
       />
+
+      {/* MagicBlock Private Payment Panel */}
+      <div className="mt-6 bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-5">
+        <div className="flex items-center gap-2 mb-1">
+          <Lock size={14} className="text-[var(--accent-green)]" />
+          <h3 className="text-[13px] uppercase tracking-[2px] font-bold">PRIVATE_PAYMENT · MAGICBLOCK_PER</h3>
+          <span className="ml-auto text-[11px] px-2 py-0.5 border border-[var(--accent-green)] text-[var(--accent-green)] rounded-[2px] uppercase tracking-widest">LIVE</span>
+        </div>
+        <p className="text-[12px] text-[var(--text-muted)] mb-4">
+          Trust-gated private SPL transfers via MagicBlock Private Ephemeral Rollup · Payment amount &amp; routing hidden on-chain
+        </p>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Input form */}
+          <div className="space-y-3">
+            <div>
+              <label className="block text-[11px] uppercase tracking-widest text-[var(--text-secondary)] mb-1">RECIPIENT_PUBKEY</label>
+              <input
+                type="text"
+                value={toAddress}
+                onChange={(e) => setToAddress(e.target.value)}
+                placeholder="Solana wallet address..."
+                className="w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-[2px] px-3 py-2 text-[13px] font-mono text-[var(--text-primary)] placeholder:text-[var(--text-dim)] focus:outline-none focus:border-[var(--accent-green)]"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] uppercase tracking-widest text-[var(--text-secondary)] mb-1">AMOUNT · USDC BASE UNITS</label>
+              <input
+                type="number"
+                value={payAmount}
+                onChange={(e) => setPayAmount(e.target.value)}
+                min="1"
+                className="w-full bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-[2px] px-3 py-2 text-[13px] font-mono text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-green)]"
+              />
+              <p className="text-[11px] text-[var(--text-dim)] mt-1">1,000,000 = 1 USDC (devnet)</p>
+            </div>
+
+            <div className="flex flex-col gap-2 pt-1">
+              {!connected ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-[12px] text-[var(--text-muted)]">Connect wallet to send private payment</span>
+                  <WalletMultiButton style={{ fontSize: '12px', height: '32px', padding: '0 12px', borderRadius: '2px' }} />
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <TruvaButton
+                    variant="primary"
+                    className="flex-1 text-[12px] flex items-center justify-center gap-1.5"
+                    disabled={payLoading || !toAddress.trim() || !payAmount}
+                    onClick={() => {
+                      sendPrivatePayment({
+                        toAddress: toAddress.trim(),
+                        amount: parseInt(payAmount, 10),
+                        memo: 'Truva trust-gated private payment',
+                      });
+                    }}
+                  >
+                    <Zap size={12} />
+                    {payLoading ? `${payStatus.toUpperCase()}...` : 'SEND_PRIVATE_PAYMENT'}
+                  </TruvaButton>
+                  {payStatus !== 'idle' && (
+                    <TruvaButton variant="secondary" className="text-[12px]" onClick={resetPay}>
+                      RESET
+                    </TruvaButton>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Status badge */}
+            {payStatus !== 'idle' && (
+              <div className={`p-3 rounded-[2px] border text-[12px] font-mono ${
+                payStatus === 'confirmed' ? 'border-[var(--accent-green)] text-[var(--accent-green)] bg-[var(--accent-green-dim)]' :
+                payStatus === 'error' ? 'border-[var(--red)] text-[var(--red)] bg-[rgba(255,51,51,0.05)]' :
+                'border-[var(--border-default)] text-[var(--text-secondary)]'
+              }`}>
+                STATUS: {payStatus.toUpperCase()}
+                {txSignature && (
+                  <div className="mt-1 flex items-center gap-1">
+                    <span className="text-[var(--text-muted)]">SIG:</span>
+                    <a
+                      href={`https://explorer.solana.com/tx/${txSignature}?cluster=devnet`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="underline flex items-center gap-0.5"
+                    >
+                      {txSignature.slice(0, 20)}... <ExternalLink size={10} />
+                    </a>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Architecture note */}
+            <div className="p-3 bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-[2px] space-y-1">
+              <p className="text-[11px] uppercase tracking-widest text-[var(--text-secondary)] font-bold">HOW IT WORKS</p>
+              <p className="text-[12px] text-[var(--text-muted)]">① Truva TrustGate validates agent tier on-chain</p>
+              <p className="text-[12px] text-[var(--text-muted)]">② Wallet signs MagicBlock TEE challenge</p>
+              <p className="text-[12px] text-[var(--text-muted)]">③ Private transfer built via MagicBlock PER API</p>
+              <p className="text-[12px] text-[var(--text-muted)]">④ Amount &amp; routing hidden in Private Ephemeral Rollup</p>
+              <p className="text-[12px] text-[var(--text-muted)]">⑤ Settlement committed back to Solana base layer</p>
+            </div>
+          </div>
+
+          {/* Payment log terminal */}
+          <div>
+            <p className="text-[11px] uppercase tracking-widest text-[var(--text-secondary)] font-bold mb-2">PAYMENT_LOG</p>
+            <div className="bg-[var(--bg-elevated)] border border-[var(--border-default)] rounded-[2px] p-3 h-[280px] overflow-y-auto font-mono text-[12px] space-y-0.5">
+              {payLogs.length === 0 ? (
+                <span className="text-[var(--text-dim)]">› Awaiting payment initiation...</span>
+              ) : (
+                payLogs.map((l, i) => (
+                  <div key={i} className={
+                    l.type === 'success' ? 'text-[var(--accent-green)]' :
+                    l.type === 'error' ? 'text-[var(--red)]' :
+                    l.type === 'warn' ? 'text-yellow-400' :
+                    'text-[var(--text-secondary)]'
+                  }>
+                    <span className="text-[var(--text-dim)]">[{l.timestamp}]</span> {l.message}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
