@@ -27,10 +27,9 @@ function useReputationEvents(limit = 20) {
 
 /* ── Tier → CSS color var mapping ───────────────────────────── */
 const TIER_COLORS: Record<TrustTier, string> = {
-  0: 'var(--tier-bronze)',
-  1: 'var(--tier-silver)',
-  2: 'var(--tier-gold)',
-  3: 'var(--tier-platinum)',
+  1: 'var(--tier-bronze)',
+  2: 'var(--tier-silver)',
+  3: 'var(--tier-gold)',
 };
 
 /* ── SVG World Map — simplified continents ──────────────────── */

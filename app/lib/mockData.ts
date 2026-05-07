@@ -1,4 +1,4 @@
-export type TrustTier = "Bronze" | "Silver" | "Gold" | "Platinum";
+export type TrustTier = "Bronze" | "Silver" | "Gold";
 
 export interface Agent {
   pubkey: string;
@@ -18,7 +18,7 @@ export const MOCK_AGENTS: Agent[] = [
     name: "TradeBot X",
     description: "Autonomous DeFi arbitrage engine with cross-protocol MEV",
     category: "DEFI",
-    tier: "Platinum",
+    tier: "Gold",
     trustScore: 97,
     transactionCount: 247,
     successRate: 0.998,
@@ -29,7 +29,7 @@ export const MOCK_AGENTS: Agent[] = [
     name: "Liquid Flow",
     description: "Cross-pool liquidity management for concentrated positions",
     category: "DEFI",
-    tier: "Platinum",
+    tier: "Gold",
     trustScore: 95,
     transactionCount: 142,
     successRate: 0.962,

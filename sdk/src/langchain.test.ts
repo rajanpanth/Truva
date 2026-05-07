@@ -29,7 +29,7 @@ describe("LangChain Tool — createTruvaTool", () => {
     const tool = createTruvaTool(dummyConnection);
     const schema = tool.schema as Record<string, unknown>;
     const props = schema["properties"] as Record<string, { enum?: string[] }>;
-    expect(props["tier"].enum).toEqual(["Bronze", "Silver", "Gold", "Platinum"]);
+    expect(props["tier"].enum).toEqual(["Bronze", "Silver", "Gold"]);
   });
 
   it("invoke() returns FAIL for an invalid pubkey (sync-safe check)", async () => {

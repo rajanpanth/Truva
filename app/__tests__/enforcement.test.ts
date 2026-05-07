@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { checkTrustGate } from '../app/backend/enforcement/trustgate';
-import { runFastEnforce } from '../app/backend/enforcement/fastenforce';
-import type { Agent } from '../app/backend/types/agent';
-import type { TransactionRequest, EnforcementCheck } from '../app/backend/types/enforcement';
+import { checkTrustGate } from '../backend/enforcement/trustgate';
+import { runFastEnforce } from '../backend/enforcement/fastenforce';
+import type { Agent } from '../backend/types/agent';
+import type { TransactionRequest, EnforcementCheck } from '../backend/types/enforcement';
 
 function makeAgent(overrides: Partial<Agent> = {}): Agent {
   return {

@@ -51,7 +51,6 @@ pub fn handler(
         TrustTier::Bronze => 5_000_000_000,
         TrustTier::Silver => 100_000_000_000,
         TrustTier::Gold => u64::MAX,
-        TrustTier::Platinum => u64::MAX,
     };
 
     require!(

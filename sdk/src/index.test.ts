@@ -29,10 +29,9 @@ describe("TRUSTGATE_PROGRAM_ID", () => {
 // TIER_RANK
 // ─────────────────────────────────────────────────────────────
 describe("TIER_RANK", () => {
-  it("Bronze < Silver < Gold < Platinum", () => {
+  it("Bronze < Silver < Gold", () => {
     expect(TIER_RANK.Bronze).toBeLessThan(TIER_RANK.Silver);
     expect(TIER_RANK.Silver).toBeLessThan(TIER_RANK.Gold);
-    expect(TIER_RANK.Gold).toBeLessThan(TIER_RANK.Platinum);
   });
 });
 
@@ -48,9 +47,8 @@ describe("TIER_LIMITS_LAMPORTS", () => {
     expect(TIER_LIMITS_LAMPORTS.Silver).toBe(100_000_000_000);
   });
 
-  it("Gold and Platinum are unlimited (MAX_SAFE_INTEGER)", () => {
+  it("Gold is unlimited (MAX_SAFE_INTEGER)", () => {
     expect(TIER_LIMITS_LAMPORTS.Gold).toBe(Number.MAX_SAFE_INTEGER);
-    expect(TIER_LIMITS_LAMPORTS.Platinum).toBe(Number.MAX_SAFE_INTEGER);
   });
 });
 
@@ -242,7 +240,7 @@ describe("TruvaClient.requireTrustTier", () => {
     const client = new TruvaClient(connection);
     vi.spyOn(client, "getAgentScore").mockResolvedValue({
       score: 90,
-      tier: "Platinum",
+      tier: "Gold",
       txCount: 100,
       successRate: 0.99,
       frozen: true,

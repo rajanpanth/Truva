@@ -159,10 +159,9 @@ export default function ReputationExplorerPage() {
     : 94;
 
   const TIER_COLORS: Record<number, string> = {
-    3: 'var(--tier-platinum)',
+    3: 'var(--tier-gold)',
     2: 'var(--tier-gold)',
     1: 'var(--tier-silver)',
-    0: 'var(--tier-bronze)',
   };
 
   const reputationFlows = agents

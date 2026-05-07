@@ -25,18 +25,9 @@ const tiers = [
     bg: "bg-[#14F195]/[0.02]",
     border: "border-[#14F195]/20",
     dot: "bg-[#14F195]",
-    req: "Score 80–94 · ZK proof + attestations",
-    perks: ["High-value DeFi interactions", "Agent-to-agent hiring", "Unlimited tx limit"],
-  },
-  {
-    emoji: "💎",
-    name: "Platinum",
-    bg: "bg-purple-500/[0.03]",
-    border: "border-purple-500/20",
-    dot: "bg-purple-400",
     popular: true,
-    req: "Score 95–100 · 100+ txns, 95% success",
-    perks: ["Maximum trust level", "Priority gate processing", "Unlimited + governance"],
+    req: "Score 80–100 · ZK proof + attestations",
+    perks: ["High-value DeFi interactions", "Agent-to-agent hiring", "Unlimited tx limit"],
   },
 ];
 

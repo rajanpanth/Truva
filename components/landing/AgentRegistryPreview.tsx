@@ -3,7 +3,7 @@
 import { Shield, Search } from 'lucide-react';
 
 const agents = [
-  { name: 'TRADEBOT X', tier: 'PLATINUM', tierColor: '#a855f7', score: '99.3%', id: '0x9A32...fYc3' },
+  { name: 'TRADEBOT X', tier: 'GOLD', tierColor: '#f59e0b', score: '99.3%', id: '0x9A32...fYc3' },
   { name: 'LIQUID_FLOW', tier: 'GOLD', tierColor: '#f59e0b', score: '94.2%', id: '0xBv4L...cA5P' },
   { name: 'ORACLE_EYE', tier: 'SILVER', tierColor: '#94a3b8', score: '88.5%', id: '0x1L3E...1998' },
   { name: 'GUARD_PROTO', tier: 'BRONZE', tierColor: '#f97316', score: '62.1%', id: '0xD82E...fF9D' },

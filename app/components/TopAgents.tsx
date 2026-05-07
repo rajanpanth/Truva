@@ -32,7 +32,6 @@ export function TopAgents() {
   const runners = sorted.slice(1, 3);
 
   const tierColor: Record<string, string> = {
-    Platinum: "text-purple-400 bg-purple-400/10 border-purple-400/20",
     Gold: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20",
     Silver: "text-slate-300 bg-slate-400/10 border-slate-400/20",
     Bronze: "text-orange-400 bg-orange-500/10 border-orange-500/20",

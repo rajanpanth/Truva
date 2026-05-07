@@ -2,7 +2,7 @@
  * seedAgents.ts
  *
  * Seeds 10 demo agents with varied tiers:
- *   - 2 Platinum, 3 Gold, 3 Silver, 2 Bronze
+ *   - 5 Gold, 3 Silver, 2 Bronze
  *
  * Registers each via POST /api/agents/register, then generates
  * random transaction history and inserts directly into the database.
@@ -28,11 +28,11 @@ interface SeedAgent {
 }
 
 const SEED_AGENTS: SeedAgent[] = [
-  // 2 Platinum
+  // 5 Gold
   {
     name: "TradeBot X",
-    tier: "Platinum",
-    score: 97,
+    tier: "Gold",
+    score: 95,
     txCount: 180,
     successRate: 0.98,
     counterparties: 35,
@@ -41,8 +41,8 @@ const SEED_AGENTS: SeedAgent[] = [
   },
   {
     name: "Liquid Flow",
-    tier: "Platinum",
-    score: 95,
+    tier: "Gold",
+    score: 92,
     txCount: 150,
     successRate: 0.96,
     counterparties: 28,

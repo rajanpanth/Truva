@@ -2,7 +2,7 @@ type PillVariant =
   | 'passed' | 'blocked' | 'pending' | 'verified' | 'rejected'
   | 'active' | 'standby' | 'online' | 'offline' | 'flagged'
   | 'live' | 'synced'
-  | 'platinum' | 'gold' | 'silver' | 'bronze';
+  | 'gold' | 'silver' | 'bronze';
 
 interface TruvaStatusPillProps {
   variant: PillVariant;
@@ -23,7 +23,6 @@ const config: Record<PillVariant, { border: string; text: string; bg: string; do
   flagged:  { border: 'transparent', text: 'var(--red)', bg: 'transparent', dot: 'var(--red)' },
   live:     { border: 'var(--accent-green)', text: 'var(--accent-green)', bg: 'transparent', dot: 'var(--accent-green)' },
   synced:   { border: 'transparent', text: 'var(--accent-green)', bg: 'transparent' },
-  platinum: { border: 'var(--tier-platinum)', text: 'var(--tier-platinum)', bg: 'transparent' },
   gold:     { border: 'var(--tier-gold)', text: 'var(--tier-gold)', bg: 'transparent' },
   silver:   { border: 'var(--tier-silver)', text: 'var(--tier-silver)', bg: 'transparent' },
   bronze:   { border: 'var(--tier-bronze)', text: 'var(--tier-bronze)', bg: 'transparent' },
@@ -34,7 +33,7 @@ const labels: Record<PillVariant, string> = {
   verified: 'VERIFIED', rejected: 'REJECTED', active: 'ACTIVE',
   standby: 'STANDBY', online: 'ONLINE', offline: 'OFFLINE',
   flagged: 'FLAGGED', live: 'LIVE', synced: 'SYNCED',
-  platinum: 'PLATINUM', gold: 'GOLD', silver: 'SILVER', bronze: 'BRONZE',
+  gold: 'GOLD', silver: 'SILVER', bronze: 'BRONZE',
 };
 
 export function TruvaStatusPill({ variant, label, className = '' }: TruvaStatusPillProps) {

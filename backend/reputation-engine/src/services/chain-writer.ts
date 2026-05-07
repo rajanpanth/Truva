@@ -36,14 +36,12 @@ const TIER_MAP: Record<string, object> = {
   Bronze: { bronze: {} },
   Silver: { silver: {} },
   Gold: { gold: {} },
-  Platinum: { platinum: {} },
 };
 
 const TIER_SCORE_MAP: Record<string, number> = {
   Bronze: 0,
   Silver: 1,
   Gold: 2,
-  Platinum: 3,
 };
 
 // ── Connection + Authority Setup ──
@@ -127,7 +125,6 @@ export async function getOnChainTier(agentPubkey: string): Promise<string | null
       bronze: "Bronze",
       silver: "Silver",
       gold: "Gold",
-      platinum: "Platinum",
     };
     return tierMap[tierKey] || "Bronze";
   } catch {
