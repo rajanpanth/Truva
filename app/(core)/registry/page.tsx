@@ -77,7 +77,7 @@ export default function RegistryPage() {
           label="ELITE AGENTS"
           value={isLoading ? '—' : String(filtered.filter(a => a.tier >= 2).length)}
           sub="Gold tier & above"
-          icon={<Star size={15} className="text-[var(--tier-platinum)]" />}
+          icon={<Star size={15} className="text-[var(--tier-gold)]" />}
         />
       </div>
 
