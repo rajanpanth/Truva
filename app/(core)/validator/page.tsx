@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { TruvaStatCard, TruvaStatusPill, TruvaTerminal, TruvaProgressBar, TruvaButton, TruvaPulsingDot } from '@/components/ui/truva';
 import { ShieldCheck, Zap, Award, TrendingUp, AlertTriangle, Server, Cpu, HardDrive, Key, Settings } from 'lucide-react';
 import { useTrustGateLogs } from '@/lib/hooks/useTrustGateLogs';

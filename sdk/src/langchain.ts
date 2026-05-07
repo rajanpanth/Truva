@@ -67,7 +67,7 @@ export function createTruvaTool(
       properties: {
         tier: {
           type: "string",
-          enum: ["Bronze", "Silver", "Gold", "Platinum"],
+          enum: ["Bronze", "Silver", "Gold"],
           description: "Minimum trust tier required for this operation",
         },
         agentPubkey: {

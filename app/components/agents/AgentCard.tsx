@@ -7,7 +7,6 @@ import { TASK_TYPE_LABELS } from '@/backend/utils/constants';
 import { Bot } from 'lucide-react';
 
 const tierColors: Record<string, string> = {
-  platinum: 'text-[#00ff88] border-[#00ff88]/30',
   gold: 'text-yellow-500 border-yellow-500/30',
   silver: 'text-[#888] border-[#888]/30',
   bronze: 'text-orange-600 border-orange-600/30',

@@ -39,7 +39,7 @@ export default function AgentProfilePage({ params }: { params: { id: string } })
   }
 
   const tierName = TIER_LABELS[agent.tier];
-  const tierLower = tierName.toLowerCase() as 'bronze' | 'silver' | 'gold' | 'platinum';
+  const tierLower = tierName.toLowerCase() as 'bronze' | 'silver' | 'gold';
   const agentStatus = agent.is_flagged ? 'flagged' : agent.is_active ? 'active' : 'inactive';
   const successPct = agent.success_rate != null ? agent.success_rate * 100 : 0;
 
@@ -156,4 +156,4 @@ export default function AgentProfilePage({ params }: { params: { id: string } })
       </div>
     </div>
   );
-}
+}

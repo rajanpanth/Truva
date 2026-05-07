@@ -6,32 +6,29 @@
 // Trust Tiers
 // ============================================================
 
-/** The four trust tiers used by the Truva Protocol. */
-export type TrustTier = "Bronze" | "Silver" | "Gold" | "Platinum";
+/** The three trust tiers used by the Truva Protocol. */
+export type TrustTier = "Bronze" | "Silver" | "Gold";
 
 /** Internal rank map used for tier comparisons. */
 export const TIER_RANK: Record<TrustTier, number> = {
   Bronze: 0,
   Silver: 1,
   Gold: 2,
-  Platinum: 3,
 };
 
 /**
  * Per-tier payment limits expressed in **lamports** (1 SOL = 1_000_000_000 lamports).
  *
- * | Tier     | Limit (lamports)    | Limit (SOL) |
- * |----------|---------------------|-------------|
- * | Bronze   | 5_000_000_000       | 5 SOL       |
- * | Silver   | 100_000_000_000     | 100 SOL     |
- * | Gold     | unlimited           | unlimited   |
- * | Platinum | unlimited           | unlimited   |
+ * | Tier   | Limit (lamports)    | Limit (SOL) |
+ * |--------|---------------------|-------------|
+ * | Bronze | 5_000_000_000       | 5 SOL       |
+ * | Silver | 100_000_000_000     | 100 SOL     |
+ * | Gold   | unlimited           | unlimited   |
  */
 export const TIER_LIMITS_LAMPORTS: Record<TrustTier, number> = {
   Bronze: 5_000_000_000,        // 5 SOL
   Silver: 100_000_000_000,      // 100 SOL
   Gold: Number.MAX_SAFE_INTEGER,
-  Platinum: Number.MAX_SAFE_INTEGER,
 };
 
 // ============================================================

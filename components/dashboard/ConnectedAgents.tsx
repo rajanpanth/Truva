@@ -6,7 +6,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 
 const tierColors: Record<string, string> = {
-  platinum: 'text-[#00ff88]',
   gold: 'text-yellow-500',
   silver: 'text-[#888]',
   bronze: 'text-orange-600',

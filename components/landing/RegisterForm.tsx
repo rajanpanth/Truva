@@ -68,7 +68,6 @@ const tiers = [
   { name: 'BRONZE', desc: 'Testnet operations only.', active: true },
   { name: 'SILVER', desc: 'For Low Stake Routing.', active: false },
   { name: 'GOLD', desc: 'For Mid-Tier Operations.', active: false },
-  { name: 'PLATINUM', desc: 'For Ultra Gated Flows.', active: false },
 ];
 
 export function RegisterForm() {

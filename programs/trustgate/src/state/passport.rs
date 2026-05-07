@@ -5,7 +5,6 @@ pub enum TrustTier {
     Bronze = 0,
     Silver = 1,
     Gold = 2,
-    Platinum = 3,
 }
 
 impl TrustTier {
@@ -13,8 +12,7 @@ impl TrustTier {
         match score {
             0..=49 => TrustTier::Bronze,
             50..=79 => TrustTier::Silver,
-            80..=94 => TrustTier::Gold,
-            95..=100 => TrustTier::Platinum,
+            80..=100 => TrustTier::Gold,
             _ => TrustTier::Bronze,
         }
     }
@@ -24,7 +22,6 @@ impl TrustTier {
             TrustTier::Bronze => "Bronze",
             TrustTier::Silver => "Silver",
             TrustTier::Gold => "Gold",
-            TrustTier::Platinum => "Platinum",
         }
     }
 }

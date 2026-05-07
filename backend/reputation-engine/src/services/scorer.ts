@@ -13,7 +13,7 @@ import { updateOnChainTier } from "./chain-writer";
 
 // ── Types ──
 
-export type TrustTier = "Bronze" | "Silver" | "Gold" | "Platinum";
+export type TrustTier = "Bronze" | "Silver" | "Gold";
 
 export interface ScoreResult {
   score: number;
@@ -91,16 +91,6 @@ export function calculateScore(stats: AgentStats): ScoreResult {
  * Determine tier from multi-signal thresholds
  */
 function calculateTier(stats: AgentStats, successRate: number): TrustTier {
-  if (
-    stats.txCount >= 100 &&
-    successRate >= 0.95 &&
-    stats.uniqueCounterparties >= 20 &&
-    stats.attestationCount >= 3 &&
-    stats.zkProofCount >= 3
-  ) {
-    return "Platinum";
-  }
-
   if (
     stats.txCount >= 30 &&
     successRate >= 0.90 &&

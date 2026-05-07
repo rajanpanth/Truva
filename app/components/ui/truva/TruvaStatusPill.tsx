@@ -2,7 +2,7 @@
   | 'passed' | 'blocked' | 'pending' | 'verified' | 'rejected'
   | 'active' | 'standby' | 'online' | 'offline' | 'flagged' | 'inactive'
   | 'live' | 'synced'
-  | 'platinum' | 'gold' | 'silver' | 'bronze';
+  | 'gold' | 'silver' | 'bronze';
 
 interface TruvaStatusPillProps {
   variant: PillVariant;
@@ -24,7 +24,6 @@ const config: Record<PillVariant, { bg: string; border: string; text: string; do
   flagged:  { bg: 'rgba(240,54,54,0.08)',  border: 'transparent',           text: '#f03636', dot: '#f03636' },
   live:     { bg: 'rgba(0,232,122,0.1)',   border: 'rgba(0,232,122,0.3)',   text: '#00e87a', dot: '#00e87a' },
   synced:   { bg: 'rgba(0,232,122,0.08)', border: 'transparent',            text: '#00e87a' },
-  platinum: { bg: 'rgba(196,181,253,0.1)', border: 'rgba(196,181,253,0.3)', text: '#c4b5fd' },
   gold:     { bg: 'rgba(251,191,36,0.1)',  border: 'rgba(251,191,36,0.3)',  text: '#fbbf24' },
   silver:   { bg: 'rgba(148,163,184,0.1)', border: 'rgba(148,163,184,0.3)', text: '#94a3b8' },
   bronze:   { bg: 'rgba(249,115,22,0.1)',  border: 'rgba(249,115,22,0.3)',  text: '#f97316' },
@@ -35,7 +34,7 @@ const labels: Record<PillVariant, string> = {
   verified: 'VERIFIED', rejected: 'REJECTED', active: 'ACTIVE',
   standby: 'STANDBY', inactive: 'INACTIVE', online: 'ONLINE', offline: 'OFFLINE',
   flagged: 'FLAGGED', live: 'LIVE', synced: 'SYNCED',
-  platinum: 'PLATINUM', gold: 'GOLD', silver: 'SILVER', bronze: 'BRONZE',
+  gold: 'GOLD', silver: 'SILVER', bronze: 'BRONZE',
 };
 
 export function TruvaStatusPill({ variant, label, className = '' }: TruvaStatusPillProps) {

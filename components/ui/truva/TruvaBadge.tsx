@@ -1,7 +1,6 @@
-type BadgeVariant = 'platinum' | 'gold' | 'silver' | 'bronze' | 'trading' | 'security';
+type BadgeVariant = 'gold' | 'silver' | 'bronze' | 'trading' | 'security';
 
 const badgeColors: Record<BadgeVariant, string> = {
-  platinum: 'var(--tier-platinum)',
   gold: 'var(--tier-gold)',
   silver: 'var(--tier-silver)',
   bronze: 'var(--tier-bronze)',

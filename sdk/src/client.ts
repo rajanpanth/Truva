@@ -279,7 +279,6 @@ const TIER_MAP: Record<number, TrustTier> = {
   0: "Bronze",
   1: "Silver",
   2: "Gold",
-  3: "Platinum",
 };
 
 /**

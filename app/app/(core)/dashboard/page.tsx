@@ -12,7 +12,6 @@ import type { Agent } from '@/backend/types/agent';
 import type { TrustGateLog } from '@/backend/types/trustgate';
 
 const tierColors: Record<string, string> = {
-  platinum: 'var(--tier-platinum)',
   gold: 'var(--tier-gold)',
   silver: 'var(--tier-silver)',
   bronze: 'var(--tier-bronze)',

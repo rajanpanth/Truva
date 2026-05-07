@@ -7,7 +7,7 @@ import { TruvaStatCard, TruvaStatusPill, TruvaTerminal, TruvaProgressBar, TruvaB
 import { Shield, ShieldCheck, Zap, TrendingUp, Activity } from 'lucide-react';
 import type { Agent } from '@/backend/types/agent';
 
-const TIER_BADGE: Record<number, 'bronze' | 'silver' | 'gold' | 'platinum'> = { 0: 'bronze', 1: 'silver', 2: 'gold', 3: 'platinum' };
+const TIER_BADGE: Record<number, 'bronze' | 'silver' | 'gold'> = { 1: 'bronze', 2: 'silver', 3: 'gold' };
 
 function buildFallbackAgent(slug: string): Agent {
   const name = slug.replace(/-/g, '_').toUpperCase();

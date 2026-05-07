@@ -256,7 +256,7 @@ export default function LiveDemoPage() {
                     {payLoading ? `${payStatus.toUpperCase()}...` : 'SEND_PRIVATE_PAYMENT'}
                   </TruvaButton>
                   {payStatus !== 'idle' && (
-                    <TruvaButton variant="secondary" className="text-[12px]" onClick={resetPay}>
+                    <TruvaButton variant="outlined" className="text-[12px]" onClick={resetPay}>
                       RESET
                     </TruvaButton>
                   )}

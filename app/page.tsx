@@ -47,7 +47,7 @@ function LiveBarChart() {
 }
 
 const tierColors: Record<string, string> = {
-  Platinum: 'var(--tier-platinum)', Gold: 'var(--tier-gold)',
+  Gold: 'var(--tier-gold)',
   Silver: 'var(--tier-silver)', Bronze: 'var(--tier-bronze)',
 };
 
@@ -55,7 +55,6 @@ const tiers = [
   { name: 'BRONZE', desc: 'Low-trust operations. Up to 5 SOL per transaction.', color: 'var(--tier-bronze)' },
   { name: 'SILVER', desc: 'Standard operations. Up to 100 SOL per transaction.', color: 'var(--tier-silver)' },
   { name: 'GOLD', desc: 'High-trust operations. Unlimited transaction size.', color: 'var(--tier-gold)' },
-  { name: 'PLATINUM', desc: 'Ultra-compliant oracle flows. Priority routing.', color: 'var(--tier-platinum)' },
 ];
 
 export default function LandingPage() {

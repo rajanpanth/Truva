@@ -9,13 +9,12 @@ import { TIER_LABELS } from '@/backend/types/agent';
 import type { Agent } from '@/backend/types/agent';
 
 const tierColors: Record<string, string> = {
-  platinum: 'var(--tier-platinum)',
   gold: 'var(--tier-gold)',
   silver: 'var(--tier-silver)',
   bronze: 'var(--tier-bronze)',
 };
 
-const allTiers = ['all', 'platinum', 'gold', 'silver', 'bronze'] as const;
+const allTiers = ['all', 'gold', 'silver', 'bronze'] as const;
 const allCategories = ['ALL_TYPES', 'swap', 'transfer', 'stake', 'lend', 'bridge', 'nft_trade', 'governance', 'custom'] as const;
 
 function tierKey(a: Agent): string {
@@ -127,7 +126,7 @@ export default function RegistryPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((a: Agent) => {
-            const tl = tierKey(a) as 'platinum' | 'gold' | 'silver' | 'bronze';
+            const tl = tierKey(a) as 'gold' | 'silver' | 'bronze';
             const tc = tierColors[tl] ?? tierColors.bronze;
             const agentStatus = a.is_flagged ? 'flagged' : a.is_active ? 'active' : 'inactive';
             return (

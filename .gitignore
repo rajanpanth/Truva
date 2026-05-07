@@ -147,3 +147,5 @@ graphify-out/
 *.pem
 *.cert
 *.key
+.vercel
+.env*.local

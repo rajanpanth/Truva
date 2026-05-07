@@ -234,8 +234,7 @@
         "variants": [
           { "name": "Bronze" },
           { "name": "Silver" },
-          { "name": "Gold" },
-          { "name": "Platinum" }
+          { "name": "Gold" }
         ]
       }
     },

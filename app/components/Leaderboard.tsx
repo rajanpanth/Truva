@@ -6,7 +6,6 @@ import { TIER_LABELS } from "@/backend/types/agent";
 import type { Agent } from "@/backend/types/agent";
 
 const tierDot: Record<string, string> = {
-  Platinum: "bg-purple-400",
   Gold: "bg-yellow-400",
   Silver: "bg-slate-400",
   Bronze: "bg-orange-400",

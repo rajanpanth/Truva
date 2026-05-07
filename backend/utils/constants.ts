@@ -1,22 +1,19 @@
 export const TRUST_TIER_LABELS: Record<number, string> = {
-  0: 'Bronze',
-  1: 'Silver',
-  2: 'Gold',
-  3: 'Platinum',
+  1: 'Bronze',
+  2: 'Silver',
+  3: 'Gold',
 };
 
 export const TRUST_TIER_COLORS: Record<number, string> = {
-  0: '#CD7F32',
-  1: '#C0C0C0',
-  2: '#FFD700',
-  3: '#E5E4E2',
+  1: '#CD7F32',
+  2: '#C0C0C0',
+  3: '#FFD700',
 };
 
 export const TIER_MIN_SCORES: Record<number, number> = {
-  0: 0,
-  1: 50,
-  2: 80,
-  3: 95,
+  1: 0,
+  2: 50,
+  3: 80,
 };
 
 export const TASK_TYPE_LABELS: Record<string, string> = {

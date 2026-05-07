@@ -41,12 +41,11 @@ pub fn handler(
     );
 
     // Enforce tier-based amount limits (in lamports)
-    // Bronze: 5 SOL, Silver: 100 SOL, Gold+Platinum: unlimited
+    // Bronze: 5 SOL, Silver: 100 SOL, Gold: unlimited
     let max_amount: u64 = match passport.trust_tier {
         TrustTier::Bronze => 5_000_000_000,       // 5 SOL
         TrustTier::Silver => 100_000_000_000,      // 100 SOL
         TrustTier::Gold => u64::MAX,               // unlimited
-        TrustTier::Platinum => u64::MAX,            // unlimited
     };
 
     require!(

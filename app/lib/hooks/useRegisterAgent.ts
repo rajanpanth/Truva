@@ -33,6 +33,7 @@ export function useRegisterAgent() {
       max_tx_size: number;
       rate_limit: number;
       chains: string[];
+      spending_behavior?: string;
       metadata?: Record<string, unknown>;
       trust_score?: number;
     }): Promise<RegisterResult | null> => {

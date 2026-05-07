@@ -3,8 +3,8 @@ interface TierBadgeProps {
   className?: string;
 }
 
-const TIER_LABELS: Record<number, string> = { 0: 'SANDBOX', 1: 'BRONZE', 2: 'SILVER', 3: 'PLATINUM' };
-const TIER_COLORS: Record<number, string> = { 0: '#555', 1: '#cd7f32', 2: '#888', 3: '#00ff88' };
+const TIER_LABELS: Record<number, string> = { 1: 'BRONZE', 2: 'SILVER', 3: 'GOLD' };
+const TIER_COLORS: Record<number, string> = { 1: '#cd7f32', 2: '#C0C0C0', 3: '#FFD700' };
 
 export function TierBadge({ tier, className }: TierBadgeProps) {
   const label = TIER_LABELS[tier] ?? 'UNKNOWN';

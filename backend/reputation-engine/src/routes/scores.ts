@@ -27,15 +27,13 @@ router.get("/", async (_req: Request, res: Response) => {
     const tierResult = await query(
       `SELECT current_tier, COUNT(*) as count FROM agents GROUP BY current_tier ORDER BY 
        CASE current_tier 
-         WHEN 'Platinum' THEN 1 
-         WHEN 'Gold' THEN 2 
-         WHEN 'Silver' THEN 3 
-         WHEN 'Bronze' THEN 4 
+         WHEN 'Gold' THEN 1 
+         WHEN 'Silver' THEN 2 
+         WHEN 'Bronze' THEN 3 
        END`
     );
 
     const tierDistribution: Record<string, number> = {
-      Platinum: 0,
       Gold: 0,
       Silver: 0,
       Bronze: 0,
