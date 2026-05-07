@@ -3,14 +3,11 @@
 export const dynamic = 'force-dynamic';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useWallet, useConnection } from '@solana/wallet-adapter-react';
-import { Transaction, TransactionInstruction, PublicKey } from '@solana/web3.js';
-import { Buffer } from 'buffer';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { TruvaButton, TruvaInput, TruvaProgressBar, TruvaCheckTag } from '@/components/ui/truva';
 import { WalletConnectButton } from '@/components/shared/WalletConnectButton';
 import { CheckCircle, Circle, Shield, Wallet, ExternalLink, Loader2 } from 'lucide-react';
-
-const MEMO_PROGRAM_ID = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
+import { useRegisterAgent } from '@/lib/hooks/useRegisterAgent';
 
 const steps = ['IDENTITY', 'CONFIGURATION', 'VERIFICATION'];
 const categories = ['FINANCIAL_ARBITRAGE', 'DATA_ORACLE', 'SECURITY_MONITOR', 'TRADING_BOT', 'LIQUIDITY_PROVISION', 'CROSS_CHAIN_BRIDGE'];
@@ -28,13 +25,13 @@ const CATEGORY_TO_TASK: Record<string, string> = {
 
 const RISK_TO_SPENDING: Record<string, string> = {
   LOW: 'conservative',
-  MEDIUM: 'standard',~
+  MEDIUM: 'standard',
   HIGH: 'aggressive',
 };
 
 export default function RegisterPage() {
-  const { publicKey: walletPubkey, sendTransaction, connected } = useWallet();
-  const { connection } = useConnection();
+  const { publicKey: walletPubkey, connected } = useWallet();
+  const { registerAgent } = useRegisterAgent();
 
   const [step, setStep] = useState(0);
   const [name, setName] = useState('');
@@ -74,76 +71,55 @@ export default function RegisterPage() {
       setSubmitError('CONNECT_PHANTOM_WALLET_FIRST');
       return;
     }
-    if (!name || !operatorName || !operatorEmail || !maxTx || !rateLimit || selectedChains.length === 0) {
+    if (!name || !operatorName || !operatorEmail || selectedChains.length === 0) {
       setSubmitError('FILL_ALL_REQUIRED_FIELDS');
+      return;
+    }
+    const parsedMaxTx = Number(maxTx);
+    const parsedRateLimit = Number(rateLimit);
+    if (!parsedMaxTx || parsedMaxTx < 1) {
+      setSubmitError('MAX_TX_MUST_BE_AT_LEAST_1');
+      return;
+    }
+    if (!parsedRateLimit || parsedRateLimit < 1) {
+      setSubmitError('RATE_LIMIT_MUST_BE_AT_LEAST_1');
       return;
     }
 
     setSubmitting(true);
     setSubmitError('');
-    setSubmitPhase('SIGNING_MEMO_TRANSACTION...');
+    setSubmitPhase('INITIALIZING_PASSPORT_ON_CHAIN...');
 
     try {
-      const memo = JSON.stringify({
-        p: 'TRUVA',
-        op: 'register',
-        name,
-        cat: CATEGORY_TO_TASK[category] || 'trading',
-        ts: Date.now(),
-      });
-
-      const instruction = new TransactionInstruction({
-        keys: [{ pubkey: walletPubkey, isSigner: true, isWritable: false }],
-        programId: MEMO_PROGRAM_ID,
-        data: Buffer.from(memo, 'utf-8'),
-      });
-
-      const transaction = new Transaction().add(instruction);
-      const signature = await sendTransaction(transaction, connection);
-
-      setSubmitPhase('CONFIRMING_ON_CHAIN...');
-      await connection.confirmTransaction(signature, 'confirmed');
-      setTxSignature(signature);
-
-      setSubmitPhase('REGISTERING_IN_PROTOCOL...');
-      const body = {
+      const result = await registerAgent({
         name,
         public_key: walletPubkey.toBase58(),
         operator_name: operatorName,
         operator_email: operatorEmail,
         task_type: CATEGORY_TO_TASK[category] || 'trading',
         description: description || undefined,
-        max_tx_size: Number(maxTx) || 1000,
-        rate_limit: Number(rateLimit) || 100,
-        chains: selectedChains,
-        spending_behavior: RISK_TO_SPENDING[riskTolerance],
-        metadata: JSON.stringify({
+        max_tx_size: parsedMaxTx,
+        rate_limit: parsedRateLimit,
+        chains: selectedChains as ('solana' | 'ethereum' | 'base' | 'arbitrum')[],
+        spending_behavior: RISK_TO_SPENDING[riskTolerance] as 'conservative' | 'standard' | 'aggressive',
+        metadata: {
           capabilities: selectedCaps,
           stake_amount: stakeAmount,
-          tx_signature: signature,
           category,
-        }),
-        tx_signature: signature,
-      };
-
-      const res = await fetch('/api/agents', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        },
       });
 
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || 'REGISTRATION_FAILED');
+      if (!result) {
+        throw new Error('REGISTRATION_FAILED');
       }
 
-      const result = await res.json();
-      setAgentId(result.data?.id || '');
+      setTxSignature(result.txSignature);
+      setAgentId('');
       setSubmitted(true);
       setSubmitPhase('');
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'UNEXPECTED_ERROR';
-      if (message.includes('User rejected')) {
+      if (message.includes('User rejected') || message.includes('rejected')) {
         setSubmitError('TRANSACTION_REJECTED_BY_WALLET');
       } else if (message.includes('nsufficient')) {
         setSubmitError('INSUFFICIENT_SOL — AIRDROP_DEVNET_SOL_FIRST');
@@ -154,7 +130,7 @@ export default function RegisterPage() {
     } finally {
       setSubmitting(false);
     }
-  }, [walletPubkey, connected, name, operatorName, operatorEmail, category, description, maxTx, rateLimit, selectedChains, riskTolerance, selectedCaps, stakeAmount, sendTransaction, connection]);
+  }, [walletPubkey, connected, name, operatorName, operatorEmail, category, description, maxTx, rateLimit, selectedChains, riskTolerance, selectedCaps, stakeAmount, registerAgent]);
 
   if (submitted) {
     return (
@@ -399,7 +375,7 @@ export default function RegisterPage() {
 
               <div className="p-3 bg-[var(--accent-green-dim)] border border-[var(--accent-green)] rounded-[2px]">
                 <p className="text-[13px] uppercase tracking-[1px] text-[var(--accent-green)]">
-                  SUBMITTING WILL SIGN A MEMO TRANSACTION ON SOLANA AND REGISTER YOUR AGENT IN THE TRUVA PROTOCOL.
+                  SUBMITTING WILL CALL initialize_passport ON THE TRUVA ANCHOR PROGRAM AND REGISTER YOUR AGENT IN THE PROTOCOL.
                 </p>
               </div>
             </div>

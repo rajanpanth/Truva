@@ -1,14 +1,14 @@
-export type TrustTier = 0 | 1 | 2 | 3;
-export type TrustTierLabel = 'Bronze' | 'Silver' | 'Gold' | 'Platinum';
+// DB stores tier as 1=Bronze, 2=Silver, 3=Gold (matches migration 002 thresholds)
+export type TrustTier = 1 | 2 | 3;
+export type TrustTierLabel = 'Bronze' | 'Silver' | 'Gold';
 export type TaskType = 'trading' | 'yield' | 'data' | 'execution' | 'risk' | 'treasury' | 'monitoring' | 'payment';
 export type AgentChain = 'solana' | 'ethereum' | 'base' | 'arbitrum';
 export type AgentStatus = 'active' | 'inactive' | 'flagged';
 
 export const TIER_LABELS: Record<TrustTier, TrustTierLabel> = {
-  0: 'Bronze',
-  1: 'Silver',
-  2: 'Gold',
-  3: 'Platinum',
+  1: 'Bronze',
+  2: 'Silver',
+  3: 'Gold',
 };
 
 export interface Agent {

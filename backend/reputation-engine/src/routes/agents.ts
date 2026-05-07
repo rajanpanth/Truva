@@ -23,6 +23,24 @@ const registerSchema = z.object({
   pubkey: pubkeySchema,
 });
 
+// Full registration schema — matches the Next.js app registerAgentFullSchema
+const fullRegisterSchema = z.object({
+  pubkey: pubkeySchema.optional(),
+  public_key: pubkeySchema.optional(),
+  name: z.string().min(2).max(64).optional(),
+  operator_name: z.string().min(2).max(100).optional(),
+  operator_email: z.string().email().optional(),
+  task_type: z.string().optional(),
+  description: z.string().max(500).optional(),
+  max_tx_size: z.number().min(1).optional(),
+  rate_limit: z.number().min(1).optional(),
+  chains: z.array(z.string()).min(1).optional(),
+  spending_behavior: z.string().optional(),
+  metadata: z.unknown().optional(),
+}).refine((d) => d.pubkey || d.public_key, {
+  message: "pubkey or public_key is required",
+});
+
 const attestSchema = z.object({
   validator_pubkey: pubkeySchema,
 });
@@ -57,6 +75,56 @@ router.get("/", async (req: Request, res: Response) => {
     res.json({ success: true, data: result.rows });
   } catch (err: any) {
     console.error("GET /api/agents error:", err);
+    res.status(500).json({ success: false, error: "Internal server error" });
+  }
+});
+
+// ── POST /api/agents ── (SDK entry point — accepts full registration payload)
+
+router.post("/", writeLimiter, async (req: Request, res: Response) => {
+  try {
+    const parsed = fullRegisterSchema.safeParse(req.body);
+    if (!parsed.success) {
+      res.status(400).json({
+        success: false,
+        error: "Invalid request body",
+        details: parsed.error.issues,
+      });
+      return;
+    }
+
+    const pubkey = (parsed.data.pubkey || parsed.data.public_key) as string;
+
+    // Check if already registered
+    const existing = await query(
+      `SELECT pubkey FROM agents WHERE pubkey = $1`,
+      [pubkey]
+    );
+    if (existing.rows.length > 0) {
+      res.status(409).json({ success: false, error: "Agent already registered" });
+      return;
+    }
+
+    // Register agent in reputation engine DB
+    await query(`INSERT INTO agents (pubkey) VALUES ($1)`, [pubkey]);
+
+    // Trigger historical backfill asynchronously
+    backfillAgent(pubkey).catch((err: any) => {
+      console.error(`Background backfill failed for ${pubkey}:`, err);
+    });
+
+    res.status(201).json({
+      success: true,
+      data: {
+        pubkey,
+        registered_at: new Date().toISOString(),
+        current_tier: "Bronze",
+        current_score: 0,
+        message: "Agent registered. Historical backfill started in background.",
+      },
+    });
+  } catch (err: any) {
+    console.error("POST /api/agents error:", err);
     res.status(500).json({ success: false, error: "Internal server error" });
   }
 });

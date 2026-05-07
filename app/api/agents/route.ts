@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/backend/supabase/server';
+import { withRateLimit } from '@/backend/middleware/auth';
 
 export const dynamic = 'force-dynamic';
 import { agentQuerySchema } from '@/backend/validators/agentSchema';
 import { registerAgentFullSchema } from '@/backend/validators/registerSchema';
-import { generateSimulatedPDA } from '@/lib/solana/pda';
+import { deriveAgentPDA } from '@/lib/solana/pda';
 import type { Agent } from '@/backend/types/agent';
 
 export async function GET(request: NextRequest) {
@@ -58,6 +59,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const rateLimitResponse = withRateLimit(request);
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const supabase = createServerClient();
     const body: unknown = await request.json();
@@ -74,11 +78,16 @@ export async function POST(request: NextRequest) {
     const input = parsed.data;
     const rawBody = body as Record<string, unknown>;
     const txSignature = typeof rawBody.tx_signature === 'string' ? rawBody.tx_signature : null;
-    const pdaAddress = generateSimulatedPDA(input.name);
+    // Derive the real PDA from the agent's public key (same seeds as the Anchor program)
+    const pdaAddress = deriveAgentPDA(input.public_key);
     const parsedMetadata = input.metadata && input.metadata.trim() !== ''
       ? JSON.parse(input.metadata)
       : {};
     if (txSignature) parsedMetadata.tx_signature = txSignature;
+
+    // trust_score 50 maps to tier 2 (Silver) per: Bronze<50, Silver 50-79, Gold 80+
+    const trustScore = 50;
+    const tier = trustScore >= 80 ? 3 : trustScore >= 50 ? 2 : 1;
 
     const agentRow = {
       name: input.name,
@@ -87,11 +96,12 @@ export async function POST(request: NextRequest) {
       operator_email: input.operator_email,
       description: input.description ?? null,
       task_type: input.task_type,
-      trust_score: 50,
-      tier: 1,
+      trust_score: trustScore,
+      tier,
       max_tx_size: input.max_tx_size,
       rate_limit: input.rate_limit,
       chains: input.chains,
+      spending_behavior: input.spending_behavior ?? 'standard',
       tasks_completed: 0,
       tasks_failed: 0,
       success_rate: 100,
@@ -109,6 +119,16 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    // Trigger reputation engine backfill asynchronously (best-effort)
+    const reputationEngineUrl = process.env.REPUTATION_ENGINE_URL;
+    if (reputationEngineUrl && input.public_key) {
+      fetch(`${reputationEngineUrl}/api/agents`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pubkey: input.public_key }),
+      }).catch((err) => console.warn('Reputation engine registration failed (non-fatal):', err));
     }
 
     return NextResponse.json({ data: data as Agent }, { status: 201 });

@@ -224,11 +224,37 @@ export async function recalculateScore(agentPubkey: string): Promise<ScoreResult
       [agentPubkey, result.score, result.tier]
     );
 
-    // Update agents table
+    // Update agents table (reputation engine's own DB)
     await query(
       `UPDATE agents SET current_score = $1, current_tier = $2, last_updated = NOW() WHERE pubkey = $3`,
       [result.score, result.tier, agentPubkey]
     );
+
+    // Sync score back to Supabase (the Next.js frontend DB)
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (supabaseUrl && supabaseKey) {
+      const tierNum = result.tier === 'Gold' ? 3 : result.tier === 'Silver' ? 2 : 1;
+      fetch(
+        `${supabaseUrl}/rest/v1/agents?public_key=eq.${encodeURIComponent(agentPubkey)}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            apikey: supabaseKey,
+            Authorization: `Bearer ${supabaseKey}`,
+            Prefer: 'return=minimal',
+          },
+          body: JSON.stringify({
+            trust_score: result.score,
+            tier: tierNum,
+            updated_at: new Date().toISOString(),
+          }),
+        }
+      ).catch((err) =>
+        console.warn('Supabase sync failed (non-fatal):', err)
+      );
+    }
 
     return result;
   } catch (err) {

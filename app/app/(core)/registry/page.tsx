@@ -109,7 +109,7 @@ export default function RegistryPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <TruvaStatCard label="TOTAL_REGISTERED" value={isLoading ? 'LOADING' : String(filtered.length)} sub="ACROSS ALL TIERS" icon={<Users size={16} className="text-[var(--accent-green)]" />} />
         <TruvaStatCard label="AVG_TRUST_SCORE" value={isLoading || !filtered.length ? 'LOADING' : (filtered.reduce((s, a) => s + a.trust_score, 0) / filtered.length).toFixed(1)} sub="ALL AGENTS" icon={<Award size={16} className="text-[var(--accent-green)]" />} />
-        <TruvaStatCard label="ELITE_AGENTS" value={isLoading ? 'LOADING' : String(filtered.filter((a: Agent) => a.tier === 3).length)} sub="PLATINUM TIER" icon={<Star size={16} className="text-[var(--tier-platinum)]" />} />
+        <TruvaStatCard label="ELITE_AGENTS" value={isLoading ? 'LOADING' : String(filtered.filter((a: Agent) => a.tier === 3).length)} sub="GOLD TIER" icon={<Star size={16} className="text-[var(--tier-gold)]" />} />
       </div>
 
       {isLoading ? (
