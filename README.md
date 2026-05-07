@@ -2,7 +2,7 @@
 
 **Trust and reputation layer for AI agents on Solana.**
 
-Truva Protocol provides programmable, on-chain trust gates for AI agent payments. Every agent gets a **Passport PDA** with a trust score (0-100) and tier (Bronze → Platinum). Any Solana protocol can integrate TrustGate to block untrusted agents with a single CPI call.
+Truva Protocol provides programmable, on-chain trust gates for AI agent payments. Every agent gets a **Passport PDA** with a trust score (0-100) and tier (Bronze → Silver → Gold). Any Solana protocol can integrate TrustGate to block untrusted agents with a single CPI call.
 
 ---
 
@@ -55,12 +55,11 @@ Truva Protocol provides programmable, on-chain trust gates for AI agent payments
 
 ### Trust Tiers
 
-| Tier     | Score   | Access Level                | Requirements                                    |
-|----------|---------|-----------------------------|-------------------------------------------------|
-| Bronze   | 0-49    | Basic ops, 5 SOL limit      | Default                                         |
-| Silver   | 50-79   | Standard flows, 100 SOL     | ≥10 txs, ≥80% success, ≥5 counterparties, ≥1 attestation |
-| Gold     | 80-94   | Full DeFi, unlimited        | ≥30 txs, ≥90% success, ≥10 counterparties, ≥2 attestations, ≥1 ZK proof |
-| Platinum | 95-100  | Maximum trust, unlimited    | ≥100 txs, ≥95% success, ≥20 counterparties, ≥3 attestations, ≥3 ZK proofs |
+| Tier   | Score  | Access Level            | Requirements                                                              |
+|--------|--------|-------------------------|---------------------------------------------------------------------------|
+| Bronze | 0-49   | Basic ops, 5 SOL limit  | Default                                                                   |
+| Silver | 50-79  | Standard flows, 100 SOL | ≥10 txs, ≥80% success, ≥5 counterparties, ≥1 attestation                 |
+| Gold   | 80-100 | Full DeFi, unlimited    | ≥30 txs, ≥90% success, ≥10 counterparties, ≥2 attestations, ≥1 ZK proof |
 
 ---
 
