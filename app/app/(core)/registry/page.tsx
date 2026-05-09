@@ -15,7 +15,7 @@ const tierColors: Record<string, string> = {
 };
 
 const allTiers = ['all', 'gold', 'silver', 'bronze'] as const;
-const allCategories = ['ALL_TYPES', 'swap', 'transfer', 'stake', 'lend', 'bridge', 'nft_trade', 'governance', 'custom'] as const;
+const allCategories = ['ALL_TYPES', 'trading', 'yield', 'data', 'execution', 'risk', 'treasury', 'monitoring', 'payment'] as const;
 
 function tierKey(a: Agent): string {
   return TIER_LABELS[a.tier]?.toLowerCase() ?? 'bronze';
