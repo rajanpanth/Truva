@@ -22,7 +22,7 @@ const phases = [
   {
     id: 2,
     label: 'BONDING_UPGRADE',
-    desc: 'Agent required to stake additional 10,000 TRU tokens',
+    desc: 'Agent required to stake additional 10,000 SOL tokens',
     icon: ArrowUpCircle,
     color: '#00ff88',
   },

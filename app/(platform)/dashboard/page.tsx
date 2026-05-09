@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -17,9 +17,9 @@ const tierColors: Record<string, string> = {
 };
 
 const payments = [
-  { date: '2026-04-29', desc: 'Validator Reward · Epoch 412', amount: '+2,450 TRU', status: 'passed' as const },
-  { date: '2026-04-28', desc: 'Agent Registration Fee', amount: '-500 TRU', status: 'passed' as const },
-  { date: '2026-04-27', desc: 'Slashing Penalty · Oracle Eye', amount: '-120 TRU', status: 'blocked' as const },
+  { date: '2026-04-29', desc: 'Validator Reward · Epoch 412', amount: '+2,450 SOL', status: 'passed' as const },
+  { date: '2026-04-28', desc: 'Agent Registration Fee', amount: '-500 SOL', status: 'passed' as const },
+  { date: '2026-04-27', desc: 'Slashing Penalty · Oracle Eye', amount: '-120 SOL', status: 'blocked' as const },
 ];
 
 export default function PlatformDashboard() {
@@ -94,36 +94,36 @@ export default function PlatformDashboard() {
           <div className="p-4 space-y-2">
             {agentsLoading
               ? Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="h-14 rounded-lg animate-pulse" style={{ background: 'var(--bg-elevated)' }} />
-                ))
+                <div key={i} className="h-14 rounded-lg animate-pulse" style={{ background: 'var(--bg-elevated)' }} />
+              ))
               : agents.slice(0, 6).map((a: Agent) => {
-                  const tierName = TIER_LABELS[a.tier];
-                  const initials = a.name.split(/[\s_]/).map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
-                  return (
-                    <Link key={a.id} href={`/agent/${a.id}`}>
-                      <div className="flex items-center gap-3 p-3 rounded-lg transition-all duration-200 cursor-pointer"
-                        style={{ border: '1px solid var(--border-subtle)' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.border = '1px solid var(--border-hover)'; e.currentTarget.style.background = 'var(--bg-elevated)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.border = '1px solid var(--border-subtle)'; e.currentTarget.style.background = 'transparent'; }}>
-                        <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 text-[12px] font-bold"
-                          style={{ background: 'rgba(0,232,122,0.1)', color: 'var(--accent-green)', border: '1px solid rgba(0,232,122,0.2)' }}>
-                          {initials}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="text-[13px] font-semibold text-[var(--text-primary)]">{a.name}</span>
-                            <TruvaStatusPill variant={tierName.toLowerCase() as 'gold' | 'silver' | 'bronze'} />
-                          </div>
-                          <div className="text-[11px] text-[var(--text-muted)] mt-0.5 font-mono">{a.public_key.slice(0, 10)}…{a.public_key.slice(-4)}</div>
-                        </div>
-                        <div className="text-right shrink-0 space-y-1">
-                          <div className="text-[13px] font-bold tabular-nums" style={{ color: tierColors[tierName] }}>{a.trust_score}%</div>
-                          <TruvaStatusPill variant={a.is_active ? 'active' : 'inactive'} />
-                        </div>
+                const tierName = TIER_LABELS[a.tier];
+                const initials = a.name.split(/[\s_]/).map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
+                return (
+                  <Link key={a.id} href={`/agent/${a.id}`}>
+                    <div className="flex items-center gap-3 p-3 rounded-lg transition-all duration-200 cursor-pointer"
+                      style={{ border: '1px solid var(--border-subtle)' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.border = '1px solid var(--border-hover)'; e.currentTarget.style.background = 'var(--bg-elevated)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.border = '1px solid var(--border-subtle)'; e.currentTarget.style.background = 'transparent'; }}>
+                      <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 text-[12px] font-bold"
+                        style={{ background: 'rgba(0,232,122,0.1)', color: 'var(--accent-green)', border: '1px solid rgba(0,232,122,0.2)' }}>
+                        {initials}
                       </div>
-                    </Link>
-                  );
-                })}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[13px] font-semibold text-[var(--text-primary)]">{a.name}</span>
+                          <TruvaStatusPill variant={tierName.toLowerCase() as 'gold' | 'silver' | 'bronze'} />
+                        </div>
+                        <div className="text-[11px] text-[var(--text-muted)] mt-0.5 font-mono">{a.public_key.slice(0, 10)}…{a.public_key.slice(-4)}</div>
+                      </div>
+                      <div className="text-right shrink-0 space-y-1">
+                        <div className="text-[13px] font-bold tabular-nums" style={{ color: tierColors[tierName] }}>{a.trust_score}%</div>
+                        <TruvaStatusPill variant={a.is_active ? 'active' : 'inactive'} />
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
           </div>
         </div>
 
@@ -141,18 +141,18 @@ export default function PlatformDashboard() {
           <div className="flex-1 overflow-y-auto max-h-[400px] custom-scrollbar">
             {logsLoading
               ? Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className="h-9 mx-4 my-1.5 rounded-md animate-pulse" style={{ background: 'var(--bg-elevated)' }} />
-                ))
+                <div key={i} className="h-9 mx-4 my-1.5 rounded-md animate-pulse" style={{ background: 'var(--bg-elevated)' }} />
+              ))
               : logs.map((l: TrustGateLog, i: number) => (
-                  <div key={l.id ?? i} className="flex items-center gap-2.5 px-4 py-2.5 text-[11px] font-mono transition-colors" style={{ borderBottom: '1px solid var(--border-subtle)' }}
-                    onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--bg-elevated)')}
-                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
-                    <span className="text-[var(--text-muted)] w-[52px] shrink-0 tabular-nums">{new Date(l.created_at).toISOString().substring(11, 19)}</span>
-                    <span className="text-[var(--accent-green)] w-[80px] shrink-0 truncate font-semibold">{l.agent_name ?? l.agent_id?.slice(0, 8)}</span>
-                    <span className="text-[var(--text-secondary)] flex-1 truncate">{l.action}</span>
-                    <TruvaStatusPill variant={l.status} />
-                  </div>
-                ))}
+                <div key={l.id ?? i} className="flex items-center gap-2.5 px-4 py-2.5 text-[11px] font-mono transition-colors" style={{ borderBottom: '1px solid var(--border-subtle)' }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--bg-elevated)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}>
+                  <span className="text-[var(--text-muted)] w-[52px] shrink-0 tabular-nums">{new Date(l.created_at).toISOString().substring(11, 19)}</span>
+                  <span className="text-[var(--accent-green)] w-[80px] shrink-0 truncate font-semibold">{l.agent_name ?? l.agent_id?.slice(0, 8)}</span>
+                  <span className="text-[var(--text-secondary)] flex-1 truncate">{l.action}</span>
+                  <TruvaStatusPill variant={l.status} />
+                </div>
+              ))}
           </div>
           <div className="px-4 py-2 flex items-center gap-2" style={{ borderTop: '1px solid var(--border-subtle)', background: 'var(--bg-elevated)' }}>
             <TruvaPulsingDot size={4} />

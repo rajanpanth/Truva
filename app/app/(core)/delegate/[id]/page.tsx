@@ -38,7 +38,7 @@ export default function DelegatePage() {
       .then((res) => {
         if (res.data) setAgent(res.data);
       })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -128,7 +128,7 @@ export default function DelegatePage() {
         </h2>
 
         {/* Wallet Connection */}
-        <div className={`p-4 border rounded-[2px] ${connected ? 'bg-[var(--accent-green-dim)] border-[var(--accent-green)]' : 'bg-[var(--bg-terminal)] border-[var(--border-default)]'}` }>
+        <div className={`p-4 border rounded-[2px] ${connected ? 'bg-[var(--accent-green-dim)] border-[var(--accent-green)]' : 'bg-[var(--bg-terminal)] border-[var(--border-default)]'}`}>
           <label className="block mb-2 text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)]">WALLET_CONNECTION</label>
           <div className="flex items-center gap-3">
             <WalletConnectButton />
@@ -151,7 +151,7 @@ export default function DelegatePage() {
         {/* Amount */}
         <div>
           <TruvaInput
-            label="DELEGATION_AMOUNT (TRU)"
+            label="DELEGATION_AMOUNT (SOL)"
             placeholder="e.g. 500"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
@@ -168,11 +168,10 @@ export default function DelegatePage() {
               <button
                 key={d}
                 onClick={() => setDuration(d)}
-                className={`px-3 py-1.5 text-[13px] uppercase tracking-[1px] rounded-[2px] border transition-colors ${
-                  duration === d
+                className={`px-3 py-1.5 text-[13px] uppercase tracking-[1px] rounded-[2px] border transition-colors ${duration === d
                     ? 'border-[var(--accent-green)] text-[var(--accent-green)] bg-[var(--accent-green-dim)]'
                     : 'border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--text-muted)]'
-                }`}
+                  }`}
               >
                 {d.replace(/_/g, ' ')}
               </button>

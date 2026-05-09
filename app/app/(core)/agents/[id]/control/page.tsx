@@ -113,7 +113,7 @@ export default function AgentControlPage() {
     fetch(`/api/agents/${id}`)
       .then((r) => r.json())
       .then((res) => { if (res.data) setAgent(res.data); })
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false));
   }, [id]);
 
@@ -175,7 +175,7 @@ export default function AgentControlPage() {
   const agentStatus = paused ? 'standby' : (agent?.is_active ? 'active' : 'standby');
 
   /* ── Mock portfolio values ── */
-  const delegatedAmt = '2,500 TRU';
+  const delegatedAmt = '2,500 SOL';
   const currentVal = '$3,147.82';
   const pnlToday = '+$247.82';
   const successRate = '96.4%';
@@ -284,9 +284,8 @@ export default function AgentControlPage() {
             {[...activities].reverse().map((a) => (
               <div
                 key={a.id}
-                className={`flex items-center gap-3 px-3 py-2 rounded-[2px] text-[12px] ${
-                  a.status === 'CONFIRMED' ? 'status-row-passed' : a.status === 'BLOCKED_BY_TRUST_GATE' ? 'status-row-blocked' : 'status-row-pending'
-                } bg-[var(--bg-elevated)]`}
+                className={`flex items-center gap-3 px-3 py-2 rounded-[2px] text-[12px] ${a.status === 'CONFIRMED' ? 'status-row-passed' : a.status === 'BLOCKED_BY_TRUST_GATE' ? 'status-row-blocked' : 'status-row-pending'
+                  } bg-[var(--bg-elevated)]`}
               >
                 <span className="text-[var(--text-muted)] shrink-0 font-mono">{a.timestamp}</span>
                 <span className="font-bold shrink-0 w-[90px]" style={{ color: a.action === 'GATE_CHECK' ? 'var(--amber)' : 'var(--text-primary)' }}>

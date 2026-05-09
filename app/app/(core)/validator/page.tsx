@@ -12,7 +12,7 @@ function generateValidationLog(): string[] {
     '[TX] Validated ORACLE_FEED · ORACLE_EYE · 0xA3Dc12 · 8ms',
     '[AUTH] ZK-proof batch verified · 48 proofs · 142ms total',
     '[TX] BLOCKED · GUARD_PROTO · Anomaly score 0.87 · 0xF71a3B',
-    '[INFO] Reward distribution · +245 TRU · Epoch 411 settlement',
+    '[INFO] Reward distribution · +245 SOL · Epoch 411 settlement',
     '[TX] Validated BRIDGE_OP · NEXUS_BRIDGE · 0xC29e0D · 22ms',
     '[SYS] Memory optimized · GC cycle complete · 1.2GB freed',
     '[HB] Peer discovery · 12 validators online · Quorum maintained',
@@ -73,9 +73,9 @@ export default function ValidatorDashboard() {
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <TruvaStatCard label="BLOCKS_VALIDATED" value="8,924" sub="THIS EPOCH" icon={<ShieldCheck size={16} className="text-[var(--accent-green)]" />} />
-        <TruvaStatCard label="REWARDS_EARNED" value="2,450 TRU" sub="↑ 12% vs LAST EPOCH" icon={<Award size={16} className="text-[var(--accent-green)]" />} />
+        <TruvaStatCard label="REWARDS_EARNED" value="2,450 SOL" sub="↑ 12% vs LAST EPOCH" icon={<Award size={16} className="text-[var(--accent-green)]" />} />
         <TruvaStatCard label="UPTIME" value={`${uptime.toFixed(2)}%`} sub="LAST 30 DAYS" icon={<TrendingUp size={16} className="text-[var(--accent-green)]" />} />
-        <TruvaStatCard label="STAKE_LOCKED" value="1.2M TRU" sub="UNTIL EPOCH 500" icon={<Zap size={16} className="text-[var(--accent-green)]" />} />
+        <TruvaStatCard label="STAKE_LOCKED" value="1.2M SOL" sub="UNTIL EPOCH 500" icon={<Zap size={16} className="text-[var(--accent-green)]" />} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 mb-6">
