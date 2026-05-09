@@ -79,7 +79,7 @@ export default function LandingPage() {
   useEffect(() => {
     fetch('/api/waitlist').then(r => r.json()).then(d => {
       if (d.success) setWaitlistCount(d.data.count);
-    }).catch(() => {});
+    }).catch(() => { });
   }, []);
 
   const handleWaitlistSubmit = async () => {
@@ -164,26 +164,26 @@ export default function LandingPage() {
           <span className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)]">ACTIVE_FILTERS: ALL &nbsp; LOG_BUFFER: 51240</span>
         </div>
         <div className="overflow-x-auto">
-        <table className="w-full border-collapse min-w-[600px]">
-          <thead>
-            <tr className="border-b border-[var(--border-default)]">
-              {['TIMESTAMP', 'AGENT_ID', 'TRANSACTION_HASH', 'STATUS', 'LATENCY'].map((h) => (
-                <th key={h} className="px-4 py-2.5 text-left text-[13px] uppercase tracking-[2px] text-[var(--text-muted)] font-medium">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {logRows.map((r: TrustGateLog, i: number) => (
-              <tr key={r.id ?? i} className="border-b border-[var(--border-subtle)] h-[44px] hover:bg-[var(--bg-card)]">
-                <td className="px-4 py-2.5 text-[13px] text-[var(--text-muted)]">{new Date(r.created_at).toISOString().substring(0, 19).replace('T', ' ')}</td>
-                <td className="px-4 py-2.5 text-[13px] text-[var(--accent-green)]">{r.agent_name ?? r.agent_id?.slice(0, 12)}</td>
-                <td className="px-4 py-2.5 text-[13px] text-[var(--text-secondary)]">{r.action}</td>
-                <td className="px-4 py-2.5"><TruvaStatusPill variant={r.status} /></td>
-                <td className="px-4 py-2.5 text-[13px] text-[var(--text-secondary)]">{r.latency_ms != null ? `${r.latency_ms}ms` : '—'}</td>
+          <table className="w-full border-collapse min-w-[600px]">
+            <thead>
+              <tr className="border-b border-[var(--border-default)]">
+                {['TIMESTAMP', 'AGENT_ID', 'TRANSACTION_HASH', 'STATUS', 'LATENCY'].map((h) => (
+                  <th key={h} className="px-4 py-2.5 text-left text-[13px] uppercase tracking-[2px] text-[var(--text-muted)] font-medium">{h}</th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {logRows.map((r: TrustGateLog, i: number) => (
+                <tr key={r.id ?? i} className="border-b border-[var(--border-subtle)] h-[44px] hover:bg-[var(--bg-card)]">
+                  <td className="px-4 py-2.5 text-[13px] text-[var(--text-muted)]">{new Date(r.created_at).toISOString().substring(0, 19).replace('T', ' ')}</td>
+                  <td className="px-4 py-2.5 text-[13px] text-[var(--accent-green)]">{r.agent_name ?? r.agent_id?.slice(0, 12)}</td>
+                  <td className="px-4 py-2.5 text-[13px] text-[var(--text-secondary)]">{r.action}</td>
+                  <td className="px-4 py-2.5"><TruvaStatusPill variant={r.status} /></td>
+                  <td className="px-4 py-2.5 text-[13px] text-[var(--text-secondary)]">{r.latency_ms != null ? `${r.latency_ms}ms` : '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </section>
 
@@ -196,41 +196,41 @@ export default function LandingPage() {
           </div>
           <div className="relative">
             <input placeholder="FILTER_BY_HASH_OR_NAME" className="pl-8 pr-3 py-2 bg-[var(--bg-input)] border border-[var(--border-default)] rounded-[2px] text-[13px] text-[var(--text-primary)] font-mono placeholder:text-[var(--text-dim)] w-full sm:w-[260px] focus:border-[var(--accent-green)] focus:outline-none" />
-            <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {agentsLoading
             ? Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-40 bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] animate-pulse" />
-              ))
+              <div key={i} className="h-40 bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] animate-pulse" />
+            ))
             : displayAgents.map((a: Agent) => {
-                const tierName = TIER_LABELS[a.tier];
-                return (
-                  <div key={a.id} className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-4">
-                    <div className="flex items-start justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 bg-[var(--border-default)] rounded-[2px] flex items-center justify-center">
-                          <Shield size={14} className="text-[var(--text-muted)]" />
-                        </div>
-                        <div>
-                          <div className="text-[12px] font-bold">{a.name}</div>
-                          <div className="text-[12px] text-[var(--text-muted)]">ID: {a.public_key.slice(0, 10)}...</div>
-                        </div>
+              const tierName = TIER_LABELS[a.tier];
+              return (
+                <div key={a.id} className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-4">
+                  <div className="flex items-start justify-between mb-1">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 bg-[var(--border-default)] rounded-[2px] flex items-center justify-center">
+                        <Shield size={14} className="text-[var(--text-muted)]" />
                       </div>
-                      <TruvaStatusPill variant={tierName.toLowerCase() as 'gold' | 'silver' | 'bronze'} />
+                      <div>
+                        <div className="text-[12px] font-bold">{a.name}</div>
+                        <div className="text-[12px] text-[var(--text-muted)]">ID: {a.public_key.slice(0, 10)}...</div>
+                      </div>
                     </div>
-                    <div className="mt-3 flex items-center justify-between text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mb-1">
-                      <span>TRUST SCORE</span>
-                      <span style={{ color: tierColors[tierName] }}>{a.trust_score}%</span>
-                    </div>
-                    <TruvaProgressBar value={a.trust_score} color={tierColors[tierName]} />
-                    <Link href={`/agent/${a.id}`}>
-                      <TruvaButton variant="ghost" className="w-full mt-3 text-[12px]">VIEW_PASSPORT</TruvaButton>
-                    </Link>
+                    <TruvaStatusPill variant={tierName.toLowerCase() as 'gold' | 'silver' | 'bronze'} />
                   </div>
-                );
-              })}
+                  <div className="mt-3 flex items-center justify-between text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mb-1">
+                    <span>TRUST SCORE</span>
+                    <span style={{ color: tierColors[tierName] }}>{a.trust_score}%</span>
+                  </div>
+                  <TruvaProgressBar value={a.trust_score} color={tierColors[tierName]} />
+                  <Link href={`/agent/${a.id}`}>
+                    <TruvaButton variant="ghost" className="w-full mt-3 text-[12px]">VIEW_PASSPORT</TruvaButton>
+                  </Link>
+                </div>
+              );
+            })}
         </div>
       </section>
 
@@ -256,7 +256,7 @@ export default function LandingPage() {
           <div className="bg-[var(--bg-card)] border border-[var(--accent-green)] rounded-[2px] p-4 flex flex-col items-center justify-center text-center">
             <Shield size={28} className="text-[var(--accent-green)] mb-2" />
             <div className="text-[13px] uppercase tracking-[2px] text-[var(--accent-green)] italic mb-1">STAKED_REPUTATION</div>
-            <div className="text-[22px] font-bold">500,000 TRU</div>
+            <div className="text-[22px] font-bold">500,000 SOL</div>
           </div>
         </div>
         <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-5">

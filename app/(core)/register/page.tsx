@@ -193,11 +193,10 @@ export default function RegisterPage() {
       <div className="flex flex-wrap items-center gap-2 mb-8">
         {steps.map((s, i) => (
           <div key={s} className="flex items-center gap-2">
-            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[2px] border text-[13px] uppercase tracking-[2px] ${
-              i < step ? 'border-[var(--accent-green)] text-[var(--accent-green)] bg-[var(--accent-green-dim)]' :
-              i === step ? 'border-[var(--accent-green)] text-[var(--accent-green)]' :
-              'border-[var(--border-default)] text-[var(--text-muted)]'
-            }`}>
+            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[2px] border text-[13px] uppercase tracking-[2px] ${i < step ? 'border-[var(--accent-green)] text-[var(--accent-green)] bg-[var(--accent-green-dim)]' :
+                i === step ? 'border-[var(--accent-green)] text-[var(--accent-green)]' :
+                  'border-[var(--border-default)] text-[var(--text-muted)]'
+              }`}>
               {i < step ? <CheckCircle size={12} /> : <Circle size={12} />}
               <span>STEP_{i + 1}: {s}</span>
             </div>
@@ -280,11 +279,10 @@ export default function RegisterPage() {
                     <button
                       key={c}
                       onClick={() => toggleCap(c)}
-                      className={`px-3 py-1.5 text-[13px] uppercase tracking-[1px] rounded-[2px] border transition-colors ${
-                        selectedCaps.includes(c)
+                      className={`px-3 py-1.5 text-[13px] uppercase tracking-[1px] rounded-[2px] border transition-colors ${selectedCaps.includes(c)
                           ? 'border-[var(--accent-green)] text-[var(--accent-green)] bg-[var(--accent-green-dim)]'
                           : 'border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--text-muted)]'
-                      }`}
+                        }`}
                     >
                       {c}
                     </button>
@@ -298,11 +296,10 @@ export default function RegisterPage() {
                     <button
                       key={r}
                       onClick={() => setRiskTolerance(r)}
-                      className={`flex-1 py-2 text-[13px] uppercase tracking-[2px] rounded-[2px] border transition-colors ${
-                        riskTolerance === r
+                      className={`flex-1 py-2 text-[13px] uppercase tracking-[2px] rounded-[2px] border transition-colors ${riskTolerance === r
                           ? 'border-[var(--accent-green)] text-[var(--accent-green)] bg-[var(--accent-green-dim)]'
                           : 'border-[var(--border-default)] text-[var(--text-secondary)]'
-                      }`}
+                        }`}
                     >
                       {r}
                     </button>
@@ -320,18 +317,17 @@ export default function RegisterPage() {
                     <button
                       key={c}
                       onClick={() => toggleChain(c)}
-                      className={`px-3 py-1.5 text-[13px] uppercase tracking-[1px] rounded-[2px] border transition-colors ${
-                        selectedChains.includes(c)
+                      className={`px-3 py-1.5 text-[13px] uppercase tracking-[1px] rounded-[2px] border transition-colors ${selectedChains.includes(c)
                           ? 'border-[var(--accent-green)] text-[var(--accent-green)] bg-[var(--accent-green-dim)]'
                           : 'border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--text-muted)]'
-                      }`}
+                        }`}
                     >
                       {c.toUpperCase()}
                     </button>
                   ))}
                 </div>
               </div>
-              <TruvaInput label="STAKE_AMOUNT (TRU)" placeholder="e.g. 50000" value={stakeAmount} onChange={(e) => setStakeAmount(e.target.value)} />
+              <TruvaInput label="STAKE_AMOUNT (SOL)" placeholder="e.g. 50000" value={stakeAmount} onChange={(e) => setStakeAmount(e.target.value)} />
             </div>
           )}
 
@@ -350,7 +346,7 @@ export default function RegisterPage() {
                   { label: 'MAX_TX_EPOCH', value: maxTx || '—' },
                   { label: 'RATE_LIMIT', value: rateLimit ? `${rateLimit}/hr` : '—' },
                   { label: 'CHAINS', value: selectedChains.join(', ').toUpperCase() || '—' },
-                  { label: 'STAKE', value: stakeAmount ? `${stakeAmount} TRU` : '—' },
+                  { label: 'STAKE', value: stakeAmount ? `${stakeAmount} SOL` : '—' },
                 ].map((item) => (
                   <div key={item.label} className="flex justify-between text-[13px]">
                     <span className="text-[var(--text-muted)]">{item.label}</span>

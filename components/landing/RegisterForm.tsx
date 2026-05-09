@@ -33,7 +33,7 @@ export function PassportSection() {
           <div className="rounded border border-[#2a3f52] bg-[#0d0d0d] p-5 text-center">
             <Shield className="mx-auto mb-2 h-10 w-10 text-[#00ff88]" />
             <p className="font-mono text-[13px] tracking-widest text-[#555]">STAKED_REPUTATION</p>
-            <p className="font-mono text-2xl font-bold text-[#00ff88]">500,000 TRU</p>
+            <p className="font-mono text-2xl font-bold text-[#00ff88]">500,000 SOL</p>
           </div>
         </div>
 
