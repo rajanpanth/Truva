@@ -12,17 +12,19 @@ import { CheckCircle, Circle, Shield, Wallet, ExternalLink, Loader2 } from 'luci
 const MEMO_PROGRAM_ID = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
 
 const steps = ['IDENTITY', 'CONFIGURATION', 'VERIFICATION'];
-const categories = ['FINANCIAL_ARBITRAGE', 'DATA_ORACLE', 'SECURITY_MONITOR', 'TRADING_BOT', 'LIQUIDITY_PROVISION', 'CROSS_CHAIN_BRIDGE'];
+const categories = ['TRADING_BOT', 'YIELD_OPTIMIZER', 'DATA_ORACLE', 'EXECUTION_AGENT', 'RISK_MONITOR', 'TREASURY_MANAGER', 'SECURITY_MONITOR', 'PAYMENT_AGENT'];
 const capabilities = ['SWAP_EXECUTION', 'CROSS_CHAIN_BRIDGE', 'ARBITRAGE_DETECTION', 'LP_MANAGEMENT', 'ORACLE_READING', 'RISK_ASSESSMENT', 'DATA_FEED', 'COMPLIANCE_AUDIT'];
 const CHAINS = ['solana', 'ethereum', 'base', 'arbitrum'] as const;
 
 const CATEGORY_TO_TASK: Record<string, string> = {
-  FINANCIAL_ARBITRAGE: 'trading',
-  DATA_ORACLE: 'data',
-  SECURITY_MONITOR: 'monitoring',
   TRADING_BOT: 'trading',
-  LIQUIDITY_PROVISION: 'yield',
-  CROSS_CHAIN_BRIDGE: 'execution',
+  YIELD_OPTIMIZER: 'yield',
+  DATA_ORACLE: 'data',
+  EXECUTION_AGENT: 'execution',
+  RISK_MONITOR: 'risk',
+  TREASURY_MANAGER: 'treasury',
+  SECURITY_MONITOR: 'monitoring',
+  PAYMENT_AGENT: 'payment',
 } as const;
 
 const VALID_TASK_TYPES = ['trading', 'yield', 'data', 'execution', 'risk', 'treasury', 'monitoring', 'payment'] as const;

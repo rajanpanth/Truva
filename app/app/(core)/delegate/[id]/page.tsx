@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { TruvaButton, TruvaStatusPill, TruvaBadge, TruvaProgressBar, TruvaInput } from '@/components/ui/truva';
-import { Shield, ArrowLeft, Zap } from 'lucide-react';
+import { WalletConnectButton } from '@/components/shared/WalletConnectButton';
+import { Shield, ArrowLeft, Zap, Wallet } from 'lucide-react';
 import type { Agent } from '@/backend/types/agent';
 
 const TIER_BADGE: Record<number, 'bronze' | 'silver' | 'gold'> = {
@@ -13,12 +15,12 @@ const TIER_BADGE: Record<number, 'bronze' | 'silver' | 'gold'> = {
 };
 
 const DURATIONS = ['7_DAYS', '30_DAYS', '90_DAYS', 'INDEFINITE'];
-const SPENDING_CAPS = ['100', '500', '1000', '5000', '10000'];
 
 export default function DelegatePage() {
   const params = useParams();
   const router = useRouter();
   const id = params?.id as string;
+  const { publicKey, connected } = useWallet();
 
   const [agent, setAgent] = useState<Agent | null>(null);
   const [loading, setLoading] = useState(true);
@@ -41,7 +43,7 @@ export default function DelegatePage() {
   }, [id]);
 
   const handleDelegate = () => {
-    if (!amount) return;
+    if (!amount || !connected) return;
     setSubmitting(true);
     // Simulate on-chain delegation tx
     setTimeout(() => {
@@ -67,7 +69,7 @@ export default function DelegatePage() {
         <div className="text-center">
           <div className="text-[18px] font-bold tracking-widest mb-2">DELEGATION_CONFIRMED</div>
           <div className="text-[13px] text-[var(--text-secondary)] tracking-wider">
-            {amount} TRU delegated to <span className="text-[var(--accent-green)]">{agent?.name ?? id}</span> for {duration.replace(/_/g, ' ')}.
+            {amount} SOL delegated to <span className="text-[var(--accent-green)]">{agent?.name ?? id}</span> for {duration.replace(/_/g, ' ')}.
           </div>
         </div>
         <div className="flex gap-4">
@@ -125,6 +127,27 @@ export default function DelegatePage() {
           CONFIGURE_DELEGATION
         </h2>
 
+        {/* Wallet Connection */}
+        <div className={`p-4 border rounded-[2px] ${connected ? 'bg-[var(--accent-green-dim)] border-[var(--accent-green)]' : 'bg-[var(--bg-terminal)] border-[var(--border-default)]'}` }>
+          <label className="block mb-2 text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)]">WALLET_CONNECTION</label>
+          <div className="flex items-center gap-3">
+            <WalletConnectButton />
+            {connected && publicKey && (
+              <div className="flex items-center gap-1.5">
+                <Wallet size={12} className="text-[var(--accent-green)]" />
+                <span className="text-[12px] font-mono text-[var(--accent-green)]">
+                  {publicKey.toBase58().slice(0, 8)}...{publicKey.toBase58().slice(-6)}
+                </span>
+              </div>
+            )}
+          </div>
+          {!connected && (
+            <p className="text-[12px] text-[var(--text-muted)] mt-2 uppercase tracking-[1px]">
+              CONNECT PHANTOM OR SOLFLARE TO SIGN DELEGATION
+            </p>
+          )}
+        </div>
+
         {/* Amount */}
         <div>
           <TruvaInput
@@ -159,24 +182,12 @@ export default function DelegatePage() {
 
         {/* Spending Cap */}
         <div>
-          <label className="block mb-2 text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)]">
-            SPENDING_CAP / TX (USD)
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {SPENDING_CAPS.map((c) => (
-              <button
-                key={c}
-                onClick={() => setCap(c)}
-                className={`px-3 py-1.5 text-[13px] uppercase tracking-[1px] rounded-[2px] border transition-colors ${
-                  cap === c
-                    ? 'border-[var(--accent-green)] text-[var(--accent-green)] bg-[var(--accent-green-dim)]'
-                    : 'border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--text-muted)]'
-                }`}
-              >
-                ${c}
-              </button>
-            ))}
-          </div>
+          <TruvaInput
+            label="SPENDING_CAP / TX (USD)"
+            placeholder="e.g. 1000"
+            value={cap}
+            onChange={(e) => setCap(e.target.value)}
+          />
         </div>
 
         {/* Summary */}
@@ -184,7 +195,8 @@ export default function DelegatePage() {
           <div className="text-[12px] uppercase tracking-[2px] text-[var(--text-muted)] mb-3">DELEGATION_SUMMARY</div>
           {[
             { label: 'AGENT', value: agent?.name ?? id },
-            { label: 'AMOUNT', value: amount ? `${amount} TRU` : '—' },
+            { label: 'WALLET', value: connected && publicKey ? `${publicKey.toBase58().slice(0, 8)}...${publicKey.toBase58().slice(-6)}` : 'NOT_CONNECTED' },
+            { label: 'AMOUNT', value: amount ? `${amount} SOL` : '—' },
             { label: 'DURATION', value: duration.replace(/_/g, ' ') },
             { label: 'SPENDING_CAP', value: `$${cap} / TX` },
           ].map((item) => (
@@ -199,9 +211,9 @@ export default function DelegatePage() {
           variant="primary"
           className="w-full text-[13px]"
           onClick={handleDelegate}
-          disabled={!amount || submitting}
+          disabled={!amount || !connected || submitting}
         >
-          {submitting ? 'SIGNING_TRANSACTION...' : 'CONFIRM_DELEGATION'}
+          {!connected ? 'CONNECT_WALLET_TO_DELEGATE' : submitting ? 'SIGNING_TRANSACTION...' : 'CONFIRM_DELEGATION'}
         </TruvaButton>
       </div>
     </div>
