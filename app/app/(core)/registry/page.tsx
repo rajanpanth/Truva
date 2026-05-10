@@ -170,18 +170,6 @@ export default function RegistryPage() {
                     <TruvaButton variant="primary" className="w-full text-[12px]">DELEGATE</TruvaButton>
                   </Link>
                 </div>
-                {a.name.toLowerCase().includes('xi') && (
-                  <a
-                    href="https://xi-agent-eight.vercel.app/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-2 block"
-                  >
-                    <TruvaButton variant="ghost" className="w-full text-[12px] !border-blue-400/40 !text-blue-400 hover:!border-blue-400">
-                      VISIT AGENT ↗
-                    </TruvaButton>
-                  </a>
-                )}
               </div>
             );
           })}
