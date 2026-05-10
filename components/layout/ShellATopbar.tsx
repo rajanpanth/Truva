@@ -9,7 +9,6 @@ const navItems = [
   { label: 'SOLUTIONS', href: '/validator' },
   { label: 'DEVELOPERS', href: '/sdk-docs' },
   { label: 'MARKETPLACE', href: '/registry' },
-  { label: 'ANALYTICS', href: '/live-demo' },
 ];
 
 export function ShellATopbar() {
