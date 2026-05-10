@@ -50,6 +50,32 @@ export default function DelegatePage() {
       .finally(() => setLoading(false));
   }, [id]);
 
+  // Helper: record delegation to Supabase via API
+  const recordDelegation = async (txSignature?: string) => {
+    if (!publicKey || !agent) return;
+    try {
+      await fetch('/api/delegations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          wallet: publicKey.toBase58(),
+          agent_id: id,
+          agent_name: agent.name,
+          amount_sol: parseFloat(amount),
+          cap_usd: parseFloat(cap),
+          duration,
+          tx_sig: txSignature || null,
+        }),
+      });
+    } catch (e) {
+      console.error('Failed to record delegation:', e);
+    }
+  };
+
+  // Helper: build Xi Trade redirect URL with all params
+  const xiRedirectUrl = () =>
+    `https://xi-agent-eight.vercel.app/?delegated=${amount}&from=${publicKey?.toBase58() ?? ''}&cap=${cap}&duration=${duration}`;
+
   const handleDelegate = async () => {
     if (!amount || !connected || !publicKey || !agent) return;
     setSubmitting(true);
@@ -71,9 +97,10 @@ export default function DelegatePage() {
     // If agent has no valid on-chain key, or this is the Xi agent (separate app),
     // use demo mode: mark as done and redirect if Xi
     if (!agentPubkey || isXiAgent) {
-      setTimeout(() => {
+      setTimeout(async () => {
         setSubmitting(false);
         setDone(true);
+        await recordDelegation();
       }, 1500);
       return;
     }
@@ -108,6 +135,7 @@ export default function DelegatePage() {
       await connection.confirmTransaction(sig, 'confirmed');
       setTxSig(sig);
       setDone(true);
+      await recordDelegation(sig);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Transaction failed';
       setTxError(msg);
@@ -170,7 +198,7 @@ export default function DelegatePage() {
               variant="primary"
               className="text-[12px] bg-blue-600 border-blue-600"
               onClick={() => {
-                window.location.href = `https://xi-agent-eight.vercel.app/?delegated=${amount}&from=${publicKey?.toBase58() ?? ''}`;
+                window.location.href = xiRedirectUrl();
               }}
             >
               LAUNCH XI TRADE ↗
