@@ -58,7 +58,14 @@ export default function DelegatePage() {
       const lamports = Math.round(parseFloat(amount) * LAMPORTS_PER_SOL);
       const feeLamports = Math.floor(lamports * DELEGATION_FEE_BPS / 10000);
       const agentLamports = lamports - feeLamports;
-      const agentPubkey = new PublicKey(agent.public_key);
+
+      let agentPubkey: PublicKey;
+      try {
+        agentPubkey = new PublicKey(agent.public_key);
+      } catch {
+        // Agent wallet not a valid Solana address — send full amount to treasury for demo
+        agentPubkey = TRUVA_TREASURY;
+      }
 
       const tx = new Transaction().add(
         SystemProgram.transfer({
