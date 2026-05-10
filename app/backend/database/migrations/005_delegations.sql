@@ -9,6 +9,7 @@ create table if not exists public.delegations (
   amount_sol  numeric     not null,
   cap_usd     numeric,
   duration    text,
+  status      text        not null default 'active',
   created_at  timestamptz not null default now()
 );
 
