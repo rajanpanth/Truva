@@ -57,30 +57,33 @@ export default function DelegatePage() {
 
     const isXiAgent = agent.name.toLowerCase().includes('xi');
 
-    // Xi agent demo: simulate delegation and redirect without requiring a valid agent wallet
-    if (isXiAgent) {
+    // Check if agent has a valid Solana public key
+    let agentPubkey: PublicKey | null = null;
+    try {
+      agentPubkey = new PublicKey(agent.public_key);
+    } catch {
+      agentPubkey = null;
+    }
+
+    // If no valid public key → simulate delegation (demo mode) and redirect if Xi
+    if (!agentPubkey) {
       setTimeout(() => {
         setSubmitting(false);
         setDone(true);
-        setTimeout(() => {
-          window.location.href = `https://xi-agent-eight.vercel.app/?delegated=${amount}&from=${publicKey.toBase58()}`;
-        }, 2500);
+        if (isXiAgent) {
+          setTimeout(() => {
+            window.location.href = `https://xi-agent-eight.vercel.app/?delegated=${amount}&from=${publicKey.toBase58()}`;
+          }, 2500);
+        }
       }, 1500);
       return;
     }
 
-    // Real blockchain tx for non-Xi agents
+    // Real blockchain tx — agent has a valid wallet
     try {
       const lamports = Math.round(parseFloat(amount) * LAMPORTS_PER_SOL);
       const feeLamports = Math.floor(lamports * DELEGATION_FEE_BPS / 10000);
       const agentLamports = lamports - feeLamports;
-
-      let agentPubkey: PublicKey;
-      try {
-        agentPubkey = new PublicKey(agent.public_key);
-      } catch {
-        agentPubkey = TRUVA_TREASURY;
-      }
 
       const tx = new Transaction().add(
         SystemProgram.transfer({
@@ -99,6 +102,12 @@ export default function DelegatePage() {
       await connection.confirmTransaction(sig, 'confirmed');
       setTxSig(sig);
       setDone(true);
+
+      if (isXiAgent) {
+        setTimeout(() => {
+          window.location.href = `https://xi-agent-eight.vercel.app/?delegated=${amount}&from=${publicKey.toBase58()}`;
+        }, 2500);
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Transaction failed';
       setTxError(msg);
