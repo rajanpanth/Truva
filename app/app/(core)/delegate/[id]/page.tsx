@@ -155,8 +155,6 @@ export default function DelegatePage() {
               Click below to launch the Xi Trade agent
             </div>
           )}
-            </div>
-          )}
         </div>
         <div className="flex gap-4">
           <TruvaButton variant="ghost" className="text-[12px]" onClick={() => router.push('/registry')}>
