@@ -57,16 +57,20 @@ export default function DelegatePage() {
 
     const isXiAgent = agent.name.toLowerCase().includes('xi');
 
-    // Check if agent has a valid Solana public key
+    // Validate agent public key: must be valid base58 AND on the ed25519 curve
     let agentPubkey: PublicKey | null = null;
     try {
-      agentPubkey = new PublicKey(agent.public_key);
+      const candidate = new PublicKey(agent.public_key);
+      if (PublicKey.isOnCurve(candidate.toBytes())) {
+        agentPubkey = candidate;
+      }
     } catch {
       agentPubkey = null;
     }
 
-    // If no valid public key → simulate delegation (demo mode) and redirect if Xi
-    if (!agentPubkey) {
+    // If agent has no valid on-chain key, or this is the Xi agent (separate app),
+    // use demo mode: mark as done and redirect if Xi
+    if (!agentPubkey || isXiAgent) {
       setTimeout(() => {
         setSubmitting(false);
         setDone(true);
@@ -85,6 +89,13 @@ export default function DelegatePage() {
       const feeLamports = Math.floor(lamports * DELEGATION_FEE_BPS / 10000);
       const agentLamports = lamports - feeLamports;
 
+      // Ensure fee is at least 1 lamport to avoid 0-transfer errors
+      if (agentLamports <= 0 || feeLamports <= 0) {
+        setTxError('Amount too small — minimum delegation is 0.001 SOL');
+        setSubmitting(false);
+        return;
+      }
+
       const tx = new Transaction().add(
         SystemProgram.transfer({
           fromPubkey: publicKey,
@@ -102,12 +113,6 @@ export default function DelegatePage() {
       await connection.confirmTransaction(sig, 'confirmed');
       setTxSig(sig);
       setDone(true);
-
-      if (isXiAgent) {
-        setTimeout(() => {
-          window.location.href = `https://xi-agent-eight.vercel.app/?delegated=${amount}&from=${publicKey.toBase58()}`;
-        }, 2500);
-      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Transaction failed';
       setTxError(msg);
