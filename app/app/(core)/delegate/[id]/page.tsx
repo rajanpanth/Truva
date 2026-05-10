@@ -9,6 +9,7 @@ import { TruvaButton, TruvaStatusPill, TruvaBadge, TruvaProgressBar, TruvaInput 
 import { WalletConnectButton } from '@/components/shared/WalletConnectButton';
 import { Shield, ArrowLeft, Zap, Wallet } from 'lucide-react';
 import type { Agent } from '@/backend/types/agent';
+import { createClient, isSupabaseConfigured } from '@/backend/supabase/client';
 
 const TIER_BADGE: Record<number, 'bronze' | 'silver' | 'gold'> = {
   1: 'bronze',
@@ -71,10 +72,22 @@ export default function DelegatePage() {
     // If agent has no valid on-chain key, or this is the Xi agent (separate app),
     // use demo mode: mark as done and redirect if Xi
     if (!agentPubkey || isXiAgent) {
-      setTimeout(() => {
-        setSubmitting(false);
-        setDone(true);
-      }, 1500);
+      await new Promise<void>((resolve) => setTimeout(resolve, 1500));
+      if (isSupabaseConfigured) {
+        try {
+          const supabase = createClient();
+          await supabase.from('delegations').insert({
+            wallet: publicKey.toBase58(),
+            agent_id: id,
+            agent_name: agent.name,
+            amount_sol: parseFloat(amount),
+            cap_usd: parseFloat(cap),
+            duration: duration,
+          });
+        } catch { /* non-blocking */ }
+      }
+      setSubmitting(false);
+      setDone(true);
       return;
     }
 
@@ -107,6 +120,19 @@ export default function DelegatePage() {
       const sig = await sendTransaction(tx, connection);
       await connection.confirmTransaction(sig, 'confirmed');
       setTxSig(sig);
+      if (isSupabaseConfigured) {
+        try {
+          const supabase = createClient();
+          await supabase.from('delegations').insert({
+            wallet: publicKey.toBase58(),
+            agent_id: id,
+            agent_name: agent.name,
+            amount_sol: parseFloat(amount),
+            cap_usd: parseFloat(cap),
+            duration: duration,
+          });
+        } catch { /* non-blocking */ }
+      }
       setDone(true);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Transaction failed';
@@ -170,7 +196,7 @@ export default function DelegatePage() {
               variant="primary"
               className="text-[12px] bg-blue-600 border-blue-600"
               onClick={() => {
-                window.location.href = `https://xi-agent-eight.vercel.app/?delegated=${amount}&from=${publicKey?.toBase58() ?? ''}`;
+                window.location.href = `https://xi-agent-eight.vercel.app/?delegated=${amount}&from=${publicKey?.toBase58() ?? ''}&cap=${cap}&duration=${duration}`;
               }}
             >
               LAUNCH XI TRADE ↗
