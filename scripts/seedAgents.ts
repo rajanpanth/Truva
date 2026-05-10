@@ -28,6 +28,16 @@ interface SeedAgent {
 }
 
 const SEED_AGENTS: SeedAgent[] = [
+  {
+    name: "Xi",
+    tier: "Gold",
+    score: 99,
+    txCount: 500,
+    successRate: 0.99,
+    counterparties: 100,
+    zkProofs: 10,
+    attestations: 5,
+  },
   // 5 Gold
   {
     name: "TradeBot X",
@@ -180,7 +190,19 @@ async function main() {
 
     // 1. Register agent
     try {
-      const result = await apiCall("POST", "/api/agents/register", { pubkey });
+      const payload = {
+        name: agent.name,
+        public_key: pubkey,
+        operator_name: "Seed Operator",
+        operator_email: "seed@truva.com",
+        task_type: "trading",
+        description: "Seeded demo agent",
+        max_tx_size: 1000,
+        rate_limit: 100,
+        chains: ["solana"],
+        spending_behavior: "standard"
+      };
+      const result = await apiCall("POST", "/api/agents", payload);
       if (result.success) {
         console.log(`   ✅ Registered`);
       } else {
