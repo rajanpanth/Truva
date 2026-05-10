@@ -74,11 +74,6 @@ export default function DelegatePage() {
       setTimeout(() => {
         setSubmitting(false);
         setDone(true);
-        if (isXiAgent) {
-          setTimeout(() => {
-            window.location.href = `https://xi-agent-eight.vercel.app/?delegated=${amount}&from=${publicKey.toBase58()}`;
-          }, 2500);
-        }
       }, 1500);
       return;
     }
@@ -156,8 +151,10 @@ export default function DelegatePage() {
             </a>
           )}
           {agent?.name.toLowerCase().includes('xi') && (
-            <div className="mt-3 text-[12px] text-blue-400 animate-pulse">
-              REDIRECTING TO XI TRADE...
+            <div className="mt-3 text-[12px] text-blue-400">
+              Click below to launch the Xi Trade agent
+            </div>
+          )}
             </div>
           )}
         </div>
