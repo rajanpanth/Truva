@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useConnection } from '@solana/wallet-adapter-react';
+import { Transaction, SystemProgram, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { TruvaButton, TruvaStatusPill, TruvaBadge, TruvaProgressBar, TruvaInput } from '@/components/ui/truva';
 import { WalletConnectButton } from '@/components/shared/WalletConnectButton';
 import { Shield, ArrowLeft, Zap, Wallet } from 'lucide-react';
@@ -16,11 +18,15 @@ const TIER_BADGE: Record<number, 'bronze' | 'silver' | 'gold'> = {
 
 const DURATIONS = ['7_DAYS', '30_DAYS', '90_DAYS', 'INDEFINITE'];
 
+const TRUVA_TREASURY = new PublicKey('4MMhsQ2odgEdAowV3Si6L44jRhTZAepuFjPeWGSgA3h2');
+const DELEGATION_FEE_BPS = 10;
+
 export default function DelegatePage() {
   const params = useParams();
   const router = useRouter();
   const id = params?.id as string;
-  const { publicKey, connected } = useWallet();
+  const { publicKey, connected, sendTransaction } = useWallet();
+  const { connection } = useConnection();
 
   const [agent, setAgent] = useState<Agent | null>(null);
   const [loading, setLoading] = useState(true);
@@ -30,6 +36,8 @@ export default function DelegatePage() {
   const [cap, setCap] = useState('1000');
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const [txSig, setTxSig] = useState<string | null>(null);
+  const [txError, setTxError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -42,14 +50,46 @@ export default function DelegatePage() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  const handleDelegate = () => {
-    if (!amount || !connected) return;
+  const handleDelegate = async () => {
+    if (!amount || !connected || !publicKey || !agent) return;
     setSubmitting(true);
-    // Simulate on-chain delegation tx
-    setTimeout(() => {
-      setSubmitting(false);
+    setTxError(null);
+    try {
+      const lamports = Math.round(parseFloat(amount) * LAMPORTS_PER_SOL);
+      const feeLamports = Math.floor(lamports * DELEGATION_FEE_BPS / 10000);
+      const agentLamports = lamports - feeLamports;
+      const agentPubkey = new PublicKey(agent.public_key);
+
+      const tx = new Transaction().add(
+        SystemProgram.transfer({
+          fromPubkey: publicKey,
+          toPubkey: agentPubkey,
+          lamports: agentLamports,
+        }),
+        SystemProgram.transfer({
+          fromPubkey: publicKey,
+          toPubkey: TRUVA_TREASURY,
+          lamports: feeLamports,
+        })
+      );
+
+      const sig = await sendTransaction(tx, connection);
+      await connection.confirmTransaction(sig, 'confirmed');
+      setTxSig(sig);
       setDone(true);
-    }, 1800);
+
+      // Redirect to Xi Trade if this is the Xi agent
+      if (agent.name.toLowerCase().includes('xi')) {
+        setTimeout(() => {
+          window.location.href = `https://xi-agent-eight.vercel.app/?delegated=${amount}&from=${publicKey.toBase58()}`;
+        }, 2500);
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Transaction failed';
+      setTxError(msg);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -69,16 +109,49 @@ export default function DelegatePage() {
         <div className="text-center">
           <div className="text-[18px] font-bold tracking-widest mb-2">DELEGATION_CONFIRMED</div>
           <div className="text-[13px] text-[var(--text-secondary)] tracking-wider">
-            {amount} SOL delegated to <span className="text-[var(--accent-green)]">{agent?.name ?? id}</span> for {duration.replace(/_/g, ' ')}.
+            {amount} SOL delegated to{' '}
+            <span className="text-[var(--accent-green)]">{agent?.name ?? id}</span>{' '}
+            for {duration.replace(/_/g, ' ')}.
           </div>
+          <div className="text-[12px] text-[var(--text-muted)] mt-2">
+            Protocol fee: {DELEGATION_FEE_BPS} bps (0.1%) sent to Truva treasury
+          </div>
+          {txSig && (
+            <a
+              href={`https://explorer.solana.com/tx/${txSig}?cluster=devnet`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block mt-3 text-[12px] text-[var(--accent-green)] underline font-mono"
+            >
+              VIEW TX ON EXPLORER ↗
+            </a>
+          )}
+          {agent?.name.toLowerCase().includes('xi') && (
+            <div className="mt-3 text-[12px] text-blue-400 animate-pulse">
+              REDIRECTING TO XI TRADE...
+            </div>
+          )}
         </div>
         <div className="flex gap-4">
           <TruvaButton variant="ghost" className="text-[12px]" onClick={() => router.push('/registry')}>
             BACK_TO_REGISTRY
           </TruvaButton>
-          <TruvaButton variant="primary" className="text-[12px]" onClick={() => router.push(`/agents/${id}/control`)}>
-            OPEN_CONTROL_PANEL
-          </TruvaButton>
+          {!agent?.name.toLowerCase().includes('xi') && (
+            <TruvaButton variant="primary" className="text-[12px]" onClick={() => router.push(`/agents/${id}/control`)}>
+              OPEN_CONTROL_PANEL
+            </TruvaButton>
+          )}
+          {agent?.name.toLowerCase().includes('xi') && (
+            <TruvaButton
+              variant="primary"
+              className="text-[12px] bg-blue-600 border-blue-600"
+              onClick={() => {
+                window.location.href = `https://xi-agent-eight.vercel.app/?delegated=${amount}&from=${publicKey?.toBase58() ?? ''}`;
+              }}
+            >
+              LAUNCH XI TRADE ↗
+            </TruvaButton>
+          )}
         </div>
       </div>
     );
@@ -198,6 +271,7 @@ export default function DelegatePage() {
             { label: 'AMOUNT', value: amount ? `${amount} SOL` : '—' },
             { label: 'DURATION', value: duration.replace(/_/g, ' ') },
             { label: 'SPENDING_CAP', value: `$${cap} / TX` },
+            { label: 'PROTOCOL_FEE', value: `${DELEGATION_FEE_BPS} bps (0.1%)` },
           ].map((item) => (
             <div key={item.label} className="flex justify-between text-[13px]">
               <span className="text-[var(--text-muted)]">{item.label}</span>
@@ -214,6 +288,9 @@ export default function DelegatePage() {
         >
           {!connected ? 'CONNECT_WALLET_TO_DELEGATE' : submitting ? 'SIGNING_TRANSACTION...' : 'CONFIRM_DELEGATION'}
         </TruvaButton>
+        {txError && (
+          <p className="text-[12px] text-red-400 mt-2 font-mono">{txError}</p>
+        )}
       </div>
     </div>
   );
