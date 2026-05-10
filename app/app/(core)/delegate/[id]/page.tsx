@@ -54,6 +54,22 @@ export default function DelegatePage() {
     if (!amount || !connected || !publicKey || !agent) return;
     setSubmitting(true);
     setTxError(null);
+
+    const isXiAgent = agent.name.toLowerCase().includes('xi');
+
+    // Xi agent demo: simulate delegation and redirect without requiring a valid agent wallet
+    if (isXiAgent) {
+      setTimeout(() => {
+        setSubmitting(false);
+        setDone(true);
+        setTimeout(() => {
+          window.location.href = `https://xi-agent-eight.vercel.app/?delegated=${amount}&from=${publicKey.toBase58()}`;
+        }, 2500);
+      }, 1500);
+      return;
+    }
+
+    // Real blockchain tx for non-Xi agents
     try {
       const lamports = Math.round(parseFloat(amount) * LAMPORTS_PER_SOL);
       const feeLamports = Math.floor(lamports * DELEGATION_FEE_BPS / 10000);
@@ -63,7 +79,6 @@ export default function DelegatePage() {
       try {
         agentPubkey = new PublicKey(agent.public_key);
       } catch {
-        // Agent wallet not a valid Solana address — send full amount to treasury for demo
         agentPubkey = TRUVA_TREASURY;
       }
 
@@ -84,13 +99,6 @@ export default function DelegatePage() {
       await connection.confirmTransaction(sig, 'confirmed');
       setTxSig(sig);
       setDone(true);
-
-      // Redirect to Xi Trade if this is the Xi agent
-      if (agent.name.toLowerCase().includes('xi')) {
-        setTimeout(() => {
-          window.location.href = `https://xi-agent-eight.vercel.app/?delegated=${amount}&from=${publicKey.toBase58()}`;
-        }, 2500);
-      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Transaction failed';
       setTxError(msg);
