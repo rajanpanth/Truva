@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  LayoutDashboard, Server, Shield, Activity, Key, Cpu, FileText, HelpCircle, Bot, Zap,
+  LayoutDashboard, Server, Shield, Activity, Key, FileText, HelpCircle, Bot, Zap,
 } from 'lucide-react';
 import { TruvaButton, TruvaPulsingDot } from '@/components/ui/truva';
 
@@ -28,7 +28,6 @@ const navGroups: { section: string; items: NavItem[] }[] = [
   {
     section: 'TOOLS',
     items: [
-      { label: 'Live Demo',     href: '/live-demo',      icon: <Cpu size={15} /> },
       { label: 'SDK Docs',      href: '/sdk-docs',       icon: <FileText size={15} /> },
     ],
   },

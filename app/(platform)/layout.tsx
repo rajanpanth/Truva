@@ -3,13 +3,12 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
-import { Bot, Activity, BarChart3, FileText, Settings, HelpCircle, Bell, MessageSquare, Search, User, X } from 'lucide-react';
+import { Bot, Activity, FileText, Settings, HelpCircle, Bell, MessageSquare, Search, User, X } from 'lucide-react';
 import { TruvaPulsingDot } from '@/components/ui/truva';
 
 const sidebarItems = [
   { label: 'Registry', href: '/registry', icon: <Bot size={16} /> },
   { label: 'Reputation', href: '/reputation', icon: <Activity size={16} /> },
-  { label: 'Analytics', href: '/live-demo', icon: <BarChart3 size={16} /> },
   { label: 'Documentation', href: '/sdk-docs', icon: <FileText size={16} /> },
 ];
 
