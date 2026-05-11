@@ -1,8 +1,26 @@
 # Truva Protocol
 
-**Trust and reputation layer for AI agents on Solana.**
+[![Solana](https://img.shields.io/badge/Solana-Devnet-blue)](https://explorer.solana.com/address/BTgy2r8R85Jknq3JetNiVt1x9grdccm7pTV2LyUmDzG5?cluster=devnet)
+[![Anchor](https://img.shields.io/badge/Anchor-v0.30+-purple)](https://www.anchor-lang.com/)
+[![Tests](https://img.shields.io/badge/Tests-13%20Passing-brightgreen)]()
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+
+**The trust and reputation layer for AI agents on Solana.**
 
 Truva Protocol provides programmable, on-chain trust gates for AI agent payments. Every agent gets a **Passport PDA** with a trust score (0-100) and tier (Bronze → Silver → Gold). Any Solana protocol can integrate TrustGate to block untrusted agents with a single CPI call.
+
+> **Program ID:** `BTgy2r8R85Jknq3JetNiVt1x9grdccm7pTV2LyUmDzG5`
+> **Network:** Solana Devnet · **Framework:** Anchor · **Language:** Rust + TypeScript
+
+## Key Features
+
+- **🛡️ TrustGate** — On-chain payment gating with a single CPI call. Block untrusted agents before any SOL/SPL transfer executes.
+- **🪪 Agent Passports** — PDA-based identity with trust score, tier, transaction history, and freeze capability.
+- **📊 6-Signal Scoring Engine** — Off-chain reputation scoring from transaction volume, success rate, counterparty diversity, account age, ZK proofs, and validator attestations.
+- **⛓️ On-Chain Tier Enforcement** — Bronze (5 SOL limit), Silver (100 SOL), Gold (unlimited). Tier-based amount caps enforced at the program level.
+- **🔌 SDK & Integrations** — TypeScript SDK with Eliza plugin and LangChain tool support for AI agent frameworks.
+- **🧊 Emergency Freeze** — Authority can instantly freeze any agent passport, blocking all transactions system-wide.
+- **📡 Real-Time Indexing** — Helius webhook integration for automatic transaction monitoring and score recalculation.
 
 ---
 
@@ -123,7 +141,10 @@ truva/
 - [Node.js](https://nodejs.org/) (v18+)
 - [PostgreSQL](https://www.postgresql.org/) (v14+)
 - [Redis](https://redis.io/) (v7+)
+- [RPC Fast](https://rpcfast.com) — High-performance Solana RPC (recommended)
 - npm or pnpm
+
+> **Quick start with Docker:** `docker-compose -f docker-compose.dev.yml up` to spin up PostgreSQL and Redis locally.
 
 ---
 
@@ -151,7 +172,7 @@ Edit `backend/reputation-engine/.env` with your values:
 ```env
 DATABASE_URL=postgresql://user:password@localhost:5432/truva
 REDIS_URL=redis://localhost:6379
-SOLANA_RPC_URL=https://api.devnet.solana.com
+SOLANA_RPC_URL=https://solana-devnet.rpcfast.com?api_key=YOUR_RPCFAST_API_KEY
 TRUVA_PROGRAM_ID=<your_program_id>
 BACKEND_AUTHORITY_KEY=<your_base58_keypair>
 HELIUS_API_KEY=<your_helius_key>
@@ -364,6 +385,28 @@ const profile = await truva.getAgentProfile(agentPubkey);
 const eligible = await truva.isEligible(agentPubkey, 'Silver', 50_000_000_000);
 ```
 
+### SNS Identity — `.sol` Domain Resolution
+
+Truva integrates with [SNS (Solana Name Service)](https://sns.id/) so agents can be looked up by human-readable `.sol` domain names instead of raw public keys:
+
+```typescript
+import { TruvaClient } from '@truva-protocol/sdk';
+import { Connection } from '@solana/web3.js';
+
+const connection = new Connection('https://solana-devnet.rpcfast.com?api_key=YOUR_KEY');
+const truva = new TruvaClient(connection);
+
+// Resolve a .sol domain to a PublicKey
+const pubkey = await truva.resolveAgent('my-agent.sol');
+
+// Look up trust score by .sol name (one-liner)
+const score = await truva.getAgentScoreByName('my-agent.sol');
+console.log(`${score.tier} tier — score ${score.score}/100`);
+
+// Works with raw pubkeys too
+const score2 = await truva.getAgentScoreByName('7XsJcQk...');
+```
+
 ---
 
 ## Scoring Engine
@@ -433,6 +476,31 @@ This is the **gate nobody else has built**. Any Solana protocol can integrate Tr
 
 ---
 
+## Security
+
+Truva Protocol handles real value transfers on Solana. Security is a core design principle, not an afterthought.
+
+- **Authority-gated access control** on all privileged operations via Anchor's `has_one` constraint
+- **Deterministic PDA addressing** preventing duplicate passports per agent
+- **Checked arithmetic** on all counter operations to prevent overflow
+- **Three-layer payment gating** (frozen check → tier check → amount limit) before any CPI transfer
+- **13 passing test cases** covering initialization, authority validation, payment gating, freeze/unfreeze, and account closure
+
+For a detailed breakdown of our security architecture, threat model, and areas requiring formal audit, see **[SECURITY.md](./SECURITY.md)**.
+
+---
+
+## Contributing
+
+Contributions are welcome. Please open an issue first to discuss proposed changes.
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/your-feature`)
+3. Run the test suite (`anchor test`)
+4. Submit a pull request
+
+---
+
 ## License
 
-MIT
+MIT — see [LICENSE](./LICENSE) for details.

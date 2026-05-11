@@ -7,19 +7,19 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "types":   "./dist/index.d.ts",
+      "types": "./dist/index.d.ts",
       "require": "./dist/index.js",
-      "import":  "./dist/index.mjs"
+      "import": "./dist/index.mjs"
     },
     "./eliza": {
-      "types":   "./dist/eliza.d.ts",
+      "types": "./dist/eliza.d.ts",
       "require": "./dist/eliza.js",
-      "import":  "./dist/eliza.mjs"
+      "import": "./dist/eliza.mjs"
     },
     "./langchain": {
-      "types":   "./dist/langchain.d.ts",
+      "types": "./dist/langchain.d.ts",
       "require": "./dist/langchain.js",
-      "import":  "./dist/langchain.mjs"
+      "import": "./dist/langchain.mjs"
     }
   },
   "scripts": {
@@ -50,22 +50,26 @@
     "directory": "sdk"
   },
   "homepage": "https://truva-x.tech",
-  "dependencies": {},
+  "dependencies": {
+    "@bonfida/spl-name-service": "^3.0.21"
+  },
   "peerDependencies": {
     "@anchor-lang/core": "^1.0.0",
     "@solana/web3.js": "^1.95.3"
   },
   "peerDependenciesMeta": {
-    "@anchor-lang/core": { "optional": true }
+    "@anchor-lang/core": {
+      "optional": true
+    }
   },
   "devDependencies": {
-    "typescript": "^5.6.2",
-    "tsup": "^8.0.0",
-    "vitest": "^1.6.0",
-    "@vitest/coverage-v8": "^1.6.0",
-    "@types/node": "^20.0.0",
     "@anchor-lang/core": "^1.0.0",
-    "@solana/web3.js": "^1.95.3"
+    "@solana/web3.js": "^1.95.3",
+    "@types/node": "^20.0.0",
+    "@vitest/coverage-v8": "^1.6.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.6.2",
+    "vitest": "^1.6.0"
   },
   "files": [
     "dist",
