@@ -34,11 +34,6 @@ function toTaskType(val: string): TaskType {
   return VALID_TASK_TYPES.includes(val as TaskType) ? (val as TaskType) : 'trading';
 }
 
-const RISK_TO_SPENDING: Record<string, string> = {
-  LOW: 'conservative',
-  MEDIUM: 'standard',
-  HIGH: 'aggressive',
-};
 
 /* SSR-safe wrapper — prevents WalletContext error during static generation */
 function RegisterPageInner() {
@@ -53,7 +48,6 @@ function RegisterPageInner() {
   const [category, setCategory] = useState(categories[0]);
   const [description, setDescription] = useState('');
   const [selectedCaps, setSelectedCaps] = useState<string[]>([]);
-  const [riskTolerance, setRiskTolerance] = useState('LOW');
 
   const [selectedChains, setSelectedChains] = useState<string[]>(['solana']);
   const [stakeAmount, setStakeAmount] = useState('');
@@ -124,7 +118,7 @@ function RegisterPageInner() {
         max_tx_size: 1000,
         rate_limit: 100,
         chains: selectedChains,
-        spending_behavior: RISK_TO_SPENDING[riskTolerance],
+        spending_behavior: 'standard',
         metadata: JSON.stringify({
           capabilities: selectedCaps,
           stake_amount: stakeAmount,
@@ -165,7 +159,7 @@ function RegisterPageInner() {
     } finally {
       setSubmitting(false);
     }
-  }, [walletPubkey, connected, name, operatorName, operatorEmail, category, description, selectedChains, riskTolerance, selectedCaps, stakeAmount, sendTransaction, connection]);
+  }, [walletPubkey, connected, name, operatorName, operatorEmail, category, description, selectedChains, selectedCaps, stakeAmount, sendTransaction, connection]);
 
   if (submitted) {
     return (
@@ -322,23 +316,6 @@ function RegisterPageInner() {
                   ))}
                 </div>
               </div>
-              <div>
-                <label className="block mb-2 text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)]">RISK_TOLERANCE</label>
-                <div className="flex gap-2">
-                  {['LOW', 'MEDIUM', 'HIGH'].map((r) => (
-                    <button
-                      key={r}
-                      onClick={() => setRiskTolerance(r)}
-                      className={`flex-1 py-2 text-[13px] uppercase tracking-[2px] rounded-[2px] border transition-colors ${riskTolerance === r
-                          ? 'border-[var(--accent-green)] text-[var(--accent-green)] bg-[var(--accent-green-dim)]'
-                          : 'border-[var(--border-default)] text-[var(--text-secondary)]'
-                        }`}
-                    >
-                      {r}
-                    </button>
-                  ))}
-                </div>
-              </div>
 
               <div>
                 <label className="block mb-2 text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)]">SUPPORTED_CHAINS</label>
@@ -372,7 +349,6 @@ function RegisterPageInner() {
                   { label: 'EMAIL', value: operatorEmail || '—' },
                   { label: 'CATEGORY', value: category },
                   { label: 'CAPABILITIES', value: selectedCaps.join(', ') || '—' },
-                  { label: 'RISK_TOLERANCE', value: riskTolerance },
 
                   { label: 'CHAINS', value: selectedChains.join(', ').toUpperCase() || '—' },
                   { label: 'STAKE', value: stakeAmount ? `${stakeAmount} SOL` : '—' },
