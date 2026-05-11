@@ -6,6 +6,7 @@
  */
 
 import { Connection, PublicKey } from "@solana/web3.js";
+import { getDomainKeySync } from "@bonfida/spl-name-service";
 import type {
   AgentPassportData,
   AgentProfile,
@@ -53,6 +54,57 @@ export class TruvaClient {
     }
 
     return parsePassportAccount(accountInfo.data);
+  }
+
+  // ── SNS Domain Resolution ─────────────────────────────────────────────────
+
+  /**
+   * Resolve an agent identifier to a PublicKey.
+   * Accepts either a base58 pubkey string or a `.sol` domain name.
+   *
+   * @param nameOrPubkey - A Solana base58 address or an SNS `.sol` domain
+   * @returns The resolved PublicKey
+   *
+   * @example
+   * ```ts
+   * const pubkey = await truva.resolveAgent("my-agent.sol");
+   * const pubkey2 = await truva.resolveAgent("7XsJcQk...");
+   * ```
+   */
+  async resolveAgent(nameOrPubkey: string): Promise<PublicKey> {
+    if (nameOrPubkey.endsWith(".sol")) {
+      const domainName = nameOrPubkey.replace(".sol", "");
+      const { pubkey } = getDomainKeySync(domainName);
+
+      // Verify the domain exists on-chain
+      const domainInfo = await this.connection.getAccountInfo(pubkey);
+      if (!domainInfo) {
+        throw new Error(`SNS domain ${nameOrPubkey} not found on-chain`);
+      }
+
+      return pubkey;
+    }
+
+    return new PublicKey(nameOrPubkey);
+  }
+
+  /**
+   * Look up an agent's trust score by `.sol` domain name or base58 pubkey.
+   *
+   * Combines `resolveAgent()` + `getAgentScore()` into a single call.
+   *
+   * @param nameOrPubkey - A Solana base58 address or an SNS `.sol` domain
+   * @returns On-chain passport data (score, tier, txCount, etc.)
+   *
+   * @example
+   * ```ts
+   * const score = await truva.getAgentScoreByName("my-agent.sol");
+   * console.log(score.tier); // "Gold"
+   * ```
+   */
+  async getAgentScoreByName(nameOrPubkey: string): Promise<AgentPassportData> {
+    const pubkey = await this.resolveAgent(nameOrPubkey);
+    return this.getAgentScore(pubkey);
   }
 
   /**

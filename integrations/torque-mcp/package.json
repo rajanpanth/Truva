@@ -1,0 +1,20 @@
+{
+  "name": "@truva-protocol/mcp-server",
+  "version": "1.0.0",
+  "description": "Truva TrustGate MCP Server — Trust verification tools for AI agents via Model Context Protocol",
+  "main": "server.ts",
+  "scripts": {
+    "start": "npx ts-node server.ts",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "@solana/web3.js": "^1.95.3",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.2",
+    "ts-node": "^10.9.2",
+    "@types/node": "^20.0.0"
+  }
+}
