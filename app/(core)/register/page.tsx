@@ -25,11 +25,6 @@ const CATEGORY_TO_TASK: Record<string, string> = {
   PAYMENT_AGENT: 'payment',
 };
 
-const RISK_TO_SPENDING: Record<string, string> = {
-  LOW: 'conservative',
-  MEDIUM: 'standard',
-  HIGH: 'aggressive',
-};
 
 export default function RegisterPage() {
   const { publicKey: walletPubkey, connected } = useWallet();
@@ -43,7 +38,6 @@ export default function RegisterPage() {
   const [category, setCategory] = useState(categories[0]);
   const [description, setDescription] = useState('');
   const [selectedCaps, setSelectedCaps] = useState<string[]>([]);
-  const [riskTolerance, setRiskTolerance] = useState('LOW');
   const [maxTx, setMaxTx] = useState('');
   const [rateLimit, setRateLimit] = useState('');
   const [selectedChains, setSelectedChains] = useState<string[]>(['solana']);
@@ -103,7 +97,7 @@ export default function RegisterPage() {
         max_tx_size: parsedMaxTx,
         rate_limit: parsedRateLimit,
         chains: selectedChains as ('solana' | 'ethereum' | 'base' | 'arbitrum')[],
-        spending_behavior: RISK_TO_SPENDING[riskTolerance] as 'conservative' | 'standard' | 'aggressive',
+        spending_behavior: 'standard' as 'conservative' | 'standard' | 'aggressive',
         metadata: {
           capabilities: selectedCaps,
           stake_amount: stakeAmount,
@@ -132,7 +126,7 @@ export default function RegisterPage() {
     } finally {
       setSubmitting(false);
     }
-  }, [walletPubkey, connected, name, operatorName, operatorEmail, category, description, maxTx, rateLimit, selectedChains, riskTolerance, selectedCaps, stakeAmount, registerAgent]);
+  }, [walletPubkey, connected, name, operatorName, operatorEmail, category, description, maxTx, rateLimit, selectedChains, selectedCaps, stakeAmount, registerAgent]);
 
   if (submitted) {
     return (
@@ -289,23 +283,6 @@ export default function RegisterPage() {
                   ))}
                 </div>
               </div>
-              <div>
-                <label className="block mb-2 text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)]">RISK_TOLERANCE</label>
-                <div className="flex gap-2">
-                  {['LOW', 'MEDIUM', 'HIGH'].map((r) => (
-                    <button
-                      key={r}
-                      onClick={() => setRiskTolerance(r)}
-                      className={`flex-1 py-2 text-[13px] uppercase tracking-[2px] rounded-[2px] border transition-colors ${riskTolerance === r
-                          ? 'border-[var(--accent-green)] text-[var(--accent-green)] bg-[var(--accent-green-dim)]'
-                          : 'border-[var(--border-default)] text-[var(--text-secondary)]'
-                        }`}
-                    >
-                      {r}
-                    </button>
-                  ))}
-                </div>
-              </div>
               <div className="grid grid-cols-2 gap-4">
                 <TruvaInput label="MAX_TX_PER_EPOCH" placeholder="e.g. 10000" value={maxTx} onChange={(e) => setMaxTx(e.target.value)} />
                 <TruvaInput label="RATE_LIMIT / HOUR" placeholder="e.g. 100" value={rateLimit} onChange={(e) => setRateLimit(e.target.value)} />
@@ -342,7 +319,6 @@ export default function RegisterPage() {
                   { label: 'EMAIL', value: operatorEmail || '—' },
                   { label: 'CATEGORY', value: category },
                   { label: 'CAPABILITIES', value: selectedCaps.join(', ') || '—' },
-                  { label: 'RISK_TOLERANCE', value: riskTolerance },
                   { label: 'MAX_TX_EPOCH', value: maxTx || '—' },
                   { label: 'RATE_LIMIT', value: rateLimit ? `${rateLimit}/hr` : '—' },
                   { label: 'CHAINS', value: selectedChains.join(', ').toUpperCase() || '—' },
