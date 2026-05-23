@@ -41,7 +41,6 @@ export default function RegisterPage() {
   const [maxTx, setMaxTx] = useState('');
   const [rateLimit, setRateLimit] = useState('');
   const [selectedChains, setSelectedChains] = useState<string[]>(['solana']);
-  const [stakeAmount, setStakeAmount] = useState('');
 
   const [submitting, setSubmitting] = useState(false);
   const [submitPhase, setSubmitPhase] = useState('');
@@ -100,7 +99,7 @@ export default function RegisterPage() {
         spending_behavior: 'standard' as 'conservative' | 'standard' | 'aggressive',
         metadata: {
           capabilities: selectedCaps,
-          stake_amount: stakeAmount,
+
           category,
         },
       });
@@ -126,7 +125,7 @@ export default function RegisterPage() {
     } finally {
       setSubmitting(false);
     }
-  }, [walletPubkey, connected, name, operatorName, operatorEmail, category, description, maxTx, rateLimit, selectedChains, selectedCaps, stakeAmount, registerAgent]);
+  }, [walletPubkey, connected, name, operatorName, operatorEmail, category, description, maxTx, rateLimit, selectedChains, selectedCaps, registerAgent]);
 
   if (submitted) {
     return (
@@ -304,7 +303,6 @@ export default function RegisterPage() {
                   ))}
                 </div>
               </div>
-              <TruvaInput label="STAKE_AMOUNT (SOL)" placeholder="e.g. 50000" value={stakeAmount} onChange={(e) => setStakeAmount(e.target.value)} />
             </div>
           )}
 
@@ -322,7 +320,6 @@ export default function RegisterPage() {
                   { label: 'MAX_TX_EPOCH', value: maxTx || '—' },
                   { label: 'RATE_LIMIT', value: rateLimit ? `${rateLimit}/hr` : '—' },
                   { label: 'CHAINS', value: selectedChains.join(', ').toUpperCase() || '—' },
-                  { label: 'STAKE', value: stakeAmount ? `${stakeAmount} SOL` : '—' },
                 ].map((item) => (
                   <div key={item.label} className="flex justify-between text-[13px]">
                     <span className="text-[var(--text-muted)]">{item.label}</span>

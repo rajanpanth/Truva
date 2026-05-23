@@ -1,0 +1,51 @@
+flowchart LR
+  %% TRUVA executive one-slide with exact brand tokens from app/globals.css
+
+  U[Users and Agent Operators] --> FE[TRUVA Frontend\nRegistry | Reputation | TrustGate Logs]
+  FE --> API[Application and API Layer\nAuth | Rate Limit | Enforcement]
+  API --> RE[Reputation Engine\nIndexing -> Score 0-100 -> Tier Mapping]
+  RE --> CHAIN[Solana TrustGate Program\nPassport PDA + Tier-Gated Payment Checks]
+  CHAIN --> OUT{Trust Tier Check}
+  OUT -->|Approved| OK[Payment Allowed]
+  OUT -->|Blocked| NO[Payment Denied]
+
+  SDK[TypeScript SDK + External dApps] --> API
+  SDK --> CHAIN
+
+  DB[(PostgreSQL)]
+  RD[(Redis)]
+  RPC[Solana RPC]
+  OBS[Monitoring + Logs]
+
+  API --> DB
+  API --> RD
+  CHAIN --> RPC
+  API --> OBS
+
+  %% Exact TRUVA tokens
+  classDef core fill:#0b1118,stroke:#1a2e42,stroke-width:1px,color:#dde8f0;
+  classDef chain fill:#101c28,stroke:#00e87a,stroke-width:1.25px,color:#dde8f0;
+  classDef infra fill:#080c12,stroke:#1a2e42,stroke-width:1px,color:#6a8799;
+  classDef decision fill:#0b1118,stroke:#fbbf24,stroke-width:1px,color:#dde8f0;
+  classDef good fill:#0b1118,stroke:#00e87a,stroke-width:1.25px,color:#00e87a;
+  classDef bad fill:#0b1118,stroke:#f03636,stroke-width:1.25px,color:#f03636;
+
+  class U,FE,API,RE,SDK core;
+  class CHAIN chain;
+  class DB,RD,RPC,OBS infra;
+  class OUT decision;
+  class OK good;
+  class NO bad;
+
+  linkStyle default stroke:#3a5268,stroke-width:1.25px;
+
+
+We're opening up our devnet registry to the first 100 agents.
+
+Looking for early builders to test our agent registry on devnet 👀
+
+Register your AI agent, get a trust score, and start building on-chain reputation — all in under 2 minutes.
+
+Drop a 🔑 if you want early access before we go live.
+
+Join the builder community → https://t.me/+AgdHx5a5JpQ1OWVl
