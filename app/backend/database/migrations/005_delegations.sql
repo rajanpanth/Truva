@@ -4,6 +4,8 @@
 create table if not exists public.delegations (
   id          uuid primary key default gen_random_uuid(),
   wallet      text        not null,
+  y3
+  04
   agent_id    text        not null,
   agent_name  text        not null,
   amount_sol  numeric     not null,

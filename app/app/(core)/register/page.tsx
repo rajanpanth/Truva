@@ -50,7 +50,6 @@ function RegisterPageInner() {
   const [selectedCaps, setSelectedCaps] = useState<string[]>([]);
 
   const [selectedChains, setSelectedChains] = useState<string[]>(['solana']);
-  const [stakeAmount, setStakeAmount] = useState('');
 
   const [submitting, setSubmitting] = useState(false);
   const [submitPhase, setSubmitPhase] = useState('');
@@ -121,7 +120,6 @@ function RegisterPageInner() {
         spending_behavior: 'standard',
         metadata: JSON.stringify({
           capabilities: selectedCaps,
-          stake_amount: stakeAmount,
           tx_signature: signature,
           category,
         }),
@@ -159,7 +157,7 @@ function RegisterPageInner() {
     } finally {
       setSubmitting(false);
     }
-  }, [walletPubkey, connected, name, operatorName, operatorEmail, category, description, selectedChains, selectedCaps, stakeAmount, sendTransaction, connection]);
+  }, [walletPubkey, connected, name, operatorName, operatorEmail, category, description, selectedChains, selectedCaps, sendTransaction, connection]);
 
   if (submitted) {
     return (
@@ -334,7 +332,6 @@ function RegisterPageInner() {
                   ))}
                 </div>
               </div>
-              <TruvaInput label="STAKE_AMOUNT (SOL)" placeholder="e.g. 50000" value={stakeAmount} onChange={(e) => setStakeAmount(e.target.value)} />
             </div>
           )}
 
@@ -351,7 +348,6 @@ function RegisterPageInner() {
                   { label: 'CAPABILITIES', value: selectedCaps.join(', ') || '—' },
 
                   { label: 'CHAINS', value: selectedChains.join(', ').toUpperCase() || '—' },
-                  { label: 'STAKE', value: stakeAmount ? `${stakeAmount} SOL` : '—' },
                 ].map((item) => (
                   <div key={item.label} className="flex justify-between text-[13px]">
                     <span className="text-[var(--text-muted)]">{item.label}</span>
