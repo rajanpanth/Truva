@@ -10,7 +10,7 @@ function generateSimulatedPDA(agentName: string): string {
   const random = Math.random().toString(36).substring(2, 10);
   return `PDA_${agentName.replace(/[^a-zA-Z0-9]/g, '').slice(0, 8)}_${timestamp}_${random}`;
 }
-import type { Agent } from '@/backend/types/agent';
+import { toPublicAgent, type Agent } from '@/backend/types/agent';
 
 export async function GET(request: NextRequest) {
   const rateLimited = withRateLimit(request);
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ data: data as Agent[] });
+    return NextResponse.json({ data: (data as Agent[]).map(toPublicAgent) });
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ data: data as Agent }, { status: 201 });
+    return NextResponse.json({ data: toPublicAgent(data as Agent) }, { status: 201 });
   } catch (err) {
     console.error('[POST /api/agents] error:', err);
     const message = err instanceof Error ? err.message : String(err);

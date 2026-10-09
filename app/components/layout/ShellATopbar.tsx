@@ -27,7 +27,7 @@ const SDK_STEPS = [
     code: `import { TruvaSDK } from 'truva-sdk';
 
 const truva = new TruvaSDK({
-  rpcUrl: 'https://api.mainnet-beta.solana.com',
+  rpcUrl: 'https://api.devnet.solana.com',
   apiUrl: 'https://api.truva.xyz',
 });`,
   },

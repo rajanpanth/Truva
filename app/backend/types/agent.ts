@@ -38,3 +38,11 @@ export interface Agent {
   registered_at?: string;
   updated_at: string;
 }
+
+/** Agent as returned by public API routes: operator contact details are never exposed. */
+export type PublicAgent = Omit<Agent, 'operator_email'>;
+
+export function toPublicAgent(agent: Agent): PublicAgent {
+  const { operator_email: _email, ...rest } = agent;
+  return rest;
+}

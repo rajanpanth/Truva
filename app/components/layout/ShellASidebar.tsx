@@ -57,7 +57,7 @@ export function ShellASidebar() {
             <div className="text-[12px] text-[var(--text-primary)] font-bold tracking-wide">NODE_001</div>
             <div className="flex items-center gap-1.5 mt-0.5">
               <TruvaPulsingDot size={4} />
-              <span className="text-[11px] text-[var(--accent-green)] tracking-widest">SOLANA_MAINNET</span>
+              <span className="text-[11px] text-[var(--accent-green)] tracking-widest">SOLANA_DEVNET</span>
             </div>
           </div>
         </div>

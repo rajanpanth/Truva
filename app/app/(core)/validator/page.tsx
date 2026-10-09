@@ -65,7 +65,7 @@ export default function ValidatorDashboard() {
             <h1 className="text-[24px] font-bold">VALIDATOR_DASHBOARD</h1>
             <TruvaStatusPill variant="online" />
           </div>
-          <p className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mt-1">NODE_001 · SOLANA_MAINNET · EPOCH_412</p>
+          <p className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mt-1">NODE_001 · SOLANA_DEVNET · EPOCH_412</p>
         </div>
         <TruvaButton variant="outlined" className="text-[12px]">VALIDATOR_SETTINGS</TruvaButton>
       </div>

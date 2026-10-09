@@ -45,7 +45,7 @@ export function Sidebar() {
               <p className="font-mono text-xs font-bold text-white">NODE_001</p>
               <div className="flex items-center gap-1.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#00ff88]" />
-                <span className="font-mono text-[13px] tracking-wider text-[#555]">SOLANA_MAINNET</span>
+                <span className="font-mono text-[13px] tracking-wider text-[#555]">SOLANA_DEVNET</span>
               </div>
             </div>
           </div>

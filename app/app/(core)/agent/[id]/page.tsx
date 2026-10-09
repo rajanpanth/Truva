@@ -136,10 +136,6 @@ export default function AgentProfilePage() {
               <span className="text-[var(--text-secondary)]">OPERATOR</span>
               <span className="font-bold">{agent.operator_name}</span>
             </div>
-            <div className="flex justify-between text-[13px]">
-              <span className="text-[var(--text-secondary)]">EMAIL</span>
-              <span className="font-bold">{agent.operator_email}</span>
-            </div>
             {agent.pda_address && (
               <div className="flex justify-between text-[13px]">
                 <span className="text-[var(--text-secondary)]">PDA</span>

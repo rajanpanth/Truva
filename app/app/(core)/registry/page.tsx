@@ -42,7 +42,7 @@ export default function RegistryPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-[24px] font-bold">AGENT_REGISTRY</h1>
-          <p className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mt-1">VERIFIED_AUTONOMOUS_ENTITIES · MAINNET_CLUSTER_V1.2</p>
+          <p className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mt-1">VERIFIED_AUTONOMOUS_ENTITIES · DEVNET_CLUSTER_V1.2</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="relative">

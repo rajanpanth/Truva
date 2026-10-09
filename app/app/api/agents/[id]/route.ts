@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/backend/supabase/server';
 import { withRateLimit, withProtection } from '@/backend/middleware/auth';
-import type { Agent } from '@/backend/types/agent';
+import { toPublicAgent, type Agent } from '@/backend/types/agent';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,7 +30,7 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ data: data as Agent });
+    return NextResponse.json({ data: toPublicAgent(data as Agent) });
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -91,7 +91,7 @@ export async function PATCH(
       );
     }
 
-    return NextResponse.json({ data: data as Agent });
+    return NextResponse.json({ data: toPublicAgent(data as Agent) });
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
