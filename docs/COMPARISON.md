@@ -31,6 +31,10 @@ Truva puts three checks in one on-chain instruction:
 
 If any check fails, the transfer does not happen. There is no enclave, custodian or facilitator in the path to trust or to go down.
 
+## Planned next
+
+Bounties for misbehaving agents: operators post a bond, anyone can report an agent with evidence, the scorer committee reviews it, and an upheld report freezes or downgrades the passport and pays the reporter from the bond. This is not built yet; the design is in the Roadmap section of the README.
+
 ## Current gaps
 
 - **Devnet only.** Truva is not deployed to mainnet, while Circle Agent Wallets already run there.

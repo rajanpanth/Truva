@@ -104,8 +104,10 @@ The key that was previously committed in the repo must be rotated first.
   known limitations and a prioritized list of areas for auditor attention in `SECURITY.md`.
 - **Target mainnet launch:** **[FILL IN]**
 - **6–12 month roadmap:** **[FILL IN — suggested milestones: audit and fixes; mainnet launch
-  with USDC vaults; scorer committee live with independent members; `exact`-scheme
-  settlement verified against a live facilitator; first seller and agent-framework integrations]**
+  with USDC vaults; scorer committee live with independent members; bounties for
+  misbehaving agents (operator bond, on-chain reports reviewed by the committee, reporter
+  paid from the bond; see the Roadmap section of the README); `exact`-scheme settlement
+  verified against a live facilitator; first seller and agent-framework integrations]**
 - **Team:** **[FILL IN: names, roles, X and GitHub handles, full-time or not]**
 - **Fundraising status and plans:** **[FILL IN]**
 - **Contact for scoping call:** **[FILL IN: Telegram or email]**

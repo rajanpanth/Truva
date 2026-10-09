@@ -582,6 +582,34 @@ For a detailed breakdown of our security architecture, threat model, and areas r
 
 ---
 
+## Roadmap
+
+Nothing in this section is built yet. What exists today is described above and in [SECURITY.md](./SECURITY.md).
+
+### Next: bounties for misbehaving agents
+
+Today an agent's score comes from the reputation engine alone. The next milestone lets anyone who was harmed by an agent, or who spots one that has been hijacked, report it and be paid when the report holds up.
+
+1. **Bond.** An agent's operator posts a bond when the passport is created. An agent with nothing at stake cannot be registered as trusted.
+2. **Report.** Anyone files an on-chain report against an agent: a hash of the evidence and a small deposit that deters spam.
+3. **Review.** The scorer committee votes on the report, the same way it votes on scores.
+4. **Upheld.** The passport is frozen or its score is cut, the reporter gets the deposit back plus a reward paid from the agent's bond, and the report stays on the agent's record.
+5. **Rejected.** The reporter loses the deposit.
+
+The cases this is for are the ones the program cannot see by itself: a seller that took payment and did not deliver, and an agent whose behaviour shows its key was stolen. Overspending is not one of them, because vault limits already make it impossible.
+
+It depends on the scorer committee running with independent members. With a single scorer key, a report is decided by one party, so the committee goes live first.
+
+### After that
+
+- Security audit and fixes, then mainnet with USDC vaults
+- Scorer committee live on-chain with independent members, and the reputation engine voting as one of them
+- `exact`-scheme settlement verified against a live x402 facilitator
+- Weekly and monthly vault limits, and more than eight allowed recipients
+- First seller and agent-framework integrations
+
+---
+
 ## Contributing
 
 Contributions are welcome. Please open an issue first to discuss proposed changes.
