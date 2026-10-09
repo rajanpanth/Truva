@@ -7,6 +7,7 @@ import { Transaction, TransactionInstruction, PublicKey } from '@solana/web3.js'
 import { Buffer } from 'buffer';
 import { TruvaButton, TruvaInput, TruvaProgressBar, TruvaCheckTag } from '@/components/ui/truva';
 import { WalletConnectButton } from '@/components/shared/WalletConnectButton';
+import { signRegisterAgentMessage, SIGN_MESSAGE_UNSUPPORTED } from '@/lib/auth/signRegisterMessage';
 import { CheckCircle, Circle, Shield, Wallet, ExternalLink, Loader2 } from 'lucide-react';
 
 const MEMO_PROGRAM_ID = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
@@ -37,7 +38,7 @@ function toTaskType(val: string): TaskType {
 
 /* SSR-safe wrapper — prevents WalletContext error during static generation */
 function RegisterPageInner() {
-  const { publicKey: walletPubkey, sendTransaction, connected } = useWallet();
+  const { publicKey: walletPubkey, sendTransaction, signMessage, connected } = useWallet();
   const { connection } = useConnection();
 
   const [step, setStep] = useState(0);
@@ -79,6 +80,11 @@ function RegisterPageInner() {
       setSubmitError('FILL_ALL_REQUIRED_FIELDS');
       return;
     }
+    // The API requires a signed message; check before spending SOL on the memo tx.
+    if (!signMessage) {
+      setSubmitError(SIGN_MESSAGE_UNSUPPORTED);
+      return;
+    }
 
     setSubmitting(true);
     setSubmitError('');
@@ -106,8 +112,15 @@ function RegisterPageInner() {
       await connection.confirmTransaction(signature, 'confirmed');
       setTxSignature(signature);
 
+      setSubmitPhase('SIGNING_REGISTRATION_MESSAGE...');
+      const auth = await signRegisterAgentMessage(signMessage, {
+        publicKey: walletPubkey.toBase58(),
+        wallet: walletPubkey.toBase58(),
+      });
+
       setSubmitPhase('REGISTERING_IN_PROTOCOL...');
       const body = {
+        ...auth,
         name,
         public_key: walletPubkey.toBase58(),
         operator_name: operatorName,
@@ -147,7 +160,7 @@ function RegisterPageInner() {
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'UNEXPECTED_ERROR';
       if (message.includes('User rejected')) {
-        setSubmitError('TRANSACTION_REJECTED_BY_WALLET');
+        setSubmitError('SIGNING_REJECTED_BY_WALLET');
       } else if (message.includes('nsufficient')) {
         setSubmitError('INSUFFICIENT_SOL — AIRDROP_DEVNET_SOL_FIRST');
       } else {
@@ -157,7 +170,7 @@ function RegisterPageInner() {
     } finally {
       setSubmitting(false);
     }
-  }, [walletPubkey, connected, name, operatorName, operatorEmail, category, description, selectedChains, selectedCaps, sendTransaction, connection]);
+  }, [walletPubkey, connected, name, operatorName, operatorEmail, category, description, selectedChains, selectedCaps, sendTransaction, signMessage, connection]);
 
   if (submitted) {
     return (
@@ -374,7 +387,7 @@ function RegisterPageInner() {
 
               <div className="p-3 bg-[var(--accent-green-dim)] border border-[var(--accent-green)] rounded-[2px]">
                 <p className="text-[13px] uppercase tracking-[1px] text-[var(--accent-green)]">
-                  SUBMITTING WILL SIGN A MEMO TRANSACTION ON SOLANA AND REGISTER YOUR AGENT IN THE TRUVA PROTOCOL.
+                  SUBMITTING WILL SIGN A MEMO TRANSACTION ON SOLANA, THEN A FREE REGISTRATION MESSAGE PROVING WALLET OWNERSHIP, AND REGISTER YOUR AGENT IN THE TRUVA PROTOCOL.
                 </p>
               </div>
             </div>

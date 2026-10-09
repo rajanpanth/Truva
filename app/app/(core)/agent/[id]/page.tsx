@@ -6,6 +6,42 @@ import Link from 'next/link';
 import { TruvaStatCard, TruvaStatusPill, TruvaTerminal, TruvaProgressBar, TruvaBadge, TruvaButton, TruvaCheckTag } from '@/components/ui/truva';
 import { Shield, ShieldCheck, Zap, TrendingUp, Activity } from 'lucide-react';
 import type { Agent } from '@/backend/types/agent';
+import { PublicKey } from '@solana/web3.js';
+import { getConnection } from '@/lib/solana/connection';
+import { getPassportPDA } from '@/lib/solana';
+import { parsePassportAccount, type PassportData } from '@/lib/solana/vault';
+
+type OnChainPassport =
+  | { state: 'loading' | 'invalid-key' | 'missing' | 'error'; address?: string }
+  | { state: 'found'; address: string; passport: PassportData };
+
+/** Reads the agent's passport account from the program, so the page shows chain state rather than the database copy. */
+function useOnChainPassport(publicKey: string | undefined): OnChainPassport {
+  const [result, setResult] = useState<OnChainPassport>({ state: 'loading' });
+  useEffect(() => {
+    if (!publicKey) return;
+    let agentKey: PublicKey;
+    try {
+      agentKey = new PublicKey(publicKey);
+    } catch {
+      setResult({ state: 'invalid-key' });
+      return;
+    }
+    const address = getPassportPDA(agentKey)[0];
+    let cancelled = false;
+    getConnection()
+      .getAccountInfo(address)
+      .then((account) => {
+        if (cancelled) return;
+        setResult(account
+          ? { state: 'found', address: address.toBase58(), passport: parsePassportAccount(account.data) }
+          : { state: 'missing', address: address.toBase58() });
+      })
+      .catch(() => { if (!cancelled) setResult({ state: 'error', address: address.toBase58() }); });
+    return () => { cancelled = true; };
+  }, [publicKey]);
+  return result;
+}
 
 const TIER_BADGE: Record<number, 'bronze' | 'silver' | 'gold'> = { 1: 'bronze', 2: 'silver', 3: 'gold' };
 
@@ -41,6 +77,7 @@ export default function AgentProfilePage() {
   const params = useParams();
   const id = params?.id as string;
   const [agent, setAgent] = useState<Agent | null>(null);
+  const onChain = useOnChainPassport(agent?.public_key);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -136,12 +173,31 @@ export default function AgentProfilePage() {
               <span className="text-[var(--text-secondary)]">OPERATOR</span>
               <span className="font-bold">{agent.operator_name}</span>
             </div>
-            {agent.pda_address && (
-              <div className="flex justify-between text-[13px]">
-                <span className="text-[var(--text-secondary)]">PDA</span>
-                <span className="font-mono text-[13px]">{agent.pda_address}</span>
-              </div>
-            )}
+            <div className="flex justify-between gap-4 text-[13px]">
+              <span className="text-[var(--text-secondary)] shrink-0">PASSPORT_ADDRESS</span>
+              {onChain.address ? (
+                <a
+                  href={`https://explorer.solana.com/address/${onChain.address}?cluster=devnet`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono text-[13px] truncate hover:text-[var(--accent-green)]"
+                >
+                  {onChain.address}
+                </a>
+              ) : (
+                <span className="text-[var(--text-secondary)]">{onChain.state === 'loading' ? '...' : 'NO VALID SOLANA KEY'}</span>
+              )}
+            </div>
+            <div className="flex justify-between text-[13px]">
+              <span className="text-[var(--text-secondary)]">ON_CHAIN_PASSPORT</span>
+              <span className="font-bold">
+                {onChain.state === 'found'
+                  ? `${onChain.passport.tier.toUpperCase()} · ${onChain.passport.trustScore}/100${onChain.passport.frozen ? ' · FROZEN' : ''}`
+                  : onChain.state === 'missing' ? 'NOT CREATED YET'
+                  : onChain.state === 'error' ? 'RPC ERROR'
+                  : onChain.state === 'loading' ? '...' : '—'}
+              </span>
+            </div>
             <div className="flex justify-between text-[13px]">
               <span className="text-[var(--text-secondary)]">STATUS</span>
               <span className={`font-bold ${agent.is_flagged ? 'text-red-500' : 'text-[var(--accent-green)]'}`}>

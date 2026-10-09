@@ -5,6 +5,7 @@ import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey, SystemProgram } from '@solana/web3.js';
 import { TRUSTGATE_PROGRAM_ID, getPassportPDA, getTrustGateProgram } from '@/lib/solana';
 import TRUSTGATE_IDL from '@/lib/idl/trustgate.json';
+import { signRegisterAgentMessage, SIGN_MESSAGE_UNSUPPORTED } from '@/lib/auth/signRegisterMessage';
 
 interface RegisterResult {
   pdaAddress: string;
@@ -13,7 +14,8 @@ interface RegisterResult {
 
 /**
  * Hook to register an agent on-chain by calling initialize_passport,
- * then POST to /api/agents with the tx signature and PDA.
+ * signing the canonical register message with the wallet, then POST to
+ * /api/agents with the tx signature, PDA and wallet-signature proof.
  */
 export function useRegisterAgent() {
   const { connection } = useConnection();
@@ -39,6 +41,11 @@ export function useRegisterAgent() {
     }): Promise<RegisterResult | null> => {
       if (!publicKey || !wallet.signTransaction) {
         setError('Wallet not connected');
+        return null;
+      }
+      // POST /api/agents requires a signed message; fail before sending the on-chain tx.
+      if (!wallet.signMessage) {
+        setError(SIGN_MESSAGE_UNSUPPORTED);
         return null;
       }
 
@@ -71,12 +78,19 @@ export function useRegisterAgent() {
 
         await connection.confirmTransaction(signature, 'confirmed');
 
+        // Prove control of the paying wallet for this agent key (verified server-side)
+        const auth = await signRegisterAgentMessage(wallet.signMessage, {
+          publicKey: agentData.public_key,
+          wallet: publicKey.toBase58(),
+        });
+
         // Register in backend database
         const response = await fetch('/api/agents', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             ...agentData,
+            ...auth,
             trust_score: agentData.trust_score ?? 50,
             tx_signature: signature,
             pda_address: passportPDA.toBase58(),

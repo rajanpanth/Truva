@@ -5,7 +5,7 @@ import { Book, Shield, Zap, Globe, Terminal } from 'lucide-react';
 const apiEndpoints = [
   { method: 'GET', path: '/api/agents', desc: 'List all registered agents', auth: 'API_KEY' },
   { method: 'GET', path: '/api/agents/:id', desc: 'Get agent passport + score', auth: 'API_KEY' },
-  { method: 'POST', path: '/api/agents', desc: 'Register a new agent', auth: 'API_KEY + SIGNATURE' },
+  { method: 'POST', path: '/api/agents', desc: 'Register a new agent', auth: 'WALLET_SIGNATURE' },
   { method: 'GET', path: '/api/trustgate', desc: 'Stream TrustGate validation logs', auth: 'API_KEY' },
   { method: 'GET', path: '/api/reputation', desc: 'Get global reputation stats', auth: 'API_KEY' },
   { method: 'GET', path: '/api/transactions', desc: 'List verified transactions', auth: 'API_KEY' },
@@ -50,14 +50,15 @@ export default function SDKDocsPage() {
           <div className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mb-2">2. INITIALIZE_CLIENT</div>
           <CodeBlock
             language="typescript"
-            code={`import { TruvaSDK, TruvaError } from 'truva-sdk';
+            code={`import { Connection, PublicKey } from '@solana/web3.js';
+import { TruvaClient, TruvaError } from '@truva-protocol/sdk';
 
-const truva = new TruvaSDK({
-  rpcUrl: 'https://api.devnet.solana.com',
-  apiUrl: 'http://localhost:4000',
-});
+const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
+const truva = new TruvaClient(connection);
 
-// Check agent score
+const agentPubkey = new PublicKey('YOUR_AGENT_PUBKEY');
+
+// Check agent score (read from the on-chain passport)
 const score = await truva.getAgentScore(agentPubkey);
 console.log(score.tier);   // 'Gold'
 console.log(score.score);  // 94
@@ -65,7 +66,7 @@ console.log(score.frozen); // false`}
           />
         </div>
 
-        <div>
+        <div className="mb-4">
           <div className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mb-2">3. REGISTER_AN_AGENT</div>
           <CodeBlock
             language="typescript"
@@ -75,17 +76,66 @@ try {
   // ✅ Agent meets Gold tier — proceed
 } catch (err) {
   if (err instanceof TruvaError) {
-    console.error(err.message); // 'Agent tier Bronze < required Gold'
+    console.error(err.currentTier, err.message);
   }
 }
 
+// register() and getAgentProfile() call the Truva REST API.
+// Pass the URL of the deployment you run as apiUrl.
+const api = new TruvaClient(connection, { apiUrl: process.env.TRUVA_API_URL });
+
 // Register a new agent
-await truva.register(agentPubkey);
+const agent = await api.register({
+  name: 'ArbitrageBot_v2',
+  public_key: agentPubkey.toBase58(),
+  operator_name: 'Alice Chen',
+  operator_email: 'alice@example.com',
+  task_type: 'trading',
+  max_tx_size: 10000,
+  rate_limit: 100,
+  chains: ['solana'],
+});
+console.log(agent.id, agent.trust_score);
 
 // Get full profile
-const profile = await truva.getAgentProfile(agentPubkey);
+const profile = await api.getAgentProfile(agentPubkey);
 console.log(profile.tier);   // 'Bronze'
 console.log(profile.score);  // 42`}
+          />
+        </div>
+
+        <div>
+          <div className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mb-2">4. AGENT_VAULT_AND_X402_PAYWALL</div>
+          <CodeBlock
+            language="typescript"
+            code={`import {
+  createVaultIx, truvaPaywall, fetchWithVault, PaymentRejectedError,
+} from '@truva-protocol/sdk';
+
+// Owner: fund a vault the agent can spend from, within limits
+const ix = createVaultIx(owner, agentPubkey, USDC_MINT, {
+  perTxLimit: 1_000_000n,   // 1 USDC per payment
+  dailyLimit: 20_000_000n,  // 20 USDC per day
+  allowlist: [sellerWallet],
+});
+
+// Seller: charge 1 USDC per request (Express or Node http)
+app.get('/report',
+  truvaPaywall({ connection, payTo: sellerWallet, mint: USDC_MINT, amount: 1_000_000, minTier: 'Silver' }),
+  (req, res) => res.json({ report: '...', paidBy: req.truvaPayment.payer }));
+
+// Agent: pay the HTTP 402 challenge from its vault and retry
+try {
+  const res = await fetchWithVault(url, undefined, {
+    connection, agent: agentKeypair, vaultOwner: owner,
+    maxAmount: 1_000_000, mint: USDC_MINT,
+  });
+} catch (err) {
+  if (err instanceof PaymentRejectedError) console.log(err.reason); // 'ExceedsDailyLimit'
+}
+
+// The 402 uses the x402 wire format with the 'truva-vault' scheme.
+// Stock x402 'exact' clients can read it but cannot pay it.`}
           />
         </div>
       </div>

@@ -1,169 +1,178 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { TruvaStatCard, TruvaStatusPill, TruvaTerminal, TruvaProgressBar, TruvaButton } from '@/components/ui/truva';
-import { ShieldCheck, Zap, Award, TrendingUp, AlertTriangle, Server, Cpu, HardDrive } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { PublicKey, type ConfirmedSignatureInfo } from '@solana/web3.js';
+import { TruvaButton, TruvaStatCard, TruvaStatusPill } from '@/components/ui/truva';
+import { Bot, RefreshCw, ShieldAlert, ShieldCheck, Vault } from 'lucide-react';
+import { getConnection } from '@/lib/solana/connection';
+import { TRUSTGATE_PROGRAM_ID } from '@/lib/solana';
+import { PASSPORT_ACCOUNT_SIZE, VAULT_ACCOUNT_SIZE, parsePassportAccount, parseVaultAccount } from '@/lib/solana/vault';
 
-function generateValidationLog(): string[] {
-  const entries = [
-    '[AUTH] Epoch 412 · Block 8,924,103 · Validator consensus reached',
-    '[TX] Validated SWAP · TRADEBOT_X · 0xB5Fe01 · 12ms',
-    '[SYS] Heartbeat OK · All nodes in sync · Latency 3ms',
-    '[TX] Validated ORACLE_FEED · ORACLE_EYE · 0xA3Dc12 · 8ms',
-    '[AUTH] ZK-proof batch verified · 48 proofs · 142ms total',
-    '[TX] BLOCKED · GUARD_PROTO · Anomaly score 0.87 · 0xF71a3B',
-    '[INFO] Reward distribution · +245 SOL · Epoch 411 settlement',
-    '[TX] Validated BRIDGE_OP · NEXUS_BRIDGE · 0xC29e0D · 22ms',
-    '[SYS] Memory optimized · GC cycle complete · 1.2GB freed',
-    '[HB] Peer discovery · 12 validators online · Quorum maintained',
-  ];
-  return entries;
+const UPGRADEABLE_LOADER = new PublicKey('BPFLoaderUpgradeab1e11111111111111111111111');
+const RECENT_TX = 12;
+
+interface ProtocolStatus {
+  admin: string | null;
+  scorer: string | null;
+  upgradeAuthority: string | null;
+  deployedSlot: number | null;
+  passports: number;
+  tiers: { Bronze: number; Silver: number; Gold: number };
+  frozen: number;
+  vaults: number;
+  pausedVaults: number;
+  recent: ConfirmedSignatureInfo[];
 }
 
-/* Simple bar chart using divs */
-function RewardChart() {
-  const data = [65, 72, 58, 81, 90, 85, 78, 92, 88, 95, 87, 91];
-  const labels = ['E401', 'E402', 'E403', 'E404', 'E405', 'E406', 'E407', 'E408', 'E409', 'E410', 'E411', 'E412'];
+const explorer = (kind: 'address' | 'tx', id: string) =>
+  `https://explorer.solana.com/${kind}/${id}?cluster=devnet`;
 
+const short = (s: string) => `${s.slice(0, 6)}...${s.slice(-6)}`;
+
+async function loadStatus(): Promise<ProtocolStatus> {
+  const connection = getConnection();
+  const [configPda] = PublicKey.findProgramAddressSync([new TextEncoder().encode('config')], TRUSTGATE_PROGRAM_ID);
+  const [programData] = PublicKey.findProgramAddressSync([TRUSTGATE_PROGRAM_ID.toBuffer()], UPGRADEABLE_LOADER);
+
+  const [[config, data], passports, vaults, recent] = await Promise.all([
+    connection.getMultipleAccountsInfo([configPda, programData]),
+    connection.getProgramAccounts(TRUSTGATE_PROGRAM_ID, { filters: [{ dataSize: PASSPORT_ACCOUNT_SIZE }] }),
+    connection.getProgramAccounts(TRUSTGATE_PROGRAM_ID, { filters: [{ dataSize: VAULT_ACCOUNT_SIZE }] }),
+    connection.getSignaturesForAddress(TRUSTGATE_PROGRAM_ID, { limit: RECENT_TX }),
+  ]);
+
+  const tiers = { Bronze: 0, Silver: 0, Gold: 0 };
+  let frozen = 0;
+  for (const p of passports) {
+    const passport = parsePassportAccount(p.account.data);
+    tiers[passport.tier] += 1;
+    if (passport.frozen) frozen += 1;
+  }
+
+  // ProgramData layout: u32 tag, u64 deploy slot, Option<Pubkey> upgrade authority
+  const view = data ? new DataView(data.data.buffer, data.data.byteOffset, data.data.byteLength) : null;
+
+  return {
+    admin: config ? new PublicKey(config.data.subarray(8, 40)).toBase58() : null,
+    scorer: config ? new PublicKey(config.data.subarray(40, 72)).toBase58() : null,
+    deployedSlot: view ? Number(view.getBigUint64(4, true)) : null,
+    upgradeAuthority: data && data.data[12] === 1 ? new PublicKey(data.data.subarray(13, 45)).toBase58() : null,
+    passports: passports.length,
+    tiers,
+    frozen,
+    vaults: vaults.length,
+    pausedVaults: vaults.filter((v) => parseVaultAccount(v.account.data).paused).length,
+    recent,
+  };
+}
+
+function AddressRow({ label, value }: { label: string; value: string | null }) {
   return (
-    <div>
-      <div className="flex items-end gap-[6px] h-[120px]">
-        {data.map((v, i) => (
-          <div key={i} className="flex-1 flex flex-col items-center gap-1">
-            <div
-              className="w-full bg-[var(--accent-green)] rounded-[1px] transition-all"
-              style={{ height: `${(v / 100) * 100}%`, opacity: i === data.length - 1 ? 1 : 0.6 }}
-            />
-          </div>
-        ))}
-      </div>
-      <div className="flex gap-[6px] mt-1">
-        {labels.map((l, i) => (
-          <div key={i} className="flex-1 text-center text-[7px] text-[var(--text-dim)]">{l}</div>
-        ))}
-      </div>
+    <div className="flex items-center justify-between gap-4 text-[13px] py-2 border-b border-[var(--border-subtle)] last:border-0">
+      <span className="text-[var(--text-muted)] uppercase tracking-[1px] shrink-0">{label}</span>
+      {value ? (
+        <a href={explorer('address', value)} target="_blank" rel="noopener noreferrer" className="font-mono text-[var(--text-primary)] hover:text-[var(--accent-green)] transition-colors truncate">
+          {value}
+        </a>
+      ) : (
+        <span className="text-[var(--text-secondary)]">NOT SET</span>
+      )}
     </div>
   );
 }
 
-export default function ValidatorDashboard() {
-  const [logs] = useState(generateValidationLog);
-  const [uptime, setUptime] = useState(99.97);
+export default function ProtocolStatusPage() {
+  const [status, setStatus] = useState<ProtocolStatus | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const id = setInterval(() => {
-      setUptime((p) => Math.max(99.9, Math.min(100, p + (Math.random() - 0.3) * 0.01)));
-    }, 5000);
-    return () => clearInterval(id);
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      setStatus(await loadStatus());
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to read the program');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  const value = (n: number | undefined) => (status ? String(n) : loading ? 'LOADING' : '—');
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-[24px] font-bold">VALIDATOR_DASHBOARD</h1>
-            <TruvaStatusPill variant="online" />
+            <h1 className="text-[24px] font-bold">PROTOCOL_STATUS</h1>
+            <TruvaStatusPill variant="live" label="DEVNET" />
           </div>
-          <p className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mt-1">NODE_001 · SOLANA_DEVNET · EPOCH_412</p>
+          <p className="text-[13px] uppercase tracking-[2px] text-[var(--text-secondary)] mt-1">
+            READ DIRECTLY FROM THE TRUSTGATE PROGRAM
+          </p>
         </div>
-        <TruvaButton variant="outlined" className="text-[12px]">VALIDATOR_SETTINGS</TruvaButton>
+        <TruvaButton variant="outlined" className="text-[12px]" onClick={load} disabled={loading}>
+          <RefreshCw size={12} className={loading ? 'animate-spin' : ''} /> REFRESH
+        </TruvaButton>
       </div>
 
-      {/* Stat Cards */}
+      {error && (
+        <div className="bg-[var(--bg-card)] border border-[var(--red)] rounded-[2px] p-4 mb-4 text-[13px] text-[var(--red)] font-mono">
+          {error}
+        </div>
+      )}
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <TruvaStatCard label="BLOCKS_VALIDATED" value="8,924" sub="THIS EPOCH" icon={<ShieldCheck size={16} className="text-[var(--accent-green)]" />} />
-        <TruvaStatCard label="REWARDS_EARNED" value="2,450 SOL" sub="↑ 12% vs LAST EPOCH" icon={<Award size={16} className="text-[var(--accent-green)]" />} />
-        <TruvaStatCard label="UPTIME" value={`${uptime.toFixed(2)}%`} sub="LAST 30 DAYS" icon={<TrendingUp size={16} className="text-[var(--accent-green)]" />} />
-        <TruvaStatCard label="STAKE_LOCKED" value="1.2M SOL" sub="UNTIL EPOCH 500" icon={<Zap size={16} className="text-[var(--accent-green)]" />} />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 mb-6">
-        {/* Validation Log */}
-        <TruvaTerminal
-          title="VALIDATION_LOG"
-          lines={logs}
-          showCursor
-          maxHeight="300px"
+        <TruvaStatCard label="AGENT_PASSPORTS" value={value(status?.passports)} sub="ON-CHAIN" icon={<Bot size={16} className="text-[var(--accent-green)]" />} />
+        <TruvaStatCard
+          label="TIERS"
+          value={status ? `${status.tiers.Gold} / ${status.tiers.Silver} / ${status.tiers.Bronze}` : value(undefined)}
+          sub="GOLD / SILVER / BRONZE"
+          icon={<ShieldCheck size={16} className="text-[var(--accent-green)]" />}
         />
-
-        {/* Reward Trajectory */}
-        <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-5">
-          <h3 className="text-[13px] uppercase tracking-[2px] font-bold mb-4">REWARD_TRAJECTORY</h3>
-          <RewardChart />
-          <div className="flex justify-between text-[13px] mt-3 pt-3 border-t border-[var(--border-subtle)]">
-            <span className="text-[var(--text-muted)]">12-EPOCH TREND</span>
-            <span className="text-[var(--accent-green)] font-bold">↑ 38.4%</span>
-          </div>
-        </div>
+        <TruvaStatCard label="FROZEN_PASSPORTS" value={value(status?.frozen)} sub="BLOCKED FROM PAYING" icon={<ShieldAlert size={16} className="text-[var(--red)]" />} />
+        <TruvaStatCard label="AGENT_VAULTS" value={value(status?.vaults)} sub={status ? `${status.pausedVaults} PAUSED` : ''} icon={<Vault size={16} className="text-[var(--accent-green)]" />} />
       </div>
 
-      {/* System Telemetry + Alerts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-5">
-          <h3 className="text-[13px] uppercase tracking-[2px] font-bold mb-4">SYSTEM_TELEMETRY</h3>
-          <div className="space-y-3">
-            {[
-              { label: 'CPU_USAGE', value: 34, icon: <Cpu size={14} />, color: 'var(--accent-green)' },
-              { label: 'MEMORY', value: 62, icon: <Server size={14} />, color: 'var(--accent-green)' },
-              { label: 'DISK_I/O', value: 18, icon: <HardDrive size={14} />, color: 'var(--accent-green)' },
-              { label: 'NETWORK_BW', value: 45, icon: <Zap size={14} />, color: 'var(--accent-green)' },
-            ].map((m) => (
-              <div key={m.label}>
-                <div className="flex items-center justify-between text-[13px] mb-1">
-                  <div className="flex items-center gap-2 text-[var(--text-secondary)]">
-                    <span className="text-[var(--text-muted)]">{m.icon}</span>
-                    {m.label}
-                  </div>
-                  <span style={{ color: m.color }}>{m.value}%</span>
+          <h3 className="text-[13px] uppercase tracking-[2px] font-bold mb-3">PROGRAM</h3>
+          <AddressRow label="PROGRAM_ID" value={TRUSTGATE_PROGRAM_ID.toBase58()} />
+          <AddressRow label="UPGRADE_AUTHORITY" value={status?.upgradeAuthority ?? null} />
+          <AddressRow label="CONFIG_ADMIN" value={status?.admin ?? null} />
+          <AddressRow label="SCORER" value={status?.scorer ?? null} />
+          <div className="flex items-center justify-between gap-4 text-[13px] py-2">
+            <span className="text-[var(--text-muted)] uppercase tracking-[1px]">LAST_DEPLOYED_SLOT</span>
+            <span className="font-mono">{status?.deployedSlot?.toLocaleString('en-US') ?? '—'}</span>
+          </div>
+          <p className="text-[12px] text-[var(--text-muted)] leading-relaxed mt-3">
+            The scorer is the only key whose trust scores the program accepts. The admin can rotate it.
+          </p>
+        </div>
+
+        <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-5">
+          <h3 className="text-[13px] uppercase tracking-[2px] font-bold mb-3">RECENT_PROGRAM_TRANSACTIONS</h3>
+          {!status || status.recent.length === 0 ? (
+            <div className="text-[12px] text-[var(--text-secondary)]">{loading ? 'LOADING...' : 'NONE'}</div>
+          ) : (
+            <div className="space-y-1.5">
+              {status.recent.map((tx) => (
+                <div key={tx.signature} className="flex items-center justify-between gap-3 text-[12px]">
+                  <a href={explorer('tx', tx.signature)} target="_blank" rel="noopener noreferrer" className="font-mono text-[var(--text-primary)] hover:text-[var(--accent-green)] transition-colors">
+                    {short(tx.signature)}
+                  </a>
+                  <span className="text-[var(--text-muted)]">
+                    {tx.blockTime ? new Date(tx.blockTime * 1000).toISOString().replace('T', ' ').substring(0, 19) : ''}
+                  </span>
+                  <TruvaStatusPill variant={tx.err ? 'rejected' : 'passed'} label={tx.err ? 'FAILED' : 'CONFIRMED'} />
                 </div>
-                <TruvaProgressBar value={m.value} color={m.color} />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          {/* Alert 1 */}
-          <div className="bg-[var(--bg-card)] border border-[var(--accent-green)] rounded-[2px] p-4">
-            <div className="flex items-start gap-3">
-              <ShieldCheck size={18} className="text-[var(--accent-green)] mt-0.5 shrink-0" />
-              <div>
-                <div className="text-[13px] font-bold text-[var(--accent-green)]">ALL SYSTEMS NOMINAL</div>
-                <p className="text-[13px] text-[var(--text-secondary)] mt-1">
-                  Validator node operating within normal parameters. No anomalies detected in the last 24 hours.
-                </p>
-              </div>
+              ))}
             </div>
-          </div>
-          {/* Alert 2 */}
-          <div className="bg-[var(--bg-card)] border border-[var(--amber)] rounded-[2px] p-4">
-            <div className="flex items-start gap-3">
-              <AlertTriangle size={18} className="text-[var(--amber)] mt-0.5 shrink-0" />
-              <div>
-                <div className="text-[13px] font-bold text-[var(--amber)]">EPOCH TRANSITION PENDING</div>
-                <p className="text-[13px] text-[var(--text-secondary)] mt-1">
-                  Epoch 413 begins in ~2h 14m. Ensure stake delegation is confirmed before transition.
-                </p>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
-      </div>
-
-      {/* Feature cards */}
-      <div className="grid grid-cols-3 gap-4">
-        {[
-          { title: 'ZK_PROOF_ENGINE', desc: 'Zero-knowledge proof generation for transaction privacy and compliance verification.', icon: <ShieldCheck size={18} /> },
-          { title: 'CONSENSUS_MODULE', desc: 'Byzantine fault-tolerant consensus with sub-second finality guarantees.', icon: <Server size={18} /> },
-          { title: 'REWARD_OPTIMIZER', desc: 'Automated stake rebalancing for maximum yield across validation epochs.', icon: <TrendingUp size={18} /> },
-        ].map((f) => (
-          <div key={f.title} className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-5">
-            <div className="text-[var(--accent-green)] mb-3">{f.icon}</div>
-            <h4 className="text-[12px] font-bold mb-2">{f.title}</h4>
-            <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed">{f.desc}</p>
-          </div>
-        ))}
       </div>
     </div>
   );

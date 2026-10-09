@@ -23,7 +23,7 @@ const navGroups: { section: string; items: NavItem[] }[] = [
     items: [
       { label: 'TrustGate Logs',href: '/trustgate-logs', icon: <Activity size={15} /> },
       { label: 'Reputation',    href: '/reputation',     icon: <Shield size={15} /> },
-      { label: 'Validator',     href: '/validator',      icon: <Key size={15} /> },
+      { label: 'Protocol Status', href: '/validator',    icon: <Key size={15} /> },
     ],
   },
   {
@@ -54,7 +54,7 @@ export function ShellASidebar() {
             <Server size={16} className="text-[var(--accent-green)]" />
           </div>
           <div className="min-w-0">
-            <div className="text-[12px] text-[var(--text-primary)] font-bold tracking-wide">NODE_001</div>
+            <div className="text-[12px] text-[var(--text-primary)] font-bold tracking-wide">TRUSTGATE</div>
             <div className="flex items-center gap-1.5 mt-0.5">
               <TruvaPulsingDot size={4} />
               <span className="text-[11px] text-[var(--accent-green)] tracking-widest">SOLANA_DEVNET</span>

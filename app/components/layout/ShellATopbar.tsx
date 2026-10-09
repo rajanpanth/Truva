@@ -9,7 +9,7 @@ import { TruvaButton } from '@/components/ui/truva';
 const navItems = [
   { label: 'REGISTRY',  href: '/registry' },
   { label: 'REPUTATION', href: '/reputation' },
-  { label: 'VALIDATOR',  href: '/validator' },
+  { label: 'STATUS',     href: '/validator' },
   { label: 'SDK_DOCS',   href: '/sdk-docs' },
 ];
 
@@ -18,29 +18,30 @@ const SDK_STEPS = [
     step: '01',
     title: 'Install the SDK',
     lang: 'bash',
-    code: `npm install @truva-protocol/sdk`,
+    code: `npm install @truva-protocol/sdk @solana/web3.js`,
   },
   {
     step: '02',
     title: 'Initialize Client',
     lang: 'typescript',
-    code: `import { TruvaSDK } from 'truva-sdk';
+    code: `import { Connection, PublicKey } from '@solana/web3.js';
+import { TruvaClient } from '@truva-protocol/sdk';
 
-const truva = new TruvaSDK({
-  rpcUrl: 'https://api.devnet.solana.com',
-  apiUrl: 'https://api.truva.xyz',
-});`,
+const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
+const truva = new TruvaClient(connection);
+
+const agentPubkey = new PublicKey('YOUR_AGENT_PUBKEY');`,
   },
   {
     step: '03',
     title: 'Gate a Payment by Trust Tier',
     lang: 'typescript',
-    code: `import { TruvaError } from 'truva-sdk';
+    code: `import { TruvaError } from '@truva-protocol/sdk';
 
 try {
   // Throws if agent is below Gold tier or frozen
   await truva.requireTrustTier('Gold', agentPubkey);
-  // \u2705 Safe to proceed with payment
+  // ✅ Safe to proceed with payment
 } catch (err) {
   if (err instanceof TruvaError) {
     console.log(\`Blocked: \${err.currentTier} < Gold\`);
@@ -55,17 +56,45 @@ try {
 
 console.log(score.tier);       // 'Gold'
 console.log(score.score);      // 87
-console.log(score.frozen);     // false`,
+console.log(score.frozen);     // false
+console.log(score.trusted);    // true`,
   },
   {
     step: '05',
+    title: 'Agent Vault + x402 Paywall',
+    lang: 'typescript',
+    code: `import {
+  createVaultIx, truvaPaywall, fetchWithVault,
+} from '@truva-protocol/sdk';
+
+// Owner: 1 USDC per payment, 20 USDC per day
+const ix = createVaultIx(owner, agentPubkey, USDC_MINT, {
+  perTxLimit: 1_000_000n,
+  dailyLimit: 20_000_000n,
+  allowlist: [sellerWallet],
+});
+
+// Seller: charge 1 USDC per request (Express)
+app.get('/report', truvaPaywall({
+  connection, payTo: sellerWallet, mint: USDC_MINT,
+  amount: 1_000_000, minTier: 'Silver',
+}), handler);
+
+// Agent: pay the 402 from its vault and retry
+const res = await fetchWithVault(url, undefined, {
+  connection, agent: agentKeypair, vaultOwner: owner,
+  maxAmount: 1_000_000, mint: USDC_MINT,
+});`,
+  },
+  {
+    step: '06',
     title: 'Eliza / LangChain Integration',
     lang: 'typescript',
     code: `// Eliza OS plugin
-import { truvaPlugin } from 'truva-sdk/eliza';
+import { truvaPlugin } from '@truva-protocol/sdk/eliza';
 
 // LangChain tool
-import { createTruvaTool } from 'truva-sdk/langchain';
+import { createTruvaTool } from '@truva-protocol/sdk/langchain';
 const tool = createTruvaTool(truva);`,
   },
 ];

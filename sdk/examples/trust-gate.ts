@@ -1,5 +1,5 @@
 /**
- * Trust-Gate Demo — @truva/sdk
+ * Trust-Gate Demo — @truva-protocol/sdk
  *
  * Shows the complete flow: register → score → gate payment
  *

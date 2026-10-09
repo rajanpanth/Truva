@@ -8,7 +8,7 @@ import { PublicKey } from "@solana/web3.js";
  *
  * ```ts
  * process.env.TRUVA_PROGRAM_ID = "<your-program-id>";
- * import { TruvaClient } from "@truva/sdk";
+ * import { TruvaClient } from "@truva-protocol/sdk";
  * ```
  *
  * @see https://explorer.solana.com/address/BTgy2r8R85Jknq3JetNiVt1x9grdccm7pTV2LyUmDzG5?cluster=devnet

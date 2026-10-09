@@ -3,16 +3,18 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { PublicKey, Transaction, type ConfirmedSignatureInfo } from '@solana/web3.js';
-import { Vault, Lock, PauseCircle, PlayCircle, RefreshCw, ShieldAlert, Wallet } from 'lucide-react';
+import { Vault, Lock, PauseCircle, PlayCircle, Plus, RefreshCw, ShieldAlert, Wallet, X } from 'lucide-react';
 import {
   TruvaBadge, TruvaButton, TruvaInput, TruvaProgressBar, TruvaStatCard, TruvaStatusPill,
 } from '@/components/ui/truva';
 import { WalletConnectButton } from '@/components/shared/WalletConnectButton';
+import { CreateVaultForm } from '@/components/vaults/CreateVaultForm';
 import { TRUSTGATE_PROGRAM_ID, getPassportPDA } from '@/lib/solana';
 import {
-  VAULT_ACCOUNT_SIZE, VAULT_OWNER_OFFSET, deriveVaultTokenAccount, formatUnits, parsePassportAccount,
-  parseUnits, parseVaultAccount, setVaultPausedIx, spentToday, updateVaultLimitsIx,
-  type PassportData, type VaultData,
+  VAULT_ACCOUNT_SIZE, VAULT_OWNER_OFFSET, depositIx, deriveVaultTokenAccount, formatUnits, parsePassportAccount,
+  parseUnits, parseVaultAccount, setVaultPausedIx, simulateVaultPayment, spentToday, tokenSymbol,
+  updateVaultLimitsIx, withdrawIx,
+  type PassportData, type PaymentVerdict, type VaultData,
 } from '@/lib/solana/vault';
 
 const MAX_VAULTS = 12;
@@ -65,6 +67,8 @@ export default function VaultsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [onlyMine, setOnlyMine] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [createdSig, setCreatedSig] = useState<string | null>(null);
   const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
 
   const load = useCallback(async () => {
@@ -129,12 +133,39 @@ export default function VaultsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
+          <TruvaButton variant="primary" className="text-[12px]" onClick={() => setCreating((c) => !c)}>
+            {creating ? <X size={12} /> : <Plus size={12} />} {creating ? 'CLOSE' : 'NEW_VAULT'}
+          </TruvaButton>
           <TruvaButton variant="outlined" className="text-[12px]" onClick={load} disabled={loading}>
             <RefreshCw size={12} className={loading ? 'animate-spin' : ''} /> REFRESH
           </TruvaButton>
           <WalletConnectButton />
         </div>
       </div>
+
+      {creating && (
+        <div className="bg-[var(--bg-card)] border border-[var(--accent-green)] rounded-[2px] p-6 mb-6">
+          <h2 className="text-[14px] uppercase tracking-[3px] font-bold border-b border-[var(--border-subtle)] pb-3 mb-4">
+            CREATE_AGENT_VAULT
+          </h2>
+          <CreateVaultForm
+            onCreated={(created) => {
+              setCreatedSig(created.signature);
+              setCreating(false);
+              load();
+            }}
+          />
+        </div>
+      )}
+
+      {createdSig && (
+        <div className="bg-[var(--bg-card)] border border-[var(--accent-green)] rounded-[2px] p-4 mb-6 text-[13px] flex flex-wrap items-center justify-between gap-3">
+          <span className="text-[var(--accent-green)] font-bold tracking-widest">VAULT_CREATED</span>
+          <a href={explorer('tx', createdSig)} target="_blank" rel="noopener noreferrer" className="text-[12px] text-[var(--accent-green)] underline font-mono">
+            VIEW TX ON EXPLORER ↗
+          </a>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <TruvaStatCard label="VAULTS" value={loading ? 'LOADING' : vaults.length.toString()} sub="ON PROGRAM" icon={<Vault size={16} className="text-[var(--accent-green)]" />} />
@@ -212,11 +243,58 @@ function VaultCard({ vault, now, isOwner, onSend }: {
   onSend: (tx: Transaction) => Promise<string>;
 }) {
   const { data, passport, balance, decimals, recent } = vault;
-  const fmt = (amount: bigint) => formatUnits(amount, decimals);
+  const { connection } = useConnection();
+  const symbol = tokenSymbol(data.mint);
+  const fmt = (amount: bigint) => formatUnits(amount, decimals) + (symbol ? ` ${symbol}` : '');
+  const plain = (amount: bigint) => formatUnits(amount, decimals);
 
   const [editing, setEditing] = useState(false);
-  const [perTx, setPerTx] = useState(fmt(data.perTxLimit));
-  const [daily, setDaily] = useState(fmt(data.dailyLimit));
+  const [perTx, setPerTx] = useState(plain(data.perTxLimit));
+  const [daily, setDaily] = useState(plain(data.dailyLimit));
+  const [funds, setFunds] = useState('');
+
+  // "Would this payment go through?" — simulated against the live program
+  const [payAmount, setPayAmount] = useState(plain(data.perTxLimit));
+  const [payTo, setPayTo] = useState(data.allowlist[0]?.toBase58() ?? '');
+  const [checking, setChecking] = useState(false);
+  const [verdict, setVerdict] = useState<PaymentVerdict | null>(null);
+
+  const checkPayment = async () => {
+    setVerdict(null);
+    const amount = parseUnits(payAmount, decimals);
+    let recipient: PublicKey;
+    try {
+      recipient = new PublicKey(payTo.trim());
+    } catch {
+      setVerdict({ allowed: false, code: 'InvalidRecipient', reason: 'Recipient is not a valid Solana address.' });
+      return;
+    }
+    if (amount === null) {
+      setVerdict({ allowed: false, code: 'InvalidAmount', reason: 'Enter the amount as a number, e.g. 1.50' });
+      return;
+    }
+    setChecking(true);
+    try {
+      setVerdict(await simulateVaultPayment(connection, data, recipient, amount));
+    } catch (e) {
+      setVerdict({ allowed: false, code: 'SimulationFailed', reason: e instanceof Error ? e.message : 'Simulation failed' });
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  const moveFunds = (direction: 'deposit' | 'withdraw') => {
+    const amount = parseUnits(funds, decimals);
+    if (amount === null || amount === BigInt(0)) {
+      setTxError('Enter the amount as a number, e.g. 5');
+      return;
+    }
+    run(() => new Transaction().add(
+      direction === 'deposit'
+        ? depositIx(data.owner, vault.address, data.mint, amount, decimals)
+        : withdrawIx(data, amount)
+    ));
+  };
   const [busy, setBusy] = useState(false);
   const [txError, setTxError] = useState<string | null>(null);
   const [lastSig, setLastSig] = useState<string | null>(null);
@@ -332,8 +410,38 @@ function VaultCard({ vault, now, isOwner, onSend }: {
         )}
       </div>
 
+      <div className="bg-[var(--bg-elevated)] border border-[var(--border-subtle)] rounded-[2px] p-4 space-y-3">
+        <div>
+          <div className="text-[12px] uppercase tracking-[2px] text-[var(--text-muted)]">TEST_A_PAYMENT</div>
+          <div className="text-[12px] text-[var(--text-secondary)] mt-1">
+            Simulated against the live program. Nothing is signed or sent.
+          </div>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-[110px_1fr_auto] gap-2 items-end">
+          <TruvaInput label="AMOUNT" value={payAmount} onChange={(e) => setPayAmount(e.target.value)} />
+          <TruvaInput label="RECIPIENT" placeholder="Recipient address" value={payTo} onChange={(e) => setPayTo(e.target.value)} />
+          <TruvaButton variant="outlined" className="text-[12px] h-[41px]" disabled={checking} onClick={checkPayment}>
+            {checking ? 'CHECKING...' : 'CHECK'}
+          </TruvaButton>
+        </div>
+        {verdict && (
+          <div className="flex items-start gap-3 text-[12px]">
+            <TruvaStatusPill variant={verdict.allowed ? 'passed' : 'blocked'} label={verdict.allowed ? 'ALLOWED' : 'BLOCKED'} />
+            <div className="min-w-0">
+              {verdict.code && <div className="font-mono font-bold text-[var(--red)]">{verdict.code}</div>}
+              <div className="text-[var(--text-secondary)] break-words">{verdict.reason}</div>
+            </div>
+          </div>
+        )}
+      </div>
+
       {isOwner ? (
         <div className="border-t border-[var(--border-subtle)] pt-4 space-y-3">
+          <div className="grid grid-cols-[1fr_auto_auto] gap-2 items-end">
+            <TruvaInput label="DEPOSIT_OR_WITHDRAW" placeholder="Amount" value={funds} onChange={(e) => setFunds(e.target.value)} />
+            <TruvaButton variant="outlined" className="text-[12px] h-[41px]" disabled={busy} onClick={() => moveFunds('deposit')}>DEPOSIT</TruvaButton>
+            <TruvaButton variant="ghost" className="text-[12px] h-[41px]" disabled={busy} onClick={() => moveFunds('withdraw')}>WITHDRAW</TruvaButton>
+          </div>
           {editing && (
             <div className="grid grid-cols-2 gap-3">
               <TruvaInput label="PER_PAYMENT_LIMIT" value={perTx} onChange={(e) => setPerTx(e.target.value)} />

@@ -34,6 +34,17 @@ export const registerAgentStep2Schema = z.object({
 
 export const registerAgentFullSchema = registerAgentStep1Schema.merge(registerAgentStep2Schema);
 
+/**
+ * Wallet-signature proof required by POST /api/agents.
+ * See lib/auth/registerMessage.ts for the canonical message and encodings.
+ */
+export const registerAuthSchema = z.object({
+  wallet: z.string().regex(base58Regex, 'wallet must be a base58 Solana address'),
+  signature: z.string().min(1, 'signature is required').max(128),
+  timestamp: z.string().min(1, 'timestamp is required').max(40),
+});
+
+export type RegisterAuthData = z.infer<typeof registerAuthSchema>;
 export type RegisterStep1Data = z.infer<typeof registerAgentStep1Schema>;
 export type RegisterStep2Data = z.infer<typeof registerAgentStep2Schema>;
 export type RegisterAgentData = z.infer<typeof registerAgentFullSchema>;

@@ -10,6 +10,9 @@
  *   SOLANA_RPC_URL   RPC endpoint            (default http://127.0.0.1:8899)
  *   WALLET           funding wallet keypair  (default ~/.config/solana/id.json)
  *   SCORER_KEYPAIR   protocol scorer keypair (default: WALLET)
+ *   DEMO_MINT        pay in an existing 6-decimal token instead of a fresh demo
+ *                    token, e.g. devnet USDC 4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU
+ *                    (the wallet must already hold at least 10 of it)
  *
  * The wallet pays for setup and acts as vault owner. If the protocol config
  * does not exist yet, the wallet must be the program's upgrade authority.
@@ -29,6 +32,7 @@ import {
 import {
   createMint,
   getAccount,
+  getMint,
   getOrCreateAssociatedTokenAccount,
   mintTo,
   transfer,
@@ -56,12 +60,16 @@ const RPC_URL = process.env.SOLANA_RPC_URL || "http://127.0.0.1:8899";
 const WALLET_PATH = process.env.WALLET || path.join(os.homedir(), ".config", "solana", "id.json");
 const UNIT = 1_000_000; // demo token has 6 decimals, like USDC
 const PRICE = 1 * UNIT;
+const VAULT_FUNDING = 10 * UNIT;
+const DEVNET_USDC = "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU";
+const DEMO_MINT = process.env.DEMO_MINT;
+const SYMBOL = DEMO_MINT === DEVNET_USDC ? "USDC" : DEMO_MINT ? "tokens" : "dUSD";
 
 const loadKeypair = (file: string) =>
   Keypair.fromSecretKey(Uint8Array.from(JSON.parse(fs.readFileSync(file, "utf-8"))));
 
 const step = (n: number, text: string) => console.log(`\n[${n}] ${text}`);
-const usd = (base: number | bigint) => `${(Number(base) / UNIT).toFixed(2)} dUSD`;
+const usd = (base: number | bigint) => `${(Number(base) / UNIT).toFixed(2)} ${SYMBOL}`;
 
 async function main() {
   const connection = new Connection(RPC_URL, "confirmed");
@@ -127,17 +135,28 @@ async function main() {
     ),
     [wallet]
   );
-  const mint = await createMint(connection, wallet, wallet.publicKey, null, 6);
-  const ownerToken = (
-    await getOrCreateAssociatedTokenAccount(connection, wallet, mint, owner.publicKey)
-  ).address;
+  const mint = DEMO_MINT
+    ? new PublicKey(DEMO_MINT)
+    : await createMint(connection, wallet, wallet.publicKey, null, 6);
+  const ownerAccount = await getOrCreateAssociatedTokenAccount(connection, wallet, mint, owner.publicKey);
+  const ownerToken = ownerAccount.address;
+  if (DEMO_MINT) {
+    if ((await getMint(connection, mint)).decimals !== 6) {
+      throw new Error("DEMO_MINT must be a 6-decimal token");
+    }
+    if (ownerAccount.amount < BigInt(VAULT_FUNDING)) {
+      throw new Error(
+        `The wallet holds ${usd(ownerAccount.amount)}; it needs ${usd(VAULT_FUNDING)} to fund the vault`
+      );
+    }
+  }
   const sellerToken = (
     await getOrCreateAssociatedTokenAccount(connection, wallet, mint, seller.publicKey)
   ).address;
-  await mintTo(connection, wallet, mint, ownerToken, wallet, 100 * UNIT);
+  if (!DEMO_MINT) await mintTo(connection, wallet, mint, ownerToken, wallet, 100 * UNIT);
   console.log(`    agent:  ${agent.publicKey.toBase58()}`);
   console.log(`    seller: ${seller.publicKey.toBase58()}`);
-  console.log(`    token:  ${mint.toBase58()} (demo USD, 6 decimals)`);
+  console.log(`    token:  ${mint.toBase58()} (${DEMO_MINT ? SYMBOL : "demo USD"}, 6 decimals)`);
 
   step(3, "Agent passport: created by the agent, scored Silver by the protocol scorer");
   await sendAndConfirmTransaction(
@@ -168,9 +187,9 @@ async function main() {
   );
   const [vault] = deriveVaultPDA(owner.publicKey, agent.publicKey, mint);
   await transfer(
-    connection, owner, ownerToken, deriveAssociatedTokenAddress(mint, vault), owner, 10 * UNIT
+    connection, owner, ownerToken, deriveAssociatedTokenAddress(mint, vault), owner, VAULT_FUNDING
   );
-  console.log(`    vault ${vault.toBase58()} funded with ${usd(10 * UNIT)}`);
+  console.log(`    vault ${vault.toBase58()} funded with ${usd(VAULT_FUNDING)}`);
 
   step(5, "Seller starts a paywalled API: /report costs 1.00, /premium costs 1.00 and needs Gold");
   const paywall = (minTier: "Bronze" | "Gold") =>
@@ -256,6 +275,14 @@ async function main() {
     .signers([scorer])
     .rpc();
   await buy("/report");
+
+  step(12, "The scorer lifts the freeze, leaving the vault usable for the web app");
+  await program.methods
+    .unfreezePassport()
+    .accounts({ passport: passportPda, authority: scorer.publicKey })
+    .signers([scorer])
+    .rpc();
+  console.log(`    passport frozen: ${(await truva.getAgentScore(agent.publicKey)).frozen}`);
 
   // ── Result ──
 

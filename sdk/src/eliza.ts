@@ -5,7 +5,7 @@
  *
  * @example
  * ```ts
- * import { truvaPlugin } from "@truva/sdk/eliza";
+ * import { truvaPlugin } from "@truva-protocol/sdk/eliza";
  *
  * const runtime = new AgentRuntime({ plugins: [truvaPlugin] });
  * ```

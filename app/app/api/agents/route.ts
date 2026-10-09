@@ -4,12 +4,9 @@ import { withRateLimit } from '@/backend/middleware/auth';
 
 export const dynamic = 'force-dynamic';
 import { agentQuerySchema } from '@/backend/validators/agentSchema';
-import { registerAgentFullSchema } from '@/backend/validators/registerSchema';
-function generateSimulatedPDA(agentName: string): string {
-  const timestamp = Date.now().toString(36);
-  const random = Math.random().toString(36).substring(2, 10);
-  return `PDA_${agentName.replace(/[^a-zA-Z0-9]/g, '').slice(0, 8)}_${timestamp}_${random}`;
-}
+import { registerAgentFullSchema, registerAuthSchema } from '@/backend/validators/registerSchema';
+import { verifyRegisterSignature } from '@/backend/auth/verifyRegisterSignature';
+import { deriveAgentPDA } from '@/lib/solana/pda';
 import { toPublicAgent, type Agent } from '@/backend/types/agent';
 
 export async function GET(request: NextRequest) {
@@ -69,8 +66,27 @@ export async function POST(request: NextRequest) {
   if (rateLimited) return rateLimited;
 
   try {
-    const supabase = createServerClient();
-    const body: unknown = await request.json();
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json({ error: 'Request body must be valid JSON' }, { status: 400 });
+    }
+
+    // Registration must be authorised by a wallet signature over the canonical
+    // message (see lib/auth/registerMessage.ts): wallet = base58 address,
+    // signature = base64 ed25519 signature, timestamp = ISO-8601 UTC.
+    const auth = registerAuthSchema.safeParse(body);
+    if (!auth.success) {
+      return NextResponse.json(
+        {
+          error:
+            'Wallet signature required: provide wallet (base58), signature (base64) and timestamp (ISO-8601) for the signed registration message.',
+          details: auth.error.flatten(),
+        },
+        { status: 401 }
+      );
+    }
 
     const parsed = registerAgentFullSchema.safeParse(body);
 
@@ -82,13 +98,31 @@ export async function POST(request: NextRequest) {
     }
 
     const input = parsed.data;
+
+    const verified = verifyRegisterSignature({
+      publicKey: input.public_key,
+      wallet: auth.data.wallet,
+      signature: auth.data.signature,
+      timestamp: auth.data.timestamp,
+    });
+    if (!verified.ok) {
+      return NextResponse.json({ error: verified.error }, { status: 401 });
+    }
+
+    const supabase = createServerClient();
     const rawBody = body as Record<string, unknown>;
     const txSignature = typeof rawBody.tx_signature === 'string' ? rawBody.tx_signature : null;
-    const pdaAddress = generateSimulatedPDA(input.name);
-    const parsedMetadata = input.metadata && input.metadata.trim() !== ''
+    const pdaAddress = deriveAgentPDA(input.public_key);
+    const rawMetadata: unknown = input.metadata && input.metadata.trim() !== ''
       ? JSON.parse(input.metadata)
       : {};
+    const parsedMetadata: Record<string, unknown> =
+      rawMetadata !== null && typeof rawMetadata === 'object' && !Array.isArray(rawMetadata)
+        ? { ...(rawMetadata as Record<string, unknown>) }
+        : {};
     if (txSignature) parsedMetadata.tx_signature = txSignature;
+    // Always server-set: the wallet that proved control by signing. Never trust a client-supplied value.
+    parsedMetadata.registered_by = auth.data.wallet;
 
     const agentRow = {
       name: input.name,

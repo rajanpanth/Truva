@@ -16,13 +16,11 @@ npm install @truva-protocol/sdk
 ## Quick Start
 
 ```typescript
-import { TruvaClient } from 'truva-sdk';
+import { TruvaClient } from '@truva-protocol/sdk';
 import { Connection, PublicKey } from '@solana/web3.js';
 
 const connection = new Connection('https://api.devnet.solana.com');
-const truva = new TruvaClient(connection, {
-  apiUrl: 'https://truva.vercel.app',
-});
+const truva = new TruvaClient(connection);
 
 const agentKey = new PublicKey('YOUR_AGENT_PUBKEY');
 
@@ -35,7 +33,7 @@ await truva.requireTrustTier('Gold', agentKey);
 Register an AI agent with the Truva Protocol programmatically:
 
 ```typescript
-import { TruvaClient } from 'truva-sdk';
+import { TruvaClient } from '@truva-protocol/sdk';
 import { Connection, Keypair } from '@solana/web3.js';
 
 const connection = new Connection('https://api.devnet.solana.com');
@@ -117,7 +115,7 @@ const state = await truva.getVault(owner, agent, USDC_MINT);
 
 Builders return plain `TransactionInstruction`s. Vaults hold classic SPL tokens (not Token-2022).
 
-## x402-style Paywall
+## x402 Paywall
 
 Seller (Express or Node `http`). Each request costs `amount`; the middleware answers 402, verifies the agent's `vault_pay` transaction, submits it and calls `next()` once it is confirmed:
 
@@ -136,14 +134,96 @@ import { fetchWithVault, PaymentRejectedError } from "@truva-protocol/sdk";
 
 try {
   const res = await fetchWithVault(url, undefined, {
-    connection, agent: agentKeypair, vaultOwner: owner, maxAmount: 1_000_000,
+    connection, agent: agentKeypair, vaultOwner: owner, maxAmount: 1_000_000, mint: USDC_MINT,
   });
 } catch (err) {
   if (err instanceof PaymentRejectedError) console.log(err.reason); // e.g. "ExceedsDailyLimit"
 }
 ```
 
-The scheme name is `truva-vault`. It uses the x402 handshake but is not the stock `exact` scheme, and the seller settles the transaction itself rather than through a facilitator.
+`fetchWithVault` only signs for the TrustGate program. Pass `programId` if you run your own deployment.
+
+### x402 compatibility
+
+The messages follow the [x402 specification](https://github.com/coinbase/x402/tree/main/specs) (v1 and v2 HTTP transports). The payment scheme does not: it is `truva-vault`, not x402's `exact`.
+
+What the paywall sends for an unpaid request, HTTP 402:
+
+```jsonc
+// Body: x402 v1 PaymentRequirementsResponse
+{
+  "x402Version": 1,
+  "error": "X-PAYMENT header is required",
+  "accepts": [{
+    "scheme": "truva-vault",
+    "network": "solana-devnet",
+    "maxAmountRequired": "1000000",
+    "asset": "<token mint>",
+    "payTo": "<seller wallet>",
+    "resource": "https://api.example.com/report",
+    "description": "",
+    "mimeType": "",
+    "maxTimeoutSeconds": 60,
+    "extra": { "programId": "<TrustGate program>", "minTier": "Silver" }
+  }]
+}
+
+// Header PAYMENT-REQUIRED: base64 of the x402 v2 PaymentRequired object
+{
+  "x402Version": 2,
+  "error": "X-PAYMENT header is required",
+  "resource": { "url": "https://api.example.com/report" },
+  "accepts": [{
+    "scheme": "truva-vault",
+    "network": "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1",
+    "amount": "1000000",
+    "asset": "<token mint>",
+    "payTo": "<seller wallet>",
+    "maxTimeoutSeconds": 60,
+    "extra": { "programId": "<TrustGate program>", "minTier": "Silver" }
+  }]
+}
+```
+
+What the agent sends back, base64 JSON in one header:
+
+```jsonc
+// X-PAYMENT (x402 v1)
+{ "x402Version": 1, "scheme": "truva-vault", "network": "solana-devnet",
+  "payload": { "transaction": "<base64 signed transaction>" } }
+
+// PAYMENT-SIGNATURE (x402 v2)
+{ "x402Version": 2, "resource": { "url": "..." }, "accepted": { /* the v2 requirement above */ },
+  "payload": { "transaction": "<base64 signed transaction>" } }
+```
+
+The receipt comes back as base64 JSON in `X-PAYMENT-RESPONSE` (v1 request) or `PAYMENT-RESPONSE` (v2 request):
+
+```json
+{ "success": true, "transaction": "<signature>", "network": "solana-devnet",
+  "payer": "<agent>", "amount": "1000000", "signature": "<signature>" }
+```
+
+| | |
+|---|---|
+| 402 body | x402 v1 layout, all required fields present |
+| `PAYMENT-REQUIRED` header | x402 v2 layout. Sent only when the network has a CAIP-2 id (`solana`, `solana-devnet`, `solana-testnet`, or an id you pass yourself) |
+| Payment header | `X-PAYMENT` (v1) and `PAYMENT-SIGNATURE` (v2) are both accepted |
+| Receipt | x402 `SettlementResponse` fields, plus `amount` and a duplicate `signature` field |
+| Refused payment | 402 with the reason in the body's `error`, and a receipt header with `success: false` and `errorReason` |
+| Other schemes in `accepts` | `fetchWithVault` skips them and skips malformed entries |
+
+What is not standard:
+
+- **The scheme.** A stock x402 client (`@x402/fetch`, `x402-fetch`, `x402-axios`, ...) can parse the 402 response, but it only knows the `exact` scheme, so it cannot pay a `truva-vault` requirement. Paying needs this SDK (`fetchWithVault` or `createVaultPayment`). The published v1 TypeScript client (`x402`) validates `scheme` against a fixed list and rejects the whole response rather than skipping the entry.
+- **No facilitator.** The seller verifies and submits the transaction itself. `/verify`, `/settle` and `/supported` are not implemented, and no public facilitator supports `truva-vault`.
+- **The payer pays the fee.** The agent is fee payer and sends a fully signed legacy transaction. In `exact` on Solana the facilitator is fee payer (`extra.feePayer`) and the transaction is partially signed and versioned.
+- **`errorReason`** is a Truva program error name or a sentence (e.g. `ExceedsDailyLimit`), not one of x402's error codes.
+- **`fetchWithVault` cannot pay `exact`.** It throws `PaymentRejectedError` when a server offers no `truva-vault` requirement.
+- **Not implemented:** x402 extensions, `outputSchema`, discovery (Bazaar), and the MCP and A2A transports.
+- **Browsers.** The paywall does not set `Access-Control-Expose-Headers`. Add `PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE` to it in your CORS setup if browser code needs those headers.
+
+Helpers for building or reading the messages yourself: `buildPaymentRequired`, `buildPaymentRequiredV2`, `selectVaultRequirements`, `encodePaymentPayload`, `decodePaymentPayload`, `decodeSettlementResponse`, `toCaip2Network`, `X402_HEADERS`.
 
 ## elizaOS Plugin
 
@@ -153,7 +233,7 @@ Drop the plugin into any elizaOS `AgentRuntime`. It adds two capabilities:
 - **`TRUVA_TRUST_STATUS`** provider — injects live score + tier into context window
 
 ```typescript
-import { truvaPlugin } from 'truva-sdk/eliza';
+import { truvaPlugin } from '@truva-protocol/sdk/eliza';
 import { AgentRuntime } from '@elizaos/core';
 
 const runtime = new AgentRuntime({
@@ -171,7 +251,7 @@ The plugin reads `SOLANA_RPC_URL` from `runtime.getSetting()`. Set it via your e
 Works with any LangChain agent (GPT-4, Claude, Gemini).
 
 ```typescript
-import { createTruvaTool } from 'truva-sdk/langchain';
+import { createTruvaTool } from '@truva-protocol/sdk/langchain';
 import { createReactAgent } from '@langchain/langgraph/prebuilt';
 
 const tools = [createTruvaTool(truva)];
@@ -199,7 +279,7 @@ Tool schema:
 For autonomous server-side agents that sign transactions without user interaction.
 
 ```typescript
-import { AgentWallet } from 'truva-sdk';
+import { AgentWallet } from '@truva-protocol/sdk';
 
 // Load from env (JSON array of 64 bytes — standard solana-keygen format)
 const wallet = AgentWallet.fromEnv('AGENT_PRIVATE_KEY');
@@ -235,7 +315,7 @@ const ephemeral = AgentWallet.generate();
 Derive the on-chain Passport PDA address for any agent.
 
 ```typescript
-import { derivePassportPDA } from 'truva-sdk';
+import { derivePassportPDA } from '@truva-protocol/sdk';
 
 const [pda, bump] = derivePassportPDA(agentKey);
 ```
@@ -252,7 +332,7 @@ const [pda, bump] = derivePassportPDA(agentKey);
 ## Error Handling
 
 ```typescript
-import { TruvaClient, TruvaError, InsufficientTierError, AgentFrozenError } from 'truva-sdk';
+import { TruvaClient, TruvaError, InsufficientTierError, AgentFrozenError } from '@truva-protocol/sdk';
 
 try {
   await truva.requireTrustTier('Gold', agentKey);
@@ -272,7 +352,7 @@ try {
 Wrap any async function with a trust-tier check:
 
 ```typescript
-import { AgentWallet, wrapWithTrustGate } from 'truva-sdk';
+import { AgentWallet, wrapWithTrustGate } from '@truva-protocol/sdk';
 
 const gatedTransfer = wrapWithTrustGate(truva, agentKey, 'Silver', transfer);
 await gatedTransfer(recipient, amountLamports);
@@ -282,7 +362,7 @@ await gatedTransfer(recipient, amountLamports);
 ## Constants
 
 ```typescript
-import { TRUSTGATE_PROGRAM_ID, TIER_RANK, TIER_LIMITS_LAMPORTS } from 'truva-sdk';
+import { TRUSTGATE_PROGRAM_ID, TIER_RANK, TIER_LIMITS_LAMPORTS } from '@truva-protocol/sdk';
 
 TIER_RANK['Gold']              // 2
 TIER_LIMITS_LAMPORTS['Bronze'] // 5_000_000_000
@@ -300,9 +380,9 @@ Override: `TRUVA_PROGRAM_ID=<your-id>` environment variable.
 
 | Import path | Contents |
 |---|---|
-| `truva-sdk` | Core: `TruvaClient`, `AgentWallet`, errors, types, constants |
-| `truva-sdk/eliza` | elizaOS plugin: `truvaPlugin` |
-| `truva-sdk/langchain` | LangChain tool: `createTruvaTool` |
+| `@truva-protocol/sdk` | Core: `TruvaClient`, `AgentWallet`, errors, types, constants |
+| `@truva-protocol/sdk/eliza` | elizaOS plugin: `truvaPlugin` |
+| `@truva-protocol/sdk/langchain` | LangChain tool: `createTruvaTool` |
 
 ## License
 

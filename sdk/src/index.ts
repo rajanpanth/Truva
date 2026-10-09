@@ -1,12 +1,12 @@
 /**
- * @truva/sdk — TypeScript SDK for the Truva Protocol
+ * @truva-protocol/sdk — TypeScript SDK for the Truva Protocol
  *
  * Trust-gated AI agent payments on Solana.
  * Browser-safe · Tree-shakeable · Anchor 1.0 compatible
  *
  * @example
  * ```ts
- * import { TruvaClient, TruvaError, derivePassportPDA } from "@truva/sdk";
+ * import { TruvaClient, TruvaError, derivePassportPDA } from "@truva-protocol/sdk";
  * ```
  */
 
@@ -53,9 +53,22 @@ export type {
   AgentVaultData,
 } from "./instructions";
 
-// x402-style paywall settled through an agent vault
+// x402 paywall settled through an agent vault
 export {
   TRUVA_VAULT_SCHEME,
+  X402_HEADERS,
+  SOLANA_CAIP2_NETWORKS,
+  toCaip2Network,
+  fromCaip2Network,
+  encodeX402Header,
+  decodeX402Header,
+  buildPaymentRequired,
+  buildPaymentRequiredV2,
+  toPaymentRequirementsV2,
+  selectVaultRequirements,
+  encodePaymentPayload,
+  decodePaymentPayload,
+  decodeSettlementResponse,
   buildPaymentRequirements,
   createVaultPayment,
   settleVaultPayment,
@@ -64,7 +77,15 @@ export {
   PaymentRejectedError,
 } from "./x402";
 export type {
+  X402Version,
+  TruvaVaultExtra,
   PaymentRequirements,
+  PaymentRequirementsV2,
+  PaymentRequiredV1,
+  PaymentRequiredV2,
+  ResourceInfo,
+  DecodedPaymentPayload,
+  SettlementResponse,
   PaywallOptions,
   SettledPayment,
   FetchWithVaultOptions,
@@ -94,8 +115,8 @@ export { TruvaClient as Truva } from "./client";
 
 // ── Framework integrations ────────────────────────────────────────────────────
 // Imported separately to avoid bundling framework deps in the core bundle.
-// Usage: import { truvaPlugin }    from "@truva/sdk/eliza";
-//        import { createTruvaTool } from "@truva/sdk/langchain";
+// Usage: import { truvaPlugin }    from "@truva-protocol/sdk/eliza";
+//        import { createTruvaTool } from "@truva-protocol/sdk/langchain";
 export { truvaPlugin } from "./eliza";
 export { createTruvaTool } from "./langchain";
 export type { TruvaToolInput, TruvaToolResult, LangChainToolLike } from "./langchain";

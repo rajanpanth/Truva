@@ -6,7 +6,7 @@
  *
  * @example
  * ```ts
- * import { createTruvaTool } from "@truva/sdk/langchain";
+ * import { createTruvaTool } from "@truva-protocol/sdk/langchain";
  *
  * const tools = [createTruvaTool(connection)];
  * const agent = createReactAgent({ llm, tools });

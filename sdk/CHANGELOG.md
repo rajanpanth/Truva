@@ -17,10 +17,25 @@ Requires the TrustGate program version with protocol config, merchant policies a
 - PDA helpers: `deriveConfigPDA`, `deriveMerchantPolicyPDA`, `deriveVaultPDA`, `deriveAssociatedTokenAddress`
 - Account parsers: `parseVaultAccount`, `parseMerchantPolicyAccount`, `parseConfigAccount`
 - `PROGRAM_ERRORS` — program error codes to names
+- x402 wire compatibility for the paywall (scheme stays `truva-vault`):
+  - 402 body is a complete x402 v1 response: `resource` is an absolute URL, `description` and `mimeType` are always present
+  - 402 also carries an x402 v2 `PAYMENT-REQUIRED` header (CAIP-2 network, `amount`, `resource` object) when the network has a CAIP-2 id
+  - Payment is accepted from `X-PAYMENT` (v1) or `PAYMENT-SIGNATURE` (v2); the receipt is returned in `X-PAYMENT-RESPONSE` or `PAYMENT-RESPONSE` to match
+  - Receipt has the x402 `SettlementResponse` fields (`success`, `transaction`, `network`, `payer`); `signature` and `amount` are kept
+  - A refused payment also returns a receipt header with `success: false` and `errorReason`
+  - `fetchWithVault` skips other schemes and malformed entries in `accepts`, and reads the v2 header when the body has no `truva-vault` requirement
+  - `createVaultPayment` takes `x402Version: 2` to produce a `PAYMENT-SIGNATURE` value
+  - New exports: `X402_HEADERS`, `SOLANA_CAIP2_NETWORKS`, `toCaip2Network`, `fromCaip2Network`, `buildPaymentRequired`, `buildPaymentRequiredV2`, `toPaymentRequirementsV2`, `selectVaultRequirements`, `encodePaymentPayload`, `decodePaymentPayload`, `decodeSettlementResponse`, `encodeX402Header`, `decodeX402Header`
+  - `PaywallOptions.resource`, `PaywallOptions.mimeType`
+- `FetchWithVaultOptions.programId`
 
 ### Changed
 - `getAgentScore()` also returns `authority` and `trusted`. `trusted` is false when the passport was not scored by the protocol scorer
 - `requireTrustTier()` rejects untrusted passports with code `UNTRUSTED_AUTHORITY`
+- `fetchWithVault` refuses a 402 that names a program other than `programId` (default: the TrustGate program) before signing. Pass `programId` when paying a custom deployment
+- `PaymentRequirements.description` and `mimeType` are always strings (empty when not set)
+- Malformed payment headers are rejected with reason `malformed payment header` (was `malformed X-PAYMENT header`)
+- Docs and code comments use the published package name `@truva-protocol/sdk`
 
 ## [0.1.0] — 2026-04-27
 
