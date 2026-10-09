@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  LayoutDashboard, Server, Shield, Activity, Key, FileText, HelpCircle, Bot, Zap,
+  LayoutDashboard, Server, Shield, Activity, Key, FileText, HelpCircle, Bot, Zap, Vault,
 } from 'lucide-react';
 import { TruvaButton, TruvaPulsingDot } from '@/components/ui/truva';
 
@@ -15,6 +15,7 @@ const navGroups: { section: string; items: NavItem[] }[] = [
     items: [
       { label: 'Dashboard',     href: '/dashboard',      icon: <LayoutDashboard size={15} /> },
       { label: 'Agent Registry',href: '/registry',       icon: <Bot size={15} /> },
+      { label: 'Agent Vaults',  href: '/vaults',         icon: <Vault size={15} /> },
     ],
   },
   {
