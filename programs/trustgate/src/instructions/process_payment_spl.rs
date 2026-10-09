@@ -1,10 +1,18 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token::{self, Token, TokenAccount, Transfer};
 use crate::errors::TruvaError;
+use crate::state::config::ProtocolConfig;
+use crate::state::merchant::MerchantPolicy;
 use crate::state::passport::{AgentPassport, TrustTier, PaymentProcessed};
 
 #[derive(Accounts)]
 pub struct ProcessPaymentSpl<'info> {
+    #[account(
+        seeds = [ProtocolConfig::SEED],
+        bump = config.bump,
+    )]
+    pub config: Account<'info, ProtocolConfig>,
+
     #[account(
         mut,
         seeds = [b"passport", agent.key().as_ref()],
@@ -24,8 +32,19 @@ pub struct ProcessPaymentSpl<'info> {
     pub agent_token: Account<'info, TokenAccount>,
 
     /// Recipient's token account (destination)
-    #[account(mut)]
+    #[account(
+        mut,
+        constraint = recipient_token.mint == agent_token.mint @ TruvaError::MintMismatch,
+    )]
     pub recipient_token: Account<'info, TokenAccount>,
+
+    /// Minimum tier set by the recipient. Empty if the recipient never set one.
+    /// CHECK: Address is verified by seeds; contents are read in the handler
+    #[account(
+        seeds = [MerchantPolicy::SEED, recipient_token.owner.as_ref()],
+        bump,
+    )]
+    pub merchant_policy: UncheckedAccount<'info>,
 
     pub token_program: Program<'info, Token>,
 }
@@ -35,16 +54,12 @@ pub fn handler(
     required_tier: TrustTier,
     amount: u64,
 ) -> Result<()> {
+    // Trust tier gate: the recipient's policy applies even if the caller asks for less
+    let required_tier = required_tier
+        .max(MerchantPolicy::required_tier(&ctx.accounts.merchant_policy)?);
+
     let passport = &mut ctx.accounts.passport;
-
-    // Block frozen passports
-    require!(!passport.frozen, TruvaError::PassportFrozen);
-
-    // Trust tier gate
-    require!(
-        passport.trust_tier >= required_tier,
-        TruvaError::InsufficientTrustTier
-    );
+    passport.assert_trusted(&ctx.accounts.config, required_tier)?;
 
     // Enforce tier-based amount limits (token base units)
     let max_amount: u64 = match passport.trust_tier {
@@ -71,9 +86,7 @@ pub fn handler(
 
     // Update transaction counts
     let timestamp = Clock::get()?.unix_timestamp;
-    passport.tx_count = passport.tx_count.checked_add(1).ok_or(TruvaError::ArithmeticOverflow)?;
-    passport.success_count = passport.success_count.checked_add(1).ok_or(TruvaError::ArithmeticOverflow)?;
-    passport.updated_at = timestamp;
+    passport.record_payment(timestamp)?;
 
     emit!(PaymentProcessed {
         agent: ctx.accounts.agent.key(),

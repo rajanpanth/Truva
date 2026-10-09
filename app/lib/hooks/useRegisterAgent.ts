@@ -53,12 +53,18 @@ export function useRegisterAgent() {
         const provider = new AnchorProvider(connection, wallet as any, { commitment: 'confirmed' });
         const program = getTrustGateProgram(provider, TRUSTGATE_IDL as any);
 
+        const [configPDA] = PublicKey.findProgramAddressSync(
+          [Buffer.from('config')],
+          TRUSTGATE_PROGRAM_ID
+        );
+
         const signature = await (program.methods as any)
           .initializePassport()
           .accounts({
+            config: configPDA,
             passport: passportPDA,
             agent: agentPubkey,
-            authority: publicKey,
+            payer: publicKey,
             systemProgram: SystemProgram.programId,
           })
           .rpc();

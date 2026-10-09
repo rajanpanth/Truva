@@ -1,4 +1,6 @@
 use anchor_lang::prelude::*;
+use crate::errors::TruvaError;
+use crate::state::config::ProtocolConfig;
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub enum TrustTier {
@@ -62,6 +64,23 @@ impl AgentPassport {
         + 8    // created_at
         + 8    // updated_at
         + 1;   // bump
+
+    /// The gate: passport must be scored by the protocol scorer, not frozen,
+    /// and at or above `min_tier`.
+    pub fn assert_trusted(&self, config: &ProtocolConfig, min_tier: TrustTier) -> Result<()> {
+        require_keys_eq!(self.authority, config.scorer, TruvaError::UntrustedAuthority);
+        require!(!self.frozen, TruvaError::PassportFrozen);
+        require!(self.trust_tier >= min_tier, TruvaError::InsufficientTrustTier);
+        Ok(())
+    }
+
+    /// Count a completed payment on the passport.
+    pub fn record_payment(&mut self, timestamp: i64) -> Result<()> {
+        self.tx_count = self.tx_count.checked_add(1).ok_or(TruvaError::ArithmeticOverflow)?;
+        self.success_count = self.success_count.checked_add(1).ok_or(TruvaError::ArithmeticOverflow)?;
+        self.updated_at = timestamp;
+        Ok(())
+    }
 }
 
 // ── Events ──
@@ -106,6 +125,16 @@ pub struct PassportFrozen {
 pub struct PassportUnfrozen {
     pub agent: Pubkey,
     pub authority: Pubkey,
+    pub timestamp: i64,
+}
+
+#[event]
+pub struct PassportAdopted {
+    pub agent: Pubkey,
+    pub old_authority: Pubkey,
+    pub new_authority: Pubkey,
+    pub trust_score: u8,
+    pub trust_tier: u8,
     pub timestamp: i64,
 }
 

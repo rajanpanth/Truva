@@ -18,6 +18,7 @@ pub struct UpdateTrustTier<'info> {
 pub fn handler(
     ctx: Context<UpdateTrustTier>,
     new_score: u8,
+    new_tier: TrustTier,
 ) -> Result<()> {
     require!(new_score <= 100, TruvaError::InvalidTrustScore);
 
@@ -27,7 +28,6 @@ pub fn handler(
 
     let old_score = passport.trust_score;
     let old_tier = passport.trust_tier as u8;
-    let new_tier = TrustTier::from_score(new_score);
     let timestamp = Clock::get()?.unix_timestamp;
 
     passport.trust_score = new_score;

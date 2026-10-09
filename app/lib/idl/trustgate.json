@@ -8,205 +8,2246 @@
   },
   "instructions": [
     {
-      "name": "initialize_passport",
-      "discriminator": [61, 77, 198, 139, 101, 90, 68, 137],
-      "accounts": [
-        {
-          "name": "passport",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              { "kind": "const", "value": [112, 97, 115, 115, 112, 111, 114, 116] },
-              { "kind": "account", "path": "agent" }
-            ]
-          }
-        },
-        { "name": "agent" },
-        { "name": "authority", "writable": true, "signer": true },
-        { "name": "system_program", "address": "11111111111111111111111111111111" }
+      "name": "adopt_passport",
+      "docs": [
+        "Bring a passport under the current protocol scorer with an explicit score and tier",
+        "Scorer only"
       ],
-      "args": []
-    },
-    {
-      "name": "update_trust_tier",
-      "discriminator": [65, 69, 142, 140, 227, 164, 233, 94],
+      "discriminator": [
+        222,
+        102,
+        6,
+        69,
+        38,
+        129,
+        183,
+        190
+      ],
       "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
         {
           "name": "passport",
           "writable": true,
           "pda": {
             "seeds": [
-              { "kind": "const", "value": [112, 97, 115, 115, 112, 111, 114, 116] },
-              { "kind": "account", "path": "passport.agent", "account": "AgentPassport" }
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  115,
+                  115,
+                  112,
+                  111,
+                  114,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "passport.agent",
+                "account": "AgentPassport"
+              }
             ]
           }
         },
-        { "name": "authority", "signer": true }
+        {
+          "name": "scorer",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        }
       ],
       "args": [
-        { "name": "new_score", "type": "u8" }
+        {
+          "name": "score",
+          "type": "u8"
+        },
+        {
+          "name": "tier",
+          "type": {
+            "defined": {
+              "name": "TrustTier"
+            }
+          }
+        }
       ]
     },
     {
-      "name": "process_payment_sol",
-      "discriminator": [177, 28, 123, 191, 14, 93, 138, 70],
-      "accounts": [
-        {
-          "name": "passport",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              { "kind": "const", "value": [112, 97, 115, 115, 112, 111, 114, 116] },
-              { "kind": "account", "path": "agent" }
-            ]
-          }
-        },
-        { "name": "agent", "writable": true, "signer": true },
-        { "name": "recipient", "writable": true },
-        { "name": "system_program", "address": "11111111111111111111111111111111" }
+      "name": "close_merchant_policy",
+      "docs": [
+        "Remove the signer's merchant policy and reclaim rent"
       ],
-      "args": [
-        { "name": "required_tier", "type": { "defined": { "name": "TrustTier" } } },
-        { "name": "amount", "type": "u64" }
-      ]
-    },
-    {
-      "name": "process_payment_spl",
-      "discriminator": [12, 112, 64, 79, 149, 74, 108, 198],
-      "accounts": [
-        {
-          "name": "passport",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              { "kind": "const", "value": [112, 97, 115, 115, 112, 111, 114, 116] },
-              { "kind": "account", "path": "agent" }
-            ]
-          }
-        },
-        { "name": "agent", "writable": true, "signer": true },
-        { "name": "agent_token", "writable": true },
-        { "name": "recipient_token", "writable": true },
-        { "name": "token_program", "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" }
+      "discriminator": [
+        200,
+        56,
+        65,
+        194,
+        108,
+        9,
+        153,
+        10
       ],
-      "args": [
-        { "name": "required_tier", "type": { "defined": { "name": "TrustTier" } } },
-        { "name": "amount", "type": "u64" }
-      ]
-    },
-    {
-      "name": "freeze_passport",
-      "discriminator": [180, 250, 70, 116, 94, 104, 160, 193],
       "accounts": [
         {
-          "name": "passport",
+          "name": "policy",
           "writable": true,
           "pda": {
             "seeds": [
-              { "kind": "const", "value": [112, 97, 115, 115, 112, 111, 114, 116] },
-              { "kind": "account", "path": "passport.agent", "account": "AgentPassport" }
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  114,
+                  99,
+                  104,
+                  97,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "merchant"
+              }
             ]
           }
         },
-        { "name": "authority", "signer": true }
-      ],
-      "args": []
-    },
-    {
-      "name": "unfreeze_passport",
-      "discriminator": [130, 59, 150, 34, 230, 219, 239, 201],
-      "accounts": [
         {
-          "name": "passport",
+          "name": "merchant",
           "writable": true,
-          "pda": {
-            "seeds": [
-              { "kind": "const", "value": [112, 97, 115, 115, 112, 111, 114, 116] },
-              { "kind": "account", "path": "passport.agent", "account": "AgentPassport" }
-            ]
-          }
-        },
-        { "name": "authority", "signer": true }
-      ],
-      "args": []
-    },
-    {
-      "name": "migrate_passport",
-      "discriminator": [106, 157, 63, 128, 174, 22, 14, 137],
-      "accounts": [
-        {
-          "name": "passport",
-          "writable": true,
-          "pda": {
-            "seeds": [
-              { "kind": "const", "value": [112, 97, 115, 115, 112, 111, 114, 116] },
-              { "kind": "account", "path": "passport.agent", "account": "AgentPassport" }
-            ]
-          }
-        },
-        { "name": "authority", "writable": true, "signer": true },
-        { "name": "system_program", "address": "11111111111111111111111111111111" }
+          "signer": true,
+          "relations": [
+            "policy"
+          ]
+        }
       ],
       "args": []
     },
     {
       "name": "close_passport",
-      "discriminator": [198, 21, 251, 56, 20, 59, 143, 23],
+      "docs": [
+        "Close a passport and reclaim rent to authority",
+        "Authority only"
+      ],
+      "discriminator": [
+        198,
+        21,
+        251,
+        56,
+        20,
+        59,
+        143,
+        23
+      ],
       "accounts": [
         {
           "name": "passport",
           "writable": true,
           "pda": {
             "seeds": [
-              { "kind": "const", "value": [112, 97, 115, 115, 112, 111, 114, 116] },
-              { "kind": "account", "path": "passport.agent", "account": "AgentPassport" }
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  115,
+                  115,
+                  112,
+                  111,
+                  114,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "passport.agent",
+                "account": "AgentPassport"
+              }
             ]
           }
         },
-        { "name": "authority", "writable": true, "signer": true }
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "passport"
+          ]
+        }
       ],
       "args": []
+    },
+    {
+      "name": "close_vault",
+      "docs": [
+        "Return the remaining balance to the owner and close the vault",
+        "Owner only"
+      ],
+      "discriminator": [
+        141,
+        103,
+        17,
+        126,
+        72,
+        75,
+        29,
+        29
+      ],
+      "accounts": [
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "vault.agent",
+                "account": "AgentVault"
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault_token",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "vault"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "owner_token",
+          "docs": [
+            "Owner's token account, receives any remaining balance"
+          ],
+          "writable": true
+        },
+        {
+          "name": "mint",
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "create_vault",
+      "docs": [
+        "Create a spending vault for one agent and one mint",
+        "Owner sets a per-payment limit, a daily limit and an optional recipient allowlist"
+      ],
+      "discriminator": [
+        29,
+        237,
+        247,
+        208,
+        193,
+        82,
+        54,
+        135
+      ],
+      "accounts": [
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "agent"
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault_token",
+          "docs": [
+            "Token account holding the vault's funds, owned by the vault PDA.",
+            "Fund it with a normal token transfer."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "vault"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "agent",
+          "docs": [
+            "The agent key allowed to spend from this vault"
+          ]
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "per_tx_limit",
+          "type": "u64"
+        },
+        {
+          "name": "daily_limit",
+          "type": "u64"
+        },
+        {
+          "name": "allowlist",
+          "type": {
+            "vec": "pubkey"
+          }
+        }
+      ]
+    },
+    {
+      "name": "freeze_passport",
+      "docs": [
+        "Freeze a passport — blocks all transactions",
+        "Authority only",
+        "Emits: PassportFrozen event"
+      ],
+      "discriminator": [
+        180,
+        250,
+        70,
+        116,
+        94,
+        104,
+        160,
+        193
+      ],
+      "accounts": [
+        {
+          "name": "passport",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  115,
+                  115,
+                  112,
+                  111,
+                  114,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "passport.agent",
+                "account": "AgentPassport"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "passport"
+          ]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initialize_config",
+      "docs": [
+        "Create the global protocol config and set the scorer",
+        "Signer must be the program's upgrade authority"
+      ],
+      "discriminator": [
+        208,
+        127,
+        21,
+        1,
+        194,
+        190,
+        196,
+        70
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "docs": [
+            "Must be the program's upgrade authority, so the config cannot be front-run"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "program",
+          "address": "BTgy2r8R85Jknq3JetNiVt1x9grdccm7pTV2LyUmDzG5"
+        },
+        {
+          "name": "program_data"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "scorer",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "initialize_passport",
+      "docs": [
+        "Initialize a new Agent Passport PDA",
+        "Creates with trust_score = 0, trust_tier = Bronze, tx_count = 0, frozen = false",
+        "Anyone can pay for it; the authority is always the protocol scorer"
+      ],
+      "discriminator": [
+        61,
+        77,
+        198,
+        139,
+        101,
+        90,
+        68,
+        137
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "passport",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  115,
+                  115,
+                  112,
+                  111,
+                  114,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "agent"
+              }
+            ]
+          }
+        },
+        {
+          "name": "agent",
+          "docs": [
+            "The agent wallet this passport represents"
+          ]
+        },
+        {
+          "name": "payer",
+          "docs": [
+            "Anyone can create a passport (pays for account creation).",
+            "The passport authority is always the protocol scorer, never the payer."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "migrate_passport",
+      "docs": [
+        "Migrate an existing passport to the new account layout",
+        "Sets default values for new fields (success_count, created_at)",
+        "Authority only — idempotent (safe to call multiple times)"
+      ],
+      "discriminator": [
+        106,
+        157,
+        63,
+        128,
+        174,
+        22,
+        14,
+        137
+      ],
+      "accounts": [
+        {
+          "name": "passport",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  115,
+                  115,
+                  112,
+                  111,
+                  114,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "passport.agent",
+                "account": "AgentPassport"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "passport"
+          ]
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "process_payment_sol",
+      "docs": [
+        "Process a SOL payment with trust-gate check",
+        "Checks: passport must be scored by the protocol scorer",
+        "Checks: passport must not be frozen",
+        "Checks: trust_tier must meet required_tier and the recipient's merchant policy",
+        "Checks: amount must not exceed tier limit",
+        "Updates: tx_count += 1, success_count += 1",
+        "Emits: PaymentProcessed event"
+      ],
+      "discriminator": [
+        177,
+        28,
+        123,
+        191,
+        14,
+        93,
+        138,
+        70
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "passport",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  115,
+                  115,
+                  112,
+                  111,
+                  114,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "agent"
+              }
+            ]
+          }
+        },
+        {
+          "name": "agent",
+          "docs": [
+            "The agent initiating the payment"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "recipient",
+          "docs": [
+            "The recipient of the payment"
+          ],
+          "writable": true
+        },
+        {
+          "name": "merchant_policy",
+          "docs": [
+            "Minimum tier set by the recipient. Empty if the recipient never set one."
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  114,
+                  99,
+                  104,
+                  97,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "recipient"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "required_tier",
+          "type": {
+            "defined": {
+              "name": "TrustTier"
+            }
+          }
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "process_payment_spl",
+      "docs": [
+        "Process an SPL token payment with trust-gate check",
+        "Same logic as process_payment_sol but uses token program CPI"
+      ],
+      "discriminator": [
+        12,
+        112,
+        64,
+        79,
+        149,
+        74,
+        108,
+        198
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "passport",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  115,
+                  115,
+                  112,
+                  111,
+                  114,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "agent"
+              }
+            ]
+          }
+        },
+        {
+          "name": "agent",
+          "docs": [
+            "The agent initiating the payment"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "agent_token",
+          "docs": [
+            "Agent's token account (source)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "recipient_token",
+          "docs": [
+            "Recipient's token account (destination)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "merchant_policy",
+          "docs": [
+            "Minimum tier set by the recipient. Empty if the recipient never set one."
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  114,
+                  99,
+                  104,
+                  97,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "recipient_token.owner",
+                "account": "TokenAccount"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "required_tier",
+          "type": {
+            "defined": {
+              "name": "TrustTier"
+            }
+          }
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "set_merchant_policy",
+      "docs": [
+        "Set the minimum trust tier agents need to pay the signer"
+      ],
+      "discriminator": [
+        61,
+        182,
+        222,
+        37,
+        184,
+        165,
+        142,
+        197
+      ],
+      "accounts": [
+        {
+          "name": "policy",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  114,
+                  99,
+                  104,
+                  97,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "merchant"
+              }
+            ]
+          }
+        },
+        {
+          "name": "merchant",
+          "docs": [
+            "The recipient setting its own minimum tier"
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "min_tier",
+          "type": {
+            "defined": {
+              "name": "TrustTier"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "set_vault_paused",
+      "docs": [
+        "Pause or resume agent payments from a vault",
+        "Owner only"
+      ],
+      "discriminator": [
+        239,
+        131,
+        203,
+        69,
+        243,
+        11,
+        234,
+        153
+      ],
+      "accounts": [
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault.owner",
+                "account": "AgentVault"
+              },
+              {
+                "kind": "account",
+                "path": "vault.agent",
+                "account": "AgentVault"
+              },
+              {
+                "kind": "account",
+                "path": "vault.mint",
+                "account": "AgentVault"
+              }
+            ]
+          }
+        },
+        {
+          "name": "owner",
+          "signer": true,
+          "relations": [
+            "vault"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "paused",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "unfreeze_passport",
+      "docs": [
+        "Unfreeze a passport — re-enables transactions",
+        "Authority only",
+        "Emits: PassportUnfrozen event"
+      ],
+      "discriminator": [
+        130,
+        59,
+        150,
+        34,
+        230,
+        219,
+        239,
+        201
+      ],
+      "accounts": [
+        {
+          "name": "passport",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  115,
+                  115,
+                  112,
+                  111,
+                  114,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "passport.agent",
+                "account": "AgentPassport"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "passport"
+          ]
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "update_config",
+      "docs": [
+        "Rotate the scorer and/or hand over admin rights",
+        "Admin only"
+      ],
+      "discriminator": [
+        29,
+        158,
+        252,
+        191,
+        10,
+        83,
+        219,
+        99
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "new_admin",
+          "type": {
+            "option": "pubkey"
+          }
+        },
+        {
+          "name": "new_scorer",
+          "type": {
+            "option": "pubkey"
+          }
+        }
+      ]
+    },
+    {
+      "name": "update_trust_tier",
+      "docs": [
+        "Update an agent's trust score and tier (called by backend authority only)",
+        "The tier is computed off-chain from all scoring signals, so it is passed in",
+        "rather than derived from the score",
+        "Validates: authority must match passport.authority",
+        "Validates: score must be 0-100",
+        "Emits: TrustTierUpdated event with old and new tier"
+      ],
+      "discriminator": [
+        65,
+        69,
+        142,
+        140,
+        227,
+        164,
+        233,
+        94
+      ],
+      "accounts": [
+        {
+          "name": "passport",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  115,
+                  115,
+                  112,
+                  111,
+                  114,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "passport.agent",
+                "account": "AgentPassport"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "passport"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "new_score",
+          "type": "u8"
+        },
+        {
+          "name": "new_tier",
+          "type": {
+            "defined": {
+              "name": "TrustTier"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "update_vault_policy",
+      "docs": [
+        "Change a vault's limits and allowlist",
+        "Owner only"
+      ],
+      "discriminator": [
+        1,
+        197,
+        247,
+        6,
+        171,
+        175,
+        234,
+        107
+      ],
+      "accounts": [
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault.owner",
+                "account": "AgentVault"
+              },
+              {
+                "kind": "account",
+                "path": "vault.agent",
+                "account": "AgentVault"
+              },
+              {
+                "kind": "account",
+                "path": "vault.mint",
+                "account": "AgentVault"
+              }
+            ]
+          }
+        },
+        {
+          "name": "owner",
+          "signer": true,
+          "relations": [
+            "vault"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "per_tx_limit",
+          "type": "u64"
+        },
+        {
+          "name": "daily_limit",
+          "type": "u64"
+        },
+        {
+          "name": "allowlist",
+          "type": {
+            "vec": "pubkey"
+          }
+        }
+      ]
+    },
+    {
+      "name": "vault_pay",
+      "docs": [
+        "Pay from a vault. Signed by the agent, enforced by the program:",
+        "Checks: vault not paused, passport trusted and not frozen",
+        "Checks: tier meets the recipient's merchant policy",
+        "Checks: per-payment limit, daily limit, recipient allowlist",
+        "Emits: VaultPayment event"
+      ],
+      "discriminator": [
+        81,
+        165,
+        99,
+        6,
+        171,
+        27,
+        225,
+        236
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "passport",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  115,
+                  115,
+                  112,
+                  111,
+                  114,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "agent"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "vault.owner",
+                "account": "AgentVault"
+              },
+              {
+                "kind": "account",
+                "path": "agent"
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault_token",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "vault"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "recipient_token",
+          "docs": [
+            "Recipient's token account (destination)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "merchant_policy",
+          "docs": [
+            "Minimum tier set by the recipient. Empty if the recipient never set one."
+          ],
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  114,
+                  99,
+                  104,
+                  97,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "recipient_token.owner",
+                "account": "TokenAccount"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint",
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "agent",
+          "docs": [
+            "The agent initiating the payment"
+          ],
+          "signer": true,
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "vault_withdraw",
+      "docs": [
+        "Withdraw tokens from a vault back to the owner",
+        "Owner only"
+      ],
+      "discriminator": [
+        98,
+        28,
+        187,
+        98,
+        87,
+        69,
+        46,
+        64
+      ],
+      "accounts": [
+        {
+          "name": "vault",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  118,
+                  97,
+                  117,
+                  108,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "vault.agent",
+                "account": "AgentVault"
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault_token",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "vault"
+              },
+              {
+                "kind": "const",
+                "value": [
+                  6,
+                  221,
+                  246,
+                  225,
+                  215,
+                  101,
+                  161,
+                  147,
+                  217,
+                  203,
+                  225,
+                  70,
+                  206,
+                  235,
+                  121,
+                  172,
+                  28,
+                  180,
+                  133,
+                  237,
+                  95,
+                  91,
+                  55,
+                  145,
+                  58,
+                  140,
+                  245,
+                  133,
+                  126,
+                  255,
+                  0,
+                  169
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "owner_token",
+          "docs": [
+            "Owner's token account (destination)"
+          ],
+          "writable": true
+        },
+        {
+          "name": "mint",
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "owner",
+          "signer": true,
+          "relations": [
+            "vault"
+          ]
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "amount",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "verify_trust",
+      "docs": [
+        "Read-only trust check for other programs to call by CPI",
+        "Fails unless the passport is scored by the protocol scorer, not frozen,",
+        "and at or above min_tier. Return data: [trust_score, trust_tier]"
+      ],
+      "discriminator": [
+        27,
+        193,
+        157,
+        105,
+        249,
+        36,
+        202,
+        54
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "passport",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  115,
+                  115,
+                  112,
+                  111,
+                  114,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "passport.agent",
+                "account": "AgentPassport"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "min_tier",
+          "type": {
+            "defined": {
+              "name": "TrustTier"
+            }
+          }
+        }
+      ]
     }
   ],
   "accounts": [
     {
       "name": "AgentPassport",
-      "discriminator": [206, 202, 35, 207, 230, 239, 137, 90]
+      "discriminator": [
+        206,
+        202,
+        35,
+        207,
+        230,
+        239,
+        137,
+        90
+      ]
+    },
+    {
+      "name": "AgentVault",
+      "discriminator": [
+        232,
+        220,
+        237,
+        164,
+        157,
+        9,
+        215,
+        194
+      ]
+    },
+    {
+      "name": "MerchantPolicy",
+      "discriminator": [
+        80,
+        52,
+        137,
+        242,
+        251,
+        34,
+        18,
+        17
+      ]
+    },
+    {
+      "name": "ProtocolConfig",
+      "discriminator": [
+        207,
+        91,
+        250,
+        28,
+        152,
+        179,
+        215,
+        209
+      ]
     }
   ],
   "events": [
     {
-      "name": "PassportInitialized",
-      "discriminator": [231, 242, 181, 232, 74, 20, 32, 137]
+      "name": "ConfigUpdated",
+      "discriminator": [
+        40,
+        241,
+        230,
+        122,
+        11,
+        19,
+        198,
+        194
+      ]
     },
     {
-      "name": "TrustTierUpdated",
-      "discriminator": [49, 146, 29, 218, 195, 162, 165, 194]
+      "name": "MerchantPolicySet",
+      "discriminator": [
+        193,
+        80,
+        72,
+        47,
+        144,
+        122,
+        125,
+        196
+      ]
     },
     {
-      "name": "PaymentProcessed",
-      "discriminator": [22, 109, 191, 213, 83, 63, 120, 219]
-    },
-    {
-      "name": "PassportFrozen",
-      "discriminator": [89, 152, 85, 221, 168, 244, 7, 254]
-    },
-    {
-      "name": "PassportUnfrozen",
-      "discriminator": [68, 153, 65, 158, 55, 111, 189, 61]
+      "name": "PassportAdopted",
+      "discriminator": [
+        131,
+        35,
+        18,
+        233,
+        181,
+        22,
+        121,
+        68
+      ]
     },
     {
       "name": "PassportClosed",
-      "discriminator": [250, 79, 10, 165, 212, 71, 11, 186]
+      "discriminator": [
+        250,
+        79,
+        10,
+        165,
+        212,
+        71,
+        11,
+        186
+      ]
+    },
+    {
+      "name": "PassportFrozen",
+      "discriminator": [
+        89,
+        152,
+        85,
+        221,
+        168,
+        244,
+        7,
+        254
+      ]
+    },
+    {
+      "name": "PassportInitialized",
+      "discriminator": [
+        231,
+        242,
+        181,
+        232,
+        74,
+        20,
+        32,
+        137
+      ]
+    },
+    {
+      "name": "PassportUnfrozen",
+      "discriminator": [
+        68,
+        153,
+        65,
+        158,
+        55,
+        111,
+        189,
+        61
+      ]
+    },
+    {
+      "name": "PaymentProcessed",
+      "discriminator": [
+        22,
+        109,
+        191,
+        213,
+        83,
+        63,
+        120,
+        219
+      ]
+    },
+    {
+      "name": "TrustTierUpdated",
+      "discriminator": [
+        49,
+        146,
+        29,
+        218,
+        195,
+        162,
+        165,
+        194
+      ]
+    },
+    {
+      "name": "VaultCreated",
+      "discriminator": [
+        117,
+        25,
+        120,
+        254,
+        75,
+        236,
+        78,
+        115
+      ]
+    },
+    {
+      "name": "VaultPayment",
+      "discriminator": [
+        245,
+        93,
+        60,
+        49,
+        217,
+        41,
+        141,
+        90
+      ]
+    },
+    {
+      "name": "VaultPolicyUpdated",
+      "discriminator": [
+        183,
+        96,
+        56,
+        63,
+        214,
+        94,
+        136,
+        20
+      ]
+    },
+    {
+      "name": "VaultWithdrawal",
+      "discriminator": [
+        168,
+        109,
+        95,
+        252,
+        76,
+        240,
+        237,
+        56
+      ]
     }
   ],
   "errors": [
-    { "code": 6000, "name": "PassportFrozen", "msg": "Agent passport is frozen" },
-    { "code": 6001, "name": "InsufficientTrustTier", "msg": "Insufficient trust tier for this operation" },
-    { "code": 6002, "name": "ExceedsTierLimit", "msg": "Payment amount exceeds tier limit" },
-    { "code": 6003, "name": "Unauthorized", "msg": "Unauthorized: caller is not the authority" },
-    { "code": 6004, "name": "InvalidTrustScore", "msg": "Invalid trust score: must be between 0 and 100" },
-    { "code": 6005, "name": "ArithmeticOverflow", "msg": "Arithmetic overflow" }
+    {
+      "code": 6000,
+      "name": "PassportFrozen",
+      "msg": "Agent passport is frozen"
+    },
+    {
+      "code": 6001,
+      "name": "InsufficientTrustTier",
+      "msg": "Insufficient trust tier for this operation"
+    },
+    {
+      "code": 6002,
+      "name": "ExceedsTierLimit",
+      "msg": "Payment amount exceeds tier limit"
+    },
+    {
+      "code": 6003,
+      "name": "Unauthorized",
+      "msg": "Unauthorized: caller is not the authority"
+    },
+    {
+      "code": 6004,
+      "name": "InvalidTrustScore",
+      "msg": "Invalid trust score: must be between 0 and 100"
+    },
+    {
+      "code": 6005,
+      "name": "ArithmeticOverflow",
+      "msg": "Arithmetic overflow"
+    },
+    {
+      "code": 6006,
+      "name": "UntrustedAuthority",
+      "msg": "Passport authority is not the protocol scorer"
+    },
+    {
+      "code": 6007,
+      "name": "InvalidProgramData",
+      "msg": "Signer is not the program upgrade authority"
+    },
+    {
+      "code": 6008,
+      "name": "VaultPaused",
+      "msg": "Vault is paused by its owner"
+    },
+    {
+      "code": 6009,
+      "name": "ExceedsPerTxLimit",
+      "msg": "Payment amount exceeds the vault per-payment limit"
+    },
+    {
+      "code": 6010,
+      "name": "ExceedsDailyLimit",
+      "msg": "Payment would exceed the vault daily limit"
+    },
+    {
+      "code": 6011,
+      "name": "RecipientNotAllowed",
+      "msg": "Recipient is not on the vault allowlist"
+    },
+    {
+      "code": 6012,
+      "name": "AllowlistTooLong",
+      "msg": "Allowlist holds at most 8 recipients"
+    },
+    {
+      "code": 6013,
+      "name": "InvalidLimits",
+      "msg": "Per-payment limit cannot exceed the daily limit"
+    },
+    {
+      "code": 6014,
+      "name": "InvalidAmount",
+      "msg": "Amount must be greater than zero"
+    },
+    {
+      "code": 6015,
+      "name": "MintMismatch",
+      "msg": "Token account mint does not match"
+    }
   ],
   "types": [
     {
@@ -214,16 +2255,451 @@
       "type": {
         "kind": "struct",
         "fields": [
-          { "name": "agent", "type": "pubkey" },
-          { "name": "authority", "type": "pubkey" },
-          { "name": "trust_score", "type": "u8" },
-          { "name": "trust_tier", "type": { "defined": { "name": "TrustTier" } } },
-          { "name": "tx_count", "type": "u64" },
-          { "name": "success_count", "type": "u64" },
-          { "name": "frozen", "type": "bool" },
-          { "name": "created_at", "type": "i64" },
-          { "name": "updated_at", "type": "i64" },
-          { "name": "bump", "type": "u8" }
+          {
+            "name": "agent",
+            "docs": [
+              "The public key of the agent this passport belongs to"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "docs": [
+              "Authority that can update this passport"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "trust_score",
+            "docs": [
+              "Trust score from 0 to 100"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "trust_tier",
+            "docs": [
+              "Computed trust tier based on score"
+            ],
+            "type": {
+              "defined": {
+                "name": "TrustTier"
+              }
+            }
+          },
+          {
+            "name": "tx_count",
+            "docs": [
+              "Total number of transactions"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "success_count",
+            "docs": [
+              "Number of successful transactions"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "frozen",
+            "docs": [
+              "Whether this passport is frozen (blocked from transactions)"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "created_at",
+            "docs": [
+              "Timestamp when passport was created"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "updated_at",
+            "docs": [
+              "Timestamp of last update"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "Bump seed for the PDA"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AgentVault",
+      "docs": [
+        "Owner-funded spending account for one agent and one mint",
+        "(PDA, seeds = [\"vault\", owner, agent, mint]).",
+        "",
+        "Tokens sit in a token account owned by this PDA, so the agent key can",
+        "only move them through `vault_pay`, which enforces the owner's limits."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "docs": [
+              "Wallet that funds the vault and sets its limits"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "agent",
+            "docs": [
+              "Agent key allowed to spend from the vault"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "docs": [
+              "Token mint held by the vault"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "per_tx_limit",
+            "docs": [
+              "Maximum amount per payment (token base units)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "daily_limit",
+            "docs": [
+              "Maximum amount per 24h window (token base units)"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "spent_in_window",
+            "docs": [
+              "Amount spent in the current window"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "window_start",
+            "docs": [
+              "Timestamp the current window started"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "total_spent",
+            "docs": [
+              "Lifetime amount paid out by the agent"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "paused",
+            "docs": [
+              "Owner kill switch: blocks all agent payments while true"
+            ],
+            "type": "bool"
+          },
+          {
+            "name": "allowlist_len",
+            "docs": [
+              "Number of used entries in `allowlist` (0 = any recipient)"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "allowlist",
+            "docs": [
+              "Recipient wallets the agent may pay"
+            ],
+            "type": {
+              "array": [
+                "pubkey",
+                8
+              ]
+            }
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "Bump seed for the PDA"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ConfigUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "scorer",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MerchantPolicy",
+      "docs": [
+        "Minimum trust tier a recipient requires from agents paying it",
+        "(PDA, seeds = [\"merchant\", merchant]).",
+        "",
+        "Payment instructions always take this PDA, so the paying agent cannot",
+        "skip it or pick a lower tier for itself."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "merchant",
+            "docs": [
+              "The recipient wallet this policy belongs to"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "min_tier",
+            "docs": [
+              "Minimum tier an agent needs to pay this recipient"
+            ],
+            "type": {
+              "defined": {
+                "name": "TrustTier"
+              }
+            }
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "Bump seed for the PDA"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MerchantPolicySet",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "merchant",
+            "type": "pubkey"
+          },
+          {
+            "name": "min_tier",
+            "type": "u8"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PassportAdopted",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "agent",
+            "type": "pubkey"
+          },
+          {
+            "name": "old_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "new_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "trust_score",
+            "type": "u8"
+          },
+          {
+            "name": "trust_tier",
+            "type": "u8"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PassportClosed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "agent",
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PassportFrozen",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "agent",
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PassportInitialized",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "agent",
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "trust_score",
+            "type": "u8"
+          },
+          {
+            "name": "trust_tier",
+            "type": "u8"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PassportUnfrozen",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "agent",
+            "type": "pubkey"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PaymentProcessed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "agent",
+            "type": "pubkey"
+          },
+          {
+            "name": "recipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "trust_tier",
+            "type": "u8"
+          },
+          {
+            "name": "tx_count",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProtocolConfig",
+      "docs": [
+        "Global protocol configuration (singleton PDA, seeds = [\"config\"]).",
+        "",
+        "A passport is only trusted by the gate when `passport.authority == config.scorer`,",
+        "so nobody can create a passport and assign themselves a tier."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "docs": [
+              "Can rotate the scorer and hand over admin rights"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "scorer",
+            "docs": [
+              "The only key whose scores and tiers the gate accepts"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "Bump seed for the PDA"
+            ],
+            "type": "u8"
+          }
         ]
       }
     },
@@ -232,22 +2708,15 @@
       "type": {
         "kind": "enum",
         "variants": [
-          { "name": "Bronze" },
-          { "name": "Silver" },
-          { "name": "Gold" }
-        ]
-      }
-    },
-    {
-      "name": "PassportInitialized",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          { "name": "agent", "type": "pubkey" },
-          { "name": "authority", "type": "pubkey" },
-          { "name": "trust_score", "type": "u8" },
-          { "name": "trust_tier", "type": "u8" },
-          { "name": "timestamp", "type": "i64" }
+          {
+            "name": "Bronze"
+          },
+          {
+            "name": "Silver"
+          },
+          {
+            "name": "Gold"
+          }
         ]
       }
     },
@@ -256,59 +2725,162 @@
       "type": {
         "kind": "struct",
         "fields": [
-          { "name": "agent", "type": "pubkey" },
-          { "name": "old_score", "type": "u8" },
-          { "name": "new_score", "type": "u8" },
-          { "name": "old_tier", "type": "u8" },
-          { "name": "new_tier", "type": "u8" },
-          { "name": "timestamp", "type": "i64" }
+          {
+            "name": "agent",
+            "type": "pubkey"
+          },
+          {
+            "name": "old_score",
+            "type": "u8"
+          },
+          {
+            "name": "new_score",
+            "type": "u8"
+          },
+          {
+            "name": "old_tier",
+            "type": "u8"
+          },
+          {
+            "name": "new_tier",
+            "type": "u8"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
         ]
       }
     },
     {
-      "name": "PaymentProcessed",
+      "name": "VaultCreated",
       "type": {
         "kind": "struct",
         "fields": [
-          { "name": "agent", "type": "pubkey" },
-          { "name": "recipient", "type": "pubkey" },
-          { "name": "amount", "type": "u64" },
-          { "name": "trust_tier", "type": "u8" },
-          { "name": "tx_count", "type": "u64" },
-          { "name": "timestamp", "type": "i64" }
+          {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "agent",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "per_tx_limit",
+            "type": "u64"
+          },
+          {
+            "name": "daily_limit",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
         ]
       }
     },
     {
-      "name": "PassportFrozen",
+      "name": "VaultPayment",
       "type": {
         "kind": "struct",
         "fields": [
-          { "name": "agent", "type": "pubkey" },
-          { "name": "authority", "type": "pubkey" },
-          { "name": "timestamp", "type": "i64" }
+          {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "agent",
+            "type": "pubkey"
+          },
+          {
+            "name": "recipient",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "spent_in_window",
+            "type": "u64"
+          },
+          {
+            "name": "trust_tier",
+            "type": "u8"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
         ]
       }
     },
     {
-      "name": "PassportUnfrozen",
+      "name": "VaultPolicyUpdated",
       "type": {
         "kind": "struct",
         "fields": [
-          { "name": "agent", "type": "pubkey" },
-          { "name": "authority", "type": "pubkey" },
-          { "name": "timestamp", "type": "i64" }
+          {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "per_tx_limit",
+            "type": "u64"
+          },
+          {
+            "name": "daily_limit",
+            "type": "u64"
+          },
+          {
+            "name": "allowlist_len",
+            "type": "u8"
+          },
+          {
+            "name": "paused",
+            "type": "bool"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
         ]
       }
     },
     {
-      "name": "PassportClosed",
+      "name": "VaultWithdrawal",
       "type": {
         "kind": "struct",
         "fields": [
-          { "name": "agent", "type": "pubkey" },
-          { "name": "authority", "type": "pubkey" },
-          { "name": "timestamp", "type": "i64" }
+          {
+            "name": "vault",
+            "type": "pubkey"
+          },
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
         ]
       }
     }

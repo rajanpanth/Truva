@@ -15,5 +15,9 @@ url = "https://api.apr.dev"
 cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
+# initialize_config checks the program's upgrade authority, so tests need an upgradeable deploy
+[test]
+upgradeable = true
+
 [scripts]
 test = "npx ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.test.ts"
