@@ -2,25 +2,27 @@
 
 [![Solana](https://img.shields.io/badge/Solana-Devnet-blue)](https://explorer.solana.com/address/BTgy2r8R85Jknq3JetNiVt1x9grdccm7pTV2LyUmDzG5?cluster=devnet)
 [![Anchor](https://img.shields.io/badge/Anchor-v0.30+-purple)](https://www.anchor-lang.com/)
-[![Tests](https://img.shields.io/badge/Tests-13%20Passing-brightgreen)]()
+[![Tests](https://img.shields.io/badge/Tests-51%20Passing-brightgreen)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-**The trust and reputation layer for AI agents on Solana.**
+**Spending policy and trust enforcement for AI agent payments on Solana.**
 
-Truva Protocol provides programmable, on-chain trust gates for AI agent payments. Every agent gets a **Passport PDA** with a trust score (0-100) and tier (Bronze → Silver → Gold). Any Solana protocol can integrate TrustGate to block untrusted agents with a single CPI call.
+The [Solana Agent Registry](https://solana.com/agent-registry) says who an agent is. Truva decides what it may spend. An owner funds an on-chain **Agent Vault** with limits; the agent can only pay through the TrustGate program, which checks the owner's limits, the agent's **Passport** (trust score 0-100, tier Bronze → Silver → Gold) and the seller's minimum tier on every payment. It plugs into HTTP 402 (x402-style) paywalls, so an agent can buy from paid APIs without ever holding the funds itself.
 
 > **Program ID:** `BTgy2r8R85Jknq3JetNiVt1x9grdccm7pTV2LyUmDzG5`
 > **Network:** Solana Devnet · **Framework:** Anchor · **Language:** Rust + TypeScript
 
 ## Key Features
 
-- **🛡️ TrustGate** — On-chain payment gating with a single CPI call. Block untrusted agents before any SOL/SPL transfer executes.
-- **🪪 Agent Passports** — PDA-based identity with trust score, tier, transaction history, and freeze capability.
-- **📊 6-Signal Scoring Engine** — Off-chain reputation scoring from transaction volume, success rate, counterparty diversity, account age, ZK proofs, and validator attestations.
-- **⛓️ On-Chain Tier Enforcement** — Bronze (5 SOL limit), Silver (100 SOL), Gold (unlimited). Tier-based amount caps enforced at the program level.
-- **🔌 SDK & Integrations** — TypeScript SDK with Eliza plugin and LangChain tool support for AI agent frameworks.
-- **🧊 Emergency Freeze** — Authority can instantly freeze any agent passport, blocking all transactions system-wide.
-- **📡 Real-Time Indexing** — Helius webhook integration for automatic transaction monitoring and score recalculation.
+- **🏦 Agent Vaults** — Owner-funded, program-owned token accounts. The agent key can only spend through `vault_pay`, within a per-payment limit, a daily limit and an optional recipient allowlist. The owner can pause, withdraw or close at any time.
+- **🛡️ TrustGate** — Every payment checks the agent's passport on-chain. Other programs can run the same check with one CPI to `verify_trust`.
+- **🧾 Merchant Policy** — A seller sets the minimum tier it accepts. Payments must pass the seller's policy account, so the paying agent cannot lower or skip it.
+- **💸 x402-style Paywall** — SDK middleware answers HTTP 402, verifies the agent's `vault_pay` transaction, settles it and serves the resource. A matching `fetchWithVault` client pays automatically, with its own price cap.
+- **🪪 Agent Passports** — PDA per agent with score, tier, transaction counts and a freeze flag. Only the protocol scorer can set scores; nobody can score themselves.
+- **📊 6-Signal Scoring Engine** — Off-chain scoring from transaction volume, success rate, counterparty diversity, account age, Solana Agent Registry feedback, and validator attestations.
+- **🧊 Kill Switch** — The scorer can freeze a passport, blocking every payment. A risk monitor can do it automatically when an agent's activity looks compromised.
+- **🔌 SDK & Integrations** — TypeScript SDK (pure `@solana/web3.js`) with Eliza plugin, LangChain tool and MCP server.
+- **📡 Real-Time Indexing** — Helius webhook integration for transaction monitoring and score recalculation.
 
 ---
 
@@ -39,13 +41,18 @@ Truva Protocol provides programmable, on-chain trust gates for AI agent payments
 │  │         | success_count | frozen | authority        │ │
 │  │                                                     │ │
 │  │  Instructions:                                      │ │
+│  │    initialize_config   → set protocol scorer        │ │
 │  │    initialize_passport → create new passport        │ │
-│  │    update_trust_tier   → authority sets score/tier   │ │
-│  │    process_payment_sol → trust-gated SOL transfer   │ │
-│  │    process_payment_spl → trust-gated SPL transfer   │ │
+│  │    update_trust_tier   → scorer sets score/tier     │ │
+│  │    verify_trust        → CPI trust check            │ │
+│  │    set_merchant_policy → seller's minimum tier      │ │
+│  │    create_vault        → owner sets spend limits    │ │
+│  │    vault_pay           → policy-enforced payment    │ │
+│  │    process_payment_*   → trust-gated direct payment │ │
 │  │    freeze_passport     → block all payments         │ │
-│  │    unfreeze_passport   → re-enable payments         │ │
-│  │    close_passport      → reclaim rent               │ │
+│  └─────────────────────────────────────────────────────┘ │
+│  Accounts: ProtocolConfig · AgentPassport ·              │
+│            MerchantPolicy · AgentVault                   │
 │  └─────────────────────────────────────────────────────┘ │
 │                         ▲                                │
 │                         │ on-chain writes                │
@@ -77,7 +84,64 @@ Truva Protocol provides programmable, on-chain trust gates for AI agent payments
 |--------|--------|-------------------------|---------------------------------------------------------------------------|
 | Bronze | 0-49   | Basic ops, 5 SOL limit  | Default                                                                   |
 | Silver | 50-79  | Standard flows, 100 SOL | ≥10 txs, ≥80% success, ≥5 counterparties, ≥1 attestation                 |
-| Gold   | 80-100 | Full DeFi, unlimited    | ≥30 txs, ≥90% success, ≥10 counterparties, ≥2 attestations, ≥1 ZK proof |
+| Gold   | 80-100 | Full DeFi, unlimited    | ≥30 txs, ≥90% success, ≥10 counterparties, ≥2 attestations, Agent Registry feedback averaging ≥60 |
+
+The tier is decided off-chain from all signals and written on-chain together with the score. An agent with three or more Agent Registry feedbacks averaging below 30 is held at Bronze. The "Access Level" amounts are the caps on direct SOL payments (`process_payment_sol`); vault payments are capped by the vault owner's limits.
+
+---
+
+## Agent Vaults and the x402 Paywall
+
+```
+Owner ──create_vault(limits)──▶ AgentVault PDA ◀── holds the tokens
+Agent ──GET /report──────────▶ Seller API
+      ◀─402 + requirements───
+      ──X-PAYMENT: signed vault_pay tx──▶ Seller verifies, submits, confirms
+      ◀─200 + resource───────           TrustGate enforces at settlement:
+                                         vault not paused · passport trusted and
+                                         not frozen · seller's minimum tier ·
+                                         per-payment limit · daily limit · allowlist
+```
+
+Seller (Express or bare Node `http`):
+
+```typescript
+import { truvaPaywall } from '@truva-protocol/sdk';
+
+app.get('/report',
+  truvaPaywall({ connection, payTo: sellerWallet, mint: USDC, amount: 1_000_000, minTier: 'Silver' }),
+  (req, res) => res.json({ report: '...' }));
+```
+
+Agent:
+
+```typescript
+import { fetchWithVault } from '@truva-protocol/sdk';
+
+const res = await fetchWithVault('https://api.example.com/report', undefined, {
+  connection, agent: agentKeypair, vaultOwner: ownerWallet,
+  maxAmount: 1_000_000, // never pay more than 1 USDC per call
+});
+```
+
+Owner:
+
+```typescript
+import { createVaultIx, setVaultPausedIx } from '@truva-protocol/sdk';
+
+createVaultIx(owner, agent, USDC, {
+  perTxLimit: 1_000_000, dailyLimit: 20_000_000, allowlist: [sellerWallet],
+});
+setVaultPausedIx(owner, agent, USDC, true); // stop the agent immediately
+```
+
+The payment scheme is `truva-vault`. It follows the x402 handshake (402 response with `accepts`, `X-PAYMENT` request header, `X-PAYMENT-RESPONSE` receipt) but is not x402's stock `exact` scheme: the payment is a `vault_pay` instruction rather than a plain token transfer, and the seller settles it directly instead of through a third-party facilitator. Vaults hold classic SPL tokens (not Token-2022).
+
+Run the whole flow locally:
+
+```bash
+npm run demo:x402
+```
 
 ---
 
@@ -87,13 +151,21 @@ Truva Protocol provides programmable, on-chain trust gates for AI agent payments
 truva/
 ├── programs/trustgate/         # Solana Anchor program (Rust)
 │   └── src/
-│       ├── lib.rs              # Program entry + 7 instructions
+│       ├── lib.rs              # Program entry + 20 instructions
 │       ├── state/
 │       │   ├── mod.rs
-│       │   └── passport.rs     # AgentPassport account + TrustTier enum + events
+│       │   ├── config.rs       # ProtocolConfig (admin, scorer)
+│       │   ├── passport.rs     # AgentPassport account + TrustTier enum + events
+│       │   ├── merchant.rs     # MerchantPolicy (recipient's minimum tier)
+│       │   └── vault.rs        # AgentVault (limits, spend window, allowlist)
 │       ├── instructions/
 │       │   ├── mod.rs
+│       │   ├── config.rs
 │       │   ├── initialize_passport.rs
+│       │   ├── adopt_passport.rs
+│       │   ├── verify_trust.rs
+│       │   ├── merchant_policy.rs
+│       │   ├── vault.rs
 │       │   ├── update_trust_tier.rs
 │       │   ├── process_payment_sol.rs
 │       │   ├── process_payment_spl.rs
@@ -107,7 +179,11 @@ truva/
 │   │   ├── webhooks/
 │   │   │   └── helius.ts       # Helius webhook handler
 │   │   ├── services/
-│   │   │   ├── scorer.ts       # 6-signal trust score calculator
+│   │   │   ├── scorer.ts       # Gathers signals, recalculates, writes on-chain
+│   │   │   ├── score-rules.ts  # 6-signal score and tier rules
+│   │   │   ├── agent-registry.ts # Solana Agent Registry reputation lookup
+│   │   │   ├── risk-monitor.ts # Automatic kill switch
+│   │   │   ├── risk-rules.ts   # Anomaly detection rules
 │   │   │   ├── backfill.ts     # Historical tx analysis
 │   │   │   └── chain-writer.ts # On-chain PDA updater
 │   │   ├── db/
@@ -122,12 +198,18 @@ truva/
 │   ├── tsconfig.json
 │   └── .env.example
 ├── sdk/                        # Developer SDK (TypeScript)
-│   └── src/index.ts            # Truva class + TruvaError
+│   └── src/
+│       ├── client.ts           # TruvaClient (reads, trust checks)
+│       ├── instructions.ts     # Instruction builders + account parsers
+│       └── x402.ts             # truvaPaywall, fetchWithVault
 ├── scripts/
 │   ├── seedAgents.ts           # Seed 10 demo agents
 │   └── simulateTransactions.ts # Simulate 50 txs for testing
 ├── tests/
-│   └── trustgate.test.ts       # Anchor test suite (13 tests)
+│   ├── trustgate.test.ts       # Program test suite (42 tests)
+│   └── x402.test.ts            # End-to-end paywall tests (9 tests)
+├── demos/
+│   └── x402-vault-paywall.ts   # Narrated agent-buys-from-API demo
 └── README.md
 ```
 
@@ -200,7 +282,9 @@ anchor build
 anchor deploy
 ```
 
-After deploying, update the program ID in:
+After deploying, create the protocol config once with the upgrade-authority wallet, passing the key your backend signs score updates with (`BACKEND_AUTHORITY_KEY`) as the scorer (`initialize_config`). Passports created before the config existed must be adopted by the scorer (`adopt_passport`) before they pass the gate.
+
+Update the program ID in:
 - `Anchor.toml` (both localnet and devnet)
 - `programs/trustgate/src/lib.rs` (`declare_id!`)
 - `sdk/src/index.ts` (`TRUSTGATE_PROGRAM_ID`)
@@ -212,29 +296,7 @@ After deploying, update the program ID in:
 anchor test
 ```
 
-Expected output:
-```
-TrustGate
-  initialize_passport
-    ✓ initializes a passport correctly
-    ✓ starts agent at Bronze tier with score 0
-  update_trust_tier
-    ✓ updates trust tier when called by authority
-    ✓ rejects tier update from non-authority
-  freeze_passport / unfreeze_passport
-    ✓ freezes passport correctly
-    ✓ unfreezes passport correctly
-  process_payment_sol
-    ✓ blocks payment when agent is frozen
-    ✓ blocks payment when tier is insufficient
-    ✓ processes SOL payment for Gold tier agent
-    ✓ rejects payment exceeding Bronze tier limit
-    ✓ allows payment within Silver tier limit
-  process_payment_spl
-    ✓ processes SPL payment for Gold tier agent
-  close_passport
-    ✓ closes passport and reclaims rent
-```
+The suite (51 tests) covers the config, passports, trust checks, merchant policy, direct payments, agent vaults and the end-to-end x402 paywall in `tests/x402.test.ts`. `Anchor.toml` sets `[test] upgradeable = true` because `initialize_config` checks the program's upgrade authority.
 
 ### 6. Start the Backend
 
@@ -320,7 +382,7 @@ anchor deploy --provider.cluster devnet
 | GET | `/api/agents/:pubkey/history` | Score history over time |
 | GET | `/api/agents/:pubkey/txs` | Transaction history (paginated: `?page=1&limit=20`) |
 | POST | `/api/agents/:pubkey/attest` | Submit validator attestation |
-| POST | `/api/agents/:pubkey/zkproof` | Submit ZK proof record |
+| POST | `/api/agents/:pubkey/zkproof` | Store a proof hash (recorded only; not used for scoring) |
 
 ### Webhook
 
@@ -352,38 +414,36 @@ npm install @truva-protocol/sdk
 ### Quick Start
 
 ```typescript
-import { TruvaSDK, TruvaError } from 'truva-sdk';
-import { PublicKey } from '@solana/web3.js';
+import { TruvaClient, TruvaError } from '@truva-protocol/sdk';
+import { Connection } from '@solana/web3.js';
 
-const truva = new TruvaSDK({
-  rpcUrl: 'https://api.mainnet-beta.solana.com',
-  apiUrl: 'http://localhost:3001',
-});
+const truva = new TruvaClient(new Connection(rpcUrl), { apiUrl: 'http://localhost:3001' });
 
-// Check agent score (reads from on-chain PDA)
+// Check agent score (reads the on-chain passport)
 const score = await truva.getAgentScore(agentPubkey);
-console.log(score.tier);       // "Gold"
-console.log(score.score);      // 87
+console.log(score.tier);     // "Gold"
+console.log(score.score);    // 87
+console.log(score.trusted);  // false if the score was not set by the protocol scorer
 
-// Gate a payment — throws TruvaError if insufficient
+// Gate a call — throws TruvaError if untrusted, frozen or below the tier
 try {
   await truva.requireTrustTier('Gold', agentPubkey);
-  // ✅ Agent meets Gold tier — proceed with payment
 } catch (err) {
   if (err instanceof TruvaError) {
     console.log(`Blocked: ${err.currentTier} < ${err.requiredTier}`);
   }
 }
 
-// Register a new agent
-await truva.register(agentPubkey, payerKeypair);
+// What a seller requires, and what an agent can still spend
+const minTier = await truva.getMerchantMinTier(sellerWallet);
+const vault = await truva.getVault(ownerWallet, agentPubkey, mint);
+console.log(vault?.dailyLimit, vault?.spentInWindow, vault?.balance);
 
-// Get full profile (from REST API)
+// Full profile (from the REST API)
 const profile = await truva.getAgentProfile(agentPubkey);
-
-// Check eligibility for a specific amount
-const eligible = await truva.isEligible(agentPubkey, 'Silver', 50_000_000_000);
 ```
+
+Instruction builders (`createVaultIx`, `vaultPayIx`, `setMerchantPolicyIx`, `verifyTrustIx`, ...) return plain `TransactionInstruction`s, so they work with any wallet or agent framework.
 
 ### SNS Identity — `.sol` Domain Resolution
 
@@ -419,26 +479,41 @@ The reputation engine calculates trust scores from **6 signals**:
 | Success Rate | 25 pts | `(successCount / txCount) × 25` |
 | Counterparty Diversity | 20 pts | `min(uniqueCounterparties / 20, 1.0) × 20` |
 | Account Age | 15 pts | `min(ageInDays / 60, 1.0) × 15` |
-| ZK Proofs | 10 pts | `min(zkProofCount / 5, 1.0) × 10` |
+| Agent Registry Reputation | 10 pts | `min(feedbacks / 5, 1.0) × (averageScore / 100) × 10` |
 | Validator Attestations | 5 pts | `min(attestationCount / 3, 1.0) × 5` |
 
 **Total Score** = sum of all signals (0-100)
 
 Scoring happens **off-chain** in the reputation engine. Only **tier changes** trigger on-chain PDA updates to save SOL.
 
+### Solana Agent Registry
+
+Signal 5 is read from the [Solana Agent Registry](https://solana.com/agent-registry) (the ERC-8004 identity and feedback registry on Solana) with the `8004-solana` SDK. The engine looks up the registry identity linked to the agent's wallet and uses its feedback count and average score. Lookups are read-only, cached per agent for an hour, and skipped if the SDK is not installed. Configure with `AGENT_REGISTRY_CLUSTER` and `AGENT_REGISTRY_RPC_URL`.
+
+### Risk Monitor (automatic kill switch)
+
+After each webhook batch the engine checks every affected agent's last 10 minutes of activity for a transaction burst, payments sprayed across many counterparties, or a failure spike. If `AUTO_FREEZE_ENABLED=true`, an anomalous agent's passport is frozen on-chain, which blocks all of its payments (including vault payments) until the scorer unfreezes it. Thresholds are set with the `RISK_*` variables in `.env.example`.
+
 ---
 
 ## Smart Contract Instructions
 
-| Instruction | Description |
-|-------------|-------------|
-| `initialize_passport` | Create a new agent passport PDA (score=0, tier=Bronze) |
-| `update_trust_tier` | Authority updates score and auto-derives tier |
-| `process_payment_sol` | SOL transfer gated by minimum trust tier |
-| `process_payment_spl` | SPL token transfer gated by minimum trust tier |
-| `freeze_passport` | Authority freezes a passport (blocks all payments) |
-| `unfreeze_passport` | Authority unfreezes a passport |
-| `close_passport` | Close passport account and reclaim rent |
+| Instruction | Signer | Description |
+|-------------|--------|-------------|
+| `initialize_config` | Upgrade authority | Create the protocol config and set the scorer |
+| `update_config` | Admin | Rotate the scorer or hand over admin |
+| `initialize_passport` | Anyone (payer) | Create an agent passport (score 0, Bronze). Authority is always the scorer |
+| `adopt_passport` | Scorer | Bring an older or rotated passport under the current scorer with an explicit score and tier |
+| `update_trust_tier` | Scorer | Set score and tier |
+| `verify_trust` | None | Read-only trust check for CPI. Returns `[score, tier]` |
+| `set_merchant_policy` / `close_merchant_policy` | Recipient | Set or remove the minimum tier the recipient accepts |
+| `create_vault` | Owner | Create a vault for one agent and one mint with limits and an allowlist |
+| `update_vault_policy` / `set_vault_paused` | Owner | Change limits and allowlist; pause or resume |
+| `vault_pay` | Agent | Pay from the vault, enforced by the program |
+| `vault_withdraw` / `close_vault` | Owner | Withdraw; return the balance and close |
+| `process_payment_sol` / `process_payment_spl` | Agent | Direct transfer from the agent's own wallet, gated by tier and merchant policy |
+| `freeze_passport` / `unfreeze_passport` | Scorer | Block or re-enable all payments for an agent |
+| `migrate_passport` / `close_passport` | Scorer | Layout migration; close and reclaim rent |
 
 ---
 
@@ -459,20 +534,26 @@ Scoring happens **off-chain** in the reputation engine. Only **tier changes** tr
 
 ---
 
-## Key Innovation: TrustGate
+## How Enforcement Works
 
-The core instruction `process_payment_sol`:
+A trust check only matters if the agent cannot route around it. Truva enforces at two points:
+
+1. **The funds are not the agent's.** They sit in a token account owned by the vault PDA. The only instruction that moves them for the agent is `vault_pay`:
 
 ```rust
-// 1. Check: passport is not frozen
-// 2. Check: agent.trust_tier >= required_tier
-// 3. Check: amount <= tier_limit
-// 4. Execute: SOL transfer via system_program CPI
-// 5. Update: tx_count += 1, success_count += 1
-// 6. Emit: PaymentProcessed event
+// 1. Check: vault is not paused by its owner
+// 2. Check: passport is scored by the protocol scorer and not frozen
+// 3. Check: agent tier >= the recipient's merchant policy
+// 4. Check: recipient is on the allowlist (if one is set)
+// 5. Check: amount <= per-payment limit, window total <= daily limit
+// 6. Execute: SPL transfer signed by the vault PDA
+// 7. Update: vault spend counters, passport tx counts
+// 8. Emit: VaultPayment event
 ```
 
-This is the **gate nobody else has built**. Any Solana protocol can integrate TrustGate to trust-gate AI agent payments with a single CPI call.
+2. **The tier is not the agent's to choose.** Scores are only accepted from the protocol scorer, and the required tier comes from the recipient's own policy account, whose address the program derives and verifies.
+
+Direct payments from an agent's own wallet (`process_payment_sol` / `process_payment_spl`) apply the same passport and merchant-policy checks, but an agent holding its own funds could also transfer them without TrustGate. Use vaults when enforcement has to hold.
 
 ---
 
@@ -480,11 +561,12 @@ This is the **gate nobody else has built**. Any Solana protocol can integrate Tr
 
 Truva Protocol handles real value transfers on Solana. Security is a core design principle, not an afterthought.
 
-- **Authority-gated access control** on all privileged operations via Anchor's `has_one` constraint
-- **Deterministic PDA addressing** preventing duplicate passports per agent
-- **Checked arithmetic** on all counter operations to prevent overflow
-- **Three-layer payment gating** (frozen check → tier check → amount limit) before any CPI transfer
-- **13 passing test cases** covering initialization, authority validation, payment gating, freeze/unfreeze, and account closure
+- **Scores cannot be self-assigned** — a passport only passes the gate if its authority is the protocol scorer held in the config account, and only the program's upgrade authority can create that config
+- **Program-owned funds** — vault tokens can only move through `vault_pay` (agent, within limits) or `vault_withdraw` / `close_vault` (owner)
+- **Recipient-controlled tier** — the merchant policy PDA is derived and verified by the program, so it cannot be substituted or omitted
+- **Deterministic PDA addressing** for config, passports, merchant policies and vaults
+- **Checked arithmetic** on all counters and spend totals
+- **51 passing tests** covering authority checks, spoofing attempts, every vault limit, pause, freeze, and the end-to-end x402 paywall
 
 For a detailed breakdown of our security architecture, threat model, and areas requiring formal audit, see **[SECURITY.md](./SECURITY.md)**.
 
