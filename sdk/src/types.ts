@@ -71,6 +71,13 @@ export type AgentPassportData = {
   txCount: number;
   successRate: number;
   frozen: boolean;
+  /** Key that set this passport's score */
+  authority?: string;
+  /**
+   * False when the passport's authority is not the protocol scorer, i.e. the
+   * score was not issued by Truva and must not be relied on.
+   */
+  trusted?: boolean;
 };
 
 /** Full agent profile returned by the reputation REST API. */

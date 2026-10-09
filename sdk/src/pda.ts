@@ -36,3 +36,70 @@ export function derivePassportPDA(
     programId
   );
 }
+
+/** SPL Token program (classic). Vaults do not support Token-2022. */
+export const TOKEN_PROGRAM_ID = new PublicKey(
+  "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+);
+
+/** SPL Associated Token Account program. */
+export const ASSOCIATED_TOKEN_PROGRAM_ID = new PublicKey(
+  "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+);
+
+/**
+ * Derive the global protocol config PDA.
+ *
+ * Seeds: `["config"]`
+ */
+export function deriveConfigPDA(
+  programId: PublicKey = TRUSTGATE_PROGRAM_ID
+): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync([Buffer.from("config")], programId);
+}
+
+/**
+ * Derive the merchant policy PDA for a recipient wallet.
+ *
+ * Seeds: `["merchant", merchant]`
+ */
+export function deriveMerchantPolicyPDA(
+  merchant: PublicKey,
+  programId: PublicKey = TRUSTGATE_PROGRAM_ID
+): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("merchant"), merchant.toBuffer()],
+    programId
+  );
+}
+
+/**
+ * Derive the agent vault PDA.
+ *
+ * Seeds: `["vault", owner, agent, mint]`
+ */
+export function deriveVaultPDA(
+  owner: PublicKey,
+  agent: PublicKey,
+  mint: PublicKey,
+  programId: PublicKey = TRUSTGATE_PROGRAM_ID
+): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("vault"), owner.toBuffer(), agent.toBuffer(), mint.toBuffer()],
+    programId
+  );
+}
+
+/**
+ * Derive an associated token account address.
+ * `owner` may be a PDA (e.g. a vault).
+ */
+export function deriveAssociatedTokenAddress(
+  mint: PublicKey,
+  owner: PublicKey
+): PublicKey {
+  return PublicKey.findProgramAddressSync(
+    [owner.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), mint.toBuffer()],
+    ASSOCIATED_TOKEN_PROGRAM_ID
+  )[0];
+}

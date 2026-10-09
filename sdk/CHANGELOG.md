@@ -3,6 +3,25 @@
 All notable changes to `@truva-protocol/sdk` will be documented in this file.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+
+Requires the TrustGate program version with protocol config, merchant policies and agent vaults.
+
+### Added
+- Agent vault instruction builders: `createVaultIx`, `updateVaultPolicyIx`, `setVaultPausedIx`, `vaultPayIx`, `vaultWithdrawIx`, `closeVaultIx`
+- `setMerchantPolicyIx` / `closeMerchantPolicyIx` — a recipient's minimum tier
+- `verifyTrustIx` — on-chain trust check to compose into a transaction
+- `initializePassportIx` — permissionless passport creation
+- `TruvaClient.getVault()`, `getMerchantMinTier()`, `getConfig()`
+- x402-style paywall: `truvaPaywall` (seller middleware), `fetchWithVault` (agent client), `settleVaultPayment`, `createVaultPayment`, `buildPaymentRequirements`, `PaymentRejectedError`
+- PDA helpers: `deriveConfigPDA`, `deriveMerchantPolicyPDA`, `deriveVaultPDA`, `deriveAssociatedTokenAddress`
+- Account parsers: `parseVaultAccount`, `parseMerchantPolicyAccount`, `parseConfigAccount`
+- `PROGRAM_ERRORS` — program error codes to names
+
+### Changed
+- `getAgentScore()` also returns `authority` and `trusted`. `trusted` is false when the passport was not scored by the protocol scorer
+- `requireTrustTier()` rejects untrusted passports with code `UNTRUSTED_AUTHORITY`
+
 ## [0.1.0] — 2026-04-27
 
 ### Added

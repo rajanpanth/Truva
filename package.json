@@ -9,6 +9,7 @@
     "test": "anchor test",
     "seed": "npx ts-node scripts/seedAgents.ts",
     "simulate": "npx ts-node scripts/simulateTransactions.ts",
+    "demo:x402": "npx ts-node --transpile-only demos/x402-vault-paywall.ts",
     "dev:app": "cd app && npm run dev",
     "build:app": "cd app && npm run build",
     "dev:backend": "cd backend/reputation-engine && npm run dev",

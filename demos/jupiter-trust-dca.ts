@@ -9,7 +9,7 @@
 
 import { Connection, PublicKey, Keypair } from "@solana/web3.js";
 
-const RPC_URL = process.env.SOLANA_RPC_URL || "https://solana-rpc.rpcfast.com/3iA4Q8dhKFv1wNYgfqaEhTpfVrjV1tttBUyVSZGGkayWHeJpGXTL6ZDNjwDaDqhg";
+const RPC_URL = process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com";
 const PROGRAM_ID = process.env.TRUVA_PROGRAM_ID || "BTgy2r8R85Jknq3JetNiVt1x9grdccm7pTV2LyUmDzG5";
 const JUPITER_API = "https://api.jup.ag";
 const connection = new Connection(RPC_URL, "confirmed");

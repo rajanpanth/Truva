@@ -17,7 +17,58 @@ export { TruvaClient } from "./client";
 export { AgentWallet, wrapWithTrustGate } from "./agent";
 
 // PDA utilities
-export { TRUSTGATE_PROGRAM_ID, derivePassportPDA } from "./pda";
+export {
+  TRUSTGATE_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  derivePassportPDA,
+  deriveConfigPDA,
+  deriveMerchantPolicyPDA,
+  deriveVaultPDA,
+  deriveAssociatedTokenAddress,
+} from "./pda";
+
+// Instruction builders and account parsers (vaults, merchant policy, trust checks)
+export {
+  MAX_ALLOWLIST,
+  PROGRAM_ERRORS,
+  initializePassportIx,
+  verifyTrustIx,
+  setMerchantPolicyIx,
+  closeMerchantPolicyIx,
+  createVaultIx,
+  updateVaultPolicyIx,
+  setVaultPausedIx,
+  vaultPayIx,
+  vaultWithdrawIx,
+  closeVaultIx,
+  parseConfigAccount,
+  parseMerchantPolicyAccount,
+  parseVaultAccount,
+} from "./instructions";
+export type {
+  VaultPolicyInput,
+  ProtocolConfigData,
+  MerchantPolicyData,
+  AgentVaultData,
+} from "./instructions";
+
+// x402-style paywall settled through an agent vault
+export {
+  TRUVA_VAULT_SCHEME,
+  buildPaymentRequirements,
+  createVaultPayment,
+  settleVaultPayment,
+  truvaPaywall,
+  fetchWithVault,
+  PaymentRejectedError,
+} from "./x402";
+export type {
+  PaymentRequirements,
+  PaywallOptions,
+  SettledPayment,
+  FetchWithVaultOptions,
+} from "./x402";
 
 // Errors
 export { TruvaError, InsufficientTierError, AgentFrozenError } from "./errors";

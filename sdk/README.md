@@ -86,6 +86,65 @@ console.log(`  Tier:  ${result.tier}`);          // starts at 1 (Bronze)
 | `spending_behavior` | `SpendingBehavior` | — | `conservative`, `standard`, `aggressive` |
 | `metadata` | `object` | — | Any JSON-serializable metadata |
 
+## Agent Vaults
+
+An owner funds a vault for an agent and sets limits. The agent can only spend through the program.
+
+```ts
+import {
+  createVaultIx, vaultPayIx, setVaultPausedIx, deriveVaultPDA, deriveAssociatedTokenAddress,
+} from "@truva-protocol/sdk";
+
+// Owner: 1 USDC per payment, 20 USDC per day, one allowed recipient
+const ix = createVaultIx(owner, agent, USDC_MINT, {
+  perTxLimit: 1_000_000n,
+  dailyLimit: 20_000_000n,
+  allowlist: [sellerWallet],
+});
+// Fund it with a normal token transfer to:
+const [vault] = deriveVaultPDA(owner, agent, USDC_MINT);
+const vaultToken = deriveAssociatedTokenAddress(USDC_MINT, vault);
+
+// Agent: pay a recipient (its token account must exist)
+const pay = vaultPayIx(owner, agent, USDC_MINT, sellerWallet, 500_000n);
+
+// Owner: stop the agent
+const pause = setVaultPausedIx(owner, agent, USDC_MINT, true);
+
+// Anyone: read limits, spend so far and balance
+const state = await truva.getVault(owner, agent, USDC_MINT);
+```
+
+Builders return plain `TransactionInstruction`s. Vaults hold classic SPL tokens (not Token-2022).
+
+## x402-style Paywall
+
+Seller (Express or Node `http`). Each request costs `amount`; the middleware answers 402, verifies the agent's `vault_pay` transaction, submits it and calls `next()` once it is confirmed:
+
+```ts
+import { truvaPaywall } from "@truva-protocol/sdk";
+
+app.get("/report",
+  truvaPaywall({ connection, payTo: sellerWallet, mint: USDC_MINT, amount: 1_000_000, minTier: "Silver" }),
+  (req, res) => res.json({ report: "...", paidBy: req.truvaPayment.payer }));
+```
+
+Agent. `fetchWithVault` pays the challenge from the vault and retries once; it throws `PaymentRejectedError` if the price is above `maxAmount` or the payment is refused:
+
+```ts
+import { fetchWithVault, PaymentRejectedError } from "@truva-protocol/sdk";
+
+try {
+  const res = await fetchWithVault(url, undefined, {
+    connection, agent: agentKeypair, vaultOwner: owner, maxAmount: 1_000_000,
+  });
+} catch (err) {
+  if (err instanceof PaymentRejectedError) console.log(err.reason); // e.g. "ExceedsDailyLimit"
+}
+```
+
+The scheme name is `truva-vault`. It uses the x402 handshake but is not the stock `exact` scheme, and the seller settles the transaction itself rather than through a facilitator.
+
 ## elizaOS Plugin
 
 Drop the plugin into any elizaOS `AgentRuntime`. It adds two capabilities:

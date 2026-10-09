@@ -20,8 +20,7 @@ import { z } from "zod";
 // ── Config ──────────────────────────────────────────────────────────────────
 
 const SOLANA_RPC_URL =
-  process.env.SOLANA_RPC_URL ||
-  "https://solana-rpc.rpcfast.com/3iA4Q8dhKFv1wNYgfqaEhTpfVrjV1tttBUyVSZGGkayWHeJpGXTL6ZDNjwDaDqhg";
+  process.env.SOLANA_RPC_URL || "https://api.devnet.solana.com";
 
 const TRUVA_API_URL = process.env.TRUVA_API_URL || "http://localhost:3001";
 

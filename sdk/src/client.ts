@@ -18,7 +18,22 @@ import type {
 } from "./types";
 import { TIER_LIMITS_LAMPORTS, TIER_RANK } from "./types";
 import { TruvaError } from "./errors";
-import { derivePassportPDA } from "./pda";
+import {
+  deriveAssociatedTokenAddress,
+  deriveConfigPDA,
+  deriveMerchantPolicyPDA,
+  derivePassportPDA,
+  deriveVaultPDA,
+} from "./pda";
+import {
+  parseConfigAccount,
+  parseMerchantPolicyAccount,
+  parseVaultAccount,
+} from "./instructions";
+import type {
+  AgentVaultData,
+  ProtocolConfigData,
+} from "./instructions";
 
 export class TruvaClient {
   private readonly connection: Connection;
@@ -44,16 +59,66 @@ export class TruvaClient {
    */
   async getAgentScore(agentPubkey: PublicKey): Promise<AgentPassportData> {
     const [pda] = derivePassportPDA(agentPubkey);
+    const [configPda] = deriveConfigPDA();
 
-    const accountInfo = await this.connection.getAccountInfo(pda, {
-      commitment: this.config.commitment,
-    });
+    const [accountInfo, configInfo] = await this.connection.getMultipleAccountsInfo(
+      [pda, configPda],
+      { commitment: this.config.commitment }
+    );
 
     if (!accountInfo) {
       throw new Error(`No passport found for agent ${agentPubkey.toBase58()}`);
     }
 
-    return parsePassportAccount(accountInfo.data);
+    const passport = parsePassportAccount(accountInfo.data);
+    // A passport only counts if the protocol scorer is its authority.
+    // Deployments without a config account predate this check.
+    const trusted = configInfo
+      ? parseConfigAccount(configInfo.data).scorer.toBase58() === passport.authority
+      : true;
+
+    return { ...passport, trusted };
+  }
+
+  /** Read the global protocol config (admin and scorer). Null if not initialized. */
+  async getConfig(): Promise<ProtocolConfigData | null> {
+    const info = await this.connection.getAccountInfo(deriveConfigPDA()[0], {
+      commitment: this.config.commitment,
+    });
+    return info ? parseConfigAccount(info.data) : null;
+  }
+
+  /**
+   * Minimum tier a recipient requires from paying agents.
+   * Recipients without a merchant policy accept any tier (Bronze).
+   */
+  async getMerchantMinTier(merchant: PublicKey): Promise<TrustTier> {
+    const info = await this.connection.getAccountInfo(
+      deriveMerchantPolicyPDA(merchant)[0],
+      { commitment: this.config.commitment }
+    );
+    return info ? parseMerchantPolicyAccount(info.data).minTier : "Bronze";
+  }
+
+  /**
+   * Read an agent vault: the owner's limits, what was spent in the current
+   * 24h window, and the token balance left. Null if the vault does not exist.
+   */
+  async getVault(
+    owner: PublicKey,
+    agent: PublicKey,
+    mint: PublicKey
+  ): Promise<(AgentVaultData & { address: PublicKey; balance: bigint }) | null> {
+    const [vault] = deriveVaultPDA(owner, agent, mint);
+    const [vaultInfo, tokenInfo] = await this.connection.getMultipleAccountsInfo(
+      [vault, deriveAssociatedTokenAddress(mint, vault)],
+      { commitment: this.config.commitment }
+    );
+    if (!vaultInfo) return null;
+
+    // SPL token account layout: mint (32), owner (32), amount (u64 LE)
+    const balance = tokenInfo ? tokenInfo.data.readBigUInt64LE(64) : 0n;
+    return { ...parseVaultAccount(vaultInfo.data), address: vault, balance };
   }
 
   // ── SNS Domain Resolution ─────────────────────────────────────────────────
@@ -116,6 +181,15 @@ export class TruvaClient {
     agentPubkey: PublicKey
   ): Promise<void> {
     const passport = await this.getAgentScore(agentPubkey);
+
+    if (passport.trusted === false) {
+      throw new TruvaError(
+        `Agent ${agentPubkey.toBase58()} has a passport that was not scored by the protocol scorer`,
+        passport.tier,
+        requiredTier,
+        "UNTRUSTED_AUTHORITY"
+      );
+    }
 
     if (passport.frozen) {
       throw new TruvaError(
@@ -338,7 +412,7 @@ const TIER_MAP: Record<number, TrustTier> = {
  *
  * Layout (after 8-byte Anchor discriminator):
  * - agent:         32 bytes (Pubkey)
- * - authority:     32 bytes (Pubkey)
+ * - authority:     32 bytes (Pubkey) — must equal the protocol scorer
  * - trust_score:    1 byte  (u8)
  * - trust_tier:     1 byte  (enum u8)
  * - tx_count:       8 bytes (u64 LE)
@@ -348,11 +422,12 @@ const TIER_MAP: Record<number, TrustTier> = {
  * - updated_at:     8 bytes (i64 LE) — skipped
  * - bump:           1 byte  — skipped
  */
-function parsePassportAccount(data: Buffer): AgentPassportData {
+function parsePassportAccount(data: Buffer): Omit<AgentPassportData, "trusted"> & { authority: string } {
   let offset = 8; // skip Anchor discriminator
 
   offset += 32; // agent pubkey
-  offset += 32; // authority pubkey
+  const authority = new PublicKey(data.subarray(offset, offset + 32)).toBase58();
+  offset += 32;
 
   const trustScore = data[offset]; offset += 1;
   const tierByte   = data[offset]; offset += 1;
@@ -366,5 +441,5 @@ function parsePassportAccount(data: Buffer): AgentPassportData {
     ? Math.round((successCount / txCount) * 1000) / 1000
     : 0;
 
-  return { score: trustScore, tier, txCount, successRate, frozen };
+  return { score: trustScore, tier, txCount, successRate, frozen, authority };
 }
