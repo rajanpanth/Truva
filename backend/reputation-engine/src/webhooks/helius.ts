@@ -9,24 +9,27 @@ import { Router, Request, Response } from "express";
 import crypto from "crypto";
 import { query } from "../db/client";
 import { recalculateScore } from "../services/scorer";
+import { evaluateAgentRisk } from "../services/risk-monitor";
 
 const router = Router();
-
-const HELIUS_WEBHOOK_SECRET = process.env.HELIUS_WEBHOOK_SECRET || "";
 
 /**
  * Validate Helius webhook signature
  */
 function validateSignature(body: string, signature: string): boolean {
-  if (!HELIUS_WEBHOOK_SECRET) {
+  // Read at request time so a secret set after startup is honoured
+  const secret = process.env.HELIUS_WEBHOOK_SECRET || "";
+  if (!secret) {
     console.warn("⚠️  HELIUS_WEBHOOK_SECRET not set — skipping signature validation");
     return true;
   }
 
-  const hmac = crypto.createHmac("sha256", HELIUS_WEBHOOK_SECRET);
+  const hmac = crypto.createHmac("sha256", secret);
   hmac.update(body);
-  const expected = hmac.digest("hex");
-  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
+  const expected = Buffer.from(hmac.digest("hex"));
+  const received = Buffer.from(signature);
+  // timingSafeEqual throws on unequal lengths
+  return expected.length === received.length && crypto.timingSafeEqual(expected, received);
 }
 
 /**
@@ -82,7 +85,7 @@ router.post("/helius", async (req: Request, res: Response) => {
     const signature = (req.headers["x-helius-signature"] as string) || "";
     const rawBody = JSON.stringify(req.body);
 
-    if (HELIUS_WEBHOOK_SECRET && !validateSignature(rawBody, signature)) {
+    if (!validateSignature(rawBody, signature)) {
       console.warn("⚠️  Invalid webhook signature rejected");
       res.status(401).json({ success: false, error: "Invalid signature" });
       return;
@@ -140,6 +143,13 @@ router.post("/helius", async (req: Request, res: Response) => {
         await recalculateScore(pubkey);
       } catch (err) {
         console.error(`Error recalculating score for ${pubkey}:`, err);
+      }
+
+      // Kill switch: freeze the passport if recent activity looks compromised
+      try {
+        await evaluateAgentRisk(pubkey);
+      } catch (err) {
+        console.error(`Error evaluating risk for ${pubkey}:`, err);
       }
     }
   } catch (err) {

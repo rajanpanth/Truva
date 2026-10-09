@@ -151,7 +151,7 @@ export async function updateOnChainTier(
       const prog = await getProgram();
 
       const tx = await prog.methods
-        .updateTrustTier(score)
+        .updateTrustTier(score, TIER_MAP[newTier])
         .accounts({
           passport: pda,
           authority: auth.publicKey,
@@ -174,4 +174,30 @@ export async function updateOnChainTier(
 
   console.error(`Failed to update on-chain tier after ${MAX_RETRIES} attempts`);
   return null;
+}
+
+// ── Freeze On-Chain Passport ──
+
+/**
+ * Freeze an agent's passport on-chain. A frozen passport fails every
+ * TrustGate check until the authority unfreezes it.
+ * Returns the transaction signature, or null if the write failed.
+ */
+export async function freezeOnChain(agentPubkey: string): Promise<string | null> {
+  const [pda] = derivePassportPDA(agentPubkey);
+  const auth = getAuthority();
+
+  try {
+    const prog = await getProgram();
+    return await prog.methods
+      .freezePassport()
+      .accounts({
+        passport: pda,
+        authority: auth.publicKey,
+      })
+      .rpc();
+  } catch (err: any) {
+    console.error(`❌ Failed to freeze passport for ${agentPubkey}:`, err.message);
+    return null;
+  }
 }

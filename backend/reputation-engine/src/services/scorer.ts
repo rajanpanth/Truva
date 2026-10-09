@@ -1,8 +1,8 @@
 /**
  * Truva Scoring Engine
  *
- * Calculates a trust score (0-100) from six signals and determines
- * the trust tier based on multi-signal thresholds.
+ * Gathers an agent's signals, calculates a trust score (0-100) and tier
+ * (rules in score-rules.ts), and writes the result on-chain.
  *
  * Scoring happens off-chain. Only tier changes trigger on-chain writes.
  */
@@ -10,108 +10,14 @@
 import { query } from "../db/client";
 import { setCachedScore, type CachedScore } from "../cache/redis";
 import { updateOnChainTier } from "./chain-writer";
+import { fetchRegistryReputation } from "./agent-registry";
+import { calculateScore, type AgentStats, type ScoreResult } from "./score-rules";
 
-// ── Types ──
+export { calculateScore } from "./score-rules";
+export type { AgentStats, ScoreResult, ScoreSignals, TrustTier } from "./score-rules";
 
-export type TrustTier = "Bronze" | "Silver" | "Gold";
-
-export interface ScoreResult {
-  score: number;
-  tier: TrustTier;
-  signals: ScoreSignals;
-}
-
-export interface ScoreSignals {
-  volumeScore: number;
-  successScore: number;
-  diversityScore: number;
-  ageScore: number;
-  zkScore: number;
-  attestScore: number;
-}
-
-export interface AgentStats {
-  txCount: number;
-  successCount: number;
-  uniqueCounterparties: number;
-  ageInDays: number;
-  zkProofCount: number;
-  attestationCount: number;
-}
-
-// ── Score Calculation ──
-
-/**
- * Calculate score 0-100 from six signals
- */
-export function calculateScore(stats: AgentStats): ScoreResult {
-  // Signal 1: Transaction volume — 25 points
-  const volumeScore = Math.min(stats.txCount / 100, 1.0) * 25;
-
-  // Signal 2: Success rate — 25 points
-  const successRate = stats.txCount > 0
-    ? stats.successCount / stats.txCount
-    : 0;
-  const successScore = successRate * 25;
-
-  // Signal 3: Counterparty diversity — 20 points
-  const diversityScore = Math.min(stats.uniqueCounterparties / 20, 1.0) * 20;
-
-  // Signal 4: Account age in days — 15 points
-  const ageScore = Math.min(stats.ageInDays / 60, 1.0) * 15;
-
-  // Signal 5: ZK proofs submitted — 10 points
-  const zkScore = Math.min(stats.zkProofCount / 5, 1.0) * 10;
-
-  // Signal 6: Validator attestations — 5 points
-  const attestScore = Math.min(stats.attestationCount / 3, 1.0) * 5;
-
-  const totalScore = Math.round(
-    volumeScore + successScore + diversityScore + ageScore + zkScore + attestScore
-  );
-  const score = Math.max(0, Math.min(100, totalScore));
-
-  const tier = calculateTier(stats, successRate);
-
-  return {
-    score,
-    tier,
-    signals: {
-      volumeScore: Math.round(volumeScore * 100) / 100,
-      successScore: Math.round(successScore * 100) / 100,
-      diversityScore: Math.round(diversityScore * 100) / 100,
-      ageScore: Math.round(ageScore * 100) / 100,
-      zkScore: Math.round(zkScore * 100) / 100,
-      attestScore: Math.round(attestScore * 100) / 100,
-    },
-  };
-}
-
-/**
- * Determine tier from multi-signal thresholds
- */
-function calculateTier(stats: AgentStats, successRate: number): TrustTier {
-  if (
-    stats.txCount >= 30 &&
-    successRate >= 0.90 &&
-    stats.uniqueCounterparties >= 10 &&
-    stats.attestationCount >= 2 &&
-    stats.zkProofCount >= 1
-  ) {
-    return "Gold";
-  }
-
-  if (
-    stats.txCount >= 10 &&
-    successRate >= 0.80 &&
-    stats.uniqueCounterparties >= 5 &&
-    stats.attestationCount >= 1
-  ) {
-    return "Silver";
-  }
-
-  return "Bronze";
-}
+/** How long a stored Agent Registry reputation is reused before it is fetched again */
+const REGISTRY_REFRESH_SECS = Number(process.env.AGENT_REGISTRY_REFRESH_SECS) || 3600;
 
 // ── Gather Stats from DB ──
 
@@ -130,9 +36,10 @@ async function gatherStats(agentPubkey: string): Promise<AgentStats> {
   );
   const txRow = txResult.rows[0] || {};
 
-  // Account age
+  // Account age and stored Agent Registry reputation
   const ageResult = await query(
-    `SELECT registered_at FROM agents WHERE pubkey = $1`,
+    `SELECT registered_at, registry_feedbacks, registry_avg_score, registry_synced_at
+     FROM agents WHERE pubkey = $1`,
     [agentPubkey]
   );
   const registeredAt = ageResult.rows[0]?.registered_at;
@@ -140,11 +47,8 @@ async function gatherStats(agentPubkey: string): Promise<AgentStats> {
     ? Math.floor((Date.now() - new Date(registeredAt).getTime()) / (1000 * 60 * 60 * 24))
     : 0;
 
-  // ZK proofs
-  const zkResult = await query(
-    `SELECT COUNT(*) as count FROM zk_proofs WHERE agent_pubkey = $1`,
-    [agentPubkey]
-  );
+  // Solana Agent Registry reputation (refreshed when stale)
+  const registry = await syncRegistryReputation(agentPubkey, ageResult.rows[0]);
 
   // Attestations
   const attestResult = await query(
@@ -157,9 +61,47 @@ async function gatherStats(agentPubkey: string): Promise<AgentStats> {
     successCount: parseInt(txRow.success_count || "0", 10),
     uniqueCounterparties: parseInt(txRow.unique_counterparties || "0", 10),
     ageInDays,
-    zkProofCount: parseInt(zkResult.rows[0]?.count || "0", 10),
+    registryFeedbacks: registry.feedbacks,
+    registryAvgScore: registry.avgScore,
     attestationCount: parseInt(attestResult.rows[0]?.count || "0", 10),
   };
+}
+
+// ── Agent Registry Sync ──
+
+/**
+ * Return the agent's Agent Registry reputation, fetching it from the registry
+ * when the stored copy is older than REGISTRY_REFRESH_SECS.
+ * An agent with no registry identity has zero feedbacks.
+ */
+async function syncRegistryReputation(
+  agentPubkey: string,
+  row: any
+): Promise<{ feedbacks: number; avgScore: number }> {
+  const stored = {
+    feedbacks: Number(row?.registry_feedbacks) || 0,
+    avgScore: Number(row?.registry_avg_score) || 0,
+  };
+
+  const syncedAt = row?.registry_synced_at ? new Date(row.registry_synced_at).getTime() : 0;
+  if (Date.now() - syncedAt < REGISTRY_REFRESH_SECS * 1000) {
+    return stored;
+  }
+
+  const reputation = await fetchRegistryReputation(agentPubkey);
+  if (!reputation) {
+    // Lookup failed or no identity: keep what we have, but don't retry on every recalculation
+    await query(`UPDATE agents SET registry_synced_at = NOW() WHERE pubkey = $1`, [agentPubkey]);
+    return stored;
+  }
+
+  await query(
+    `UPDATE agents
+     SET registry_asset = $1, registry_feedbacks = $2, registry_avg_score = $3, registry_synced_at = NOW()
+     WHERE pubkey = $4`,
+    [reputation.asset, reputation.totalFeedbacks, reputation.averageScore, agentPubkey]
+  );
+  return { feedbacks: reputation.totalFeedbacks, avgScore: reputation.averageScore };
 }
 
 // ── Recalculate Score ──
