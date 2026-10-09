@@ -209,8 +209,8 @@ export default function WaitlistPage() {
                     <span>{count}</span>
                   </div>
                   <div className="waitlist-success-row">
-                    <span>Expected launch</span>
-                    <span>Q3 2026</span>
+                    <span>Mainnet launch</span>
+                    <span>To be announced</span>
                   </div>
                 </div>
                 <p className="waitlist-success-note">

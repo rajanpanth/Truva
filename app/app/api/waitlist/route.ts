@@ -74,7 +74,7 @@ function confirmationEmail(name: string, position: number): string {
       <div style="color:#555;font-size:12px;margin-bottom:8px;">$ truva waitlist --status</div>
       <div style="color:#14F195;font-size:13px;">✓ REGISTRATION_CONFIRMED</div>
       <div style="color:#999;font-size:13px;margin-top:4px;">QUEUE_POSITION: #${String(position).padStart(4, '0')}</div>
-      <div style="color:#555;font-size:13px;margin-top:4px;">ETA: MAINNET_LAUNCH_Q3_2026</div>
+      <div style="color:#555;font-size:13px;margin-top:4px;">STATUS: LIVE_ON_DEVNET · MAINNET_DATE_TBA</div>
     </div>
     
     <p style="color:#666;font-size:13px;line-height:1.6;margin:0 0 24px 0;">
