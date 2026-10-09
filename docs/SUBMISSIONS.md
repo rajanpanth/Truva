@@ -134,3 +134,16 @@ The key that was previously committed in the repo must be rotated first.
 - `SECURITY.md` documents the trust model, every control, known limitations and the specific
   areas we want reviewed (vault fund safety, merchant policy handling, authority validation).
 - Tests include negative cases for each control.
+
+---
+
+## Devnet evidence (9 Oct 2026)
+
+The upgraded program is live on devnet and `npm run demo:x402` ran against it end to end.
+
+- Program: https://explorer.solana.com/address/BTgy2r8R85Jknq3JetNiVt1x9grdccm7pTV2LyUmDzG5?cluster=devnet
+- Agent vault: https://explorer.solana.com/address/yg2aFFvWRopFt3nGkjqet9nGNWXsq8xjDaYhAGw67TD?cluster=devnet
+- Paid request 1 (`vault_pay`): https://explorer.solana.com/tx/CT3S1UNMfynaReSGBHhgay6xs4r446XgQfKq56GsoMJHgyrTQWP114znJEj9s43rYM291iCCE8PhHfzFeGa9Gut?cluster=devnet
+- Paid request 2 (`vault_pay`): https://explorer.solana.com/tx/5kcG8Mfsfc5dwKqbTL8D9T43Rn6ec6eDoLoZSAfsY1kb2XoS5fzWdHPu3u6cHyXx7vcZcSnUWaxmVKr5CAiWSMKF?cluster=devnet
+
+The token in the demo is a throwaway 6-decimal test mint, not USDC.
