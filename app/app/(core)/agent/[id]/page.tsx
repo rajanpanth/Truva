@@ -9,13 +9,18 @@ import type { Agent } from '@/backend/types/agent';
 import { PublicKey } from '@solana/web3.js';
 import { getConnection } from '@/lib/solana/connection';
 import { getPassportPDA } from '@/lib/solana';
-import { parsePassportAccount, type PassportData } from '@/lib/solana/vault';
+import {
+  deriveScoreRecordPDA, parsePassportAccount, parseScoreRecordAccount, type PassportData, type ScoreRecordData,
+} from '@/lib/solana/vault';
 
 type OnChainPassport =
   | { state: 'loading' | 'invalid-key' | 'missing' | 'error'; address?: string }
-  | { state: 'found'; address: string; passport: PassportData };
+  | { state: 'found'; address: string; passport: PassportData; scoreRecord: ScoreRecordData | null };
 
-/** Reads the agent's passport account from the program, so the page shows chain state rather than the database copy. */
+/**
+ * Reads the agent's passport and score record from the program, so the page shows chain state
+ * (and where the score came from) rather than the database copy.
+ */
 function useOnChainPassport(publicKey: string | undefined): OnChainPassport {
   const [result, setResult] = useState<OnChainPassport>({ state: 'loading' });
   useEffect(() => {
@@ -30,11 +35,16 @@ function useOnChainPassport(publicKey: string | undefined): OnChainPassport {
     const address = getPassportPDA(agentKey)[0];
     let cancelled = false;
     getConnection()
-      .getAccountInfo(address)
-      .then((account) => {
+      .getMultipleAccountsInfo([address, deriveScoreRecordPDA(agentKey)])
+      .then(([account, record]) => {
         if (cancelled) return;
         setResult(account
-          ? { state: 'found', address: address.toBase58(), passport: parsePassportAccount(account.data) }
+          ? {
+              state: 'found',
+              address: address.toBase58(),
+              passport: parsePassportAccount(account.data),
+              scoreRecord: record ? parseScoreRecordAccount(record.data) : null,
+            }
           : { state: 'missing', address: address.toBase58() });
       })
       .catch(() => { if (!cancelled) setResult({ state: 'error', address: address.toBase58() }); });
@@ -78,6 +88,7 @@ export default function AgentProfilePage() {
   const id = params?.id as string;
   const [agent, setAgent] = useState<Agent | null>(null);
   const onChain = useOnChainPassport(agent?.public_key);
+  const scoreRecord = onChain.state === 'found' ? onChain.scoreRecord : null;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -198,6 +209,47 @@ export default function AgentProfilePage() {
                   : onChain.state === 'loading' ? '...' : '—'}
               </span>
             </div>
+            {scoreRecord && (
+              <>
+                <div className="flex justify-between gap-4 text-[13px]">
+                  <span className="text-[var(--text-secondary)] shrink-0">SCORED_BY</span>
+                  <a
+                    href={`https://explorer.solana.com/address/${scoreRecord.scorer.toBase58()}?cluster=devnet`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-mono text-[13px] truncate hover:text-[var(--accent-green)]"
+                  >
+                    {scoreRecord.scorer.toBase58()}
+                  </a>
+                </div>
+                <div className="flex justify-between text-[13px]">
+                  <span className="text-[var(--text-secondary)]">SCORING</span>
+                  <span className="font-bold">
+                    {scoreRecord.votes > 1 ? `${scoreRecord.votes} SCORERS AGREED` : 'SINGLE SCORER'} · MODEL V{scoreRecord.modelVersion}
+                    {' · '}{new Date(scoreRecord.scoredAt * 1000).toISOString().substring(0, 10)}
+                  </span>
+                </div>
+                <div className="flex justify-between gap-4 text-[13px]">
+                  <span className="text-[var(--text-secondary)] shrink-0">SCORE_INPUTS_SHA256</span>
+                  <span className="font-mono text-[12px] break-all text-right">{scoreRecord.inputsHash}</span>
+                </div>
+                <div className="flex justify-between gap-4 text-[13px]">
+                  <span className="text-[var(--text-secondary)] shrink-0">AGENT_REGISTRY_ID</span>
+                  {scoreRecord.registryAsset ? (
+                    <a
+                      href={`https://explorer.solana.com/address/${scoreRecord.registryAsset.toBase58()}?cluster=devnet`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-mono text-[13px] truncate hover:text-[var(--accent-green)]"
+                    >
+                      {scoreRecord.registryAsset.toBase58()}
+                    </a>
+                  ) : (
+                    <span className="text-[var(--text-secondary)]">NOT LINKED</span>
+                  )}
+                </div>
+              </>
+            )}
             <div className="flex justify-between text-[13px]">
               <span className="text-[var(--text-secondary)]">STATUS</span>
               <span className={`font-bold ${agent.is_flagged ? 'text-red-500' : 'text-[var(--accent-green)]'}`}>

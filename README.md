@@ -488,6 +488,10 @@ The reputation engine calculates trust scores from **6 signals**:
 
 Scoring happens **off-chain** in the reputation engine. Only **tier changes** trigger on-chain PDA updates to save SOL.
 
+### Score provenance
+
+Every on-chain score update carries where the score came from. The engine serialises the agent, the model version and the seven inputs above into one canonical JSON text, hashes it with SHA-256, and sends `attest_score` (hash, model version, the agent's Agent Registry asset) together with `update_trust_tier` in a single transaction. The same text is stored in `score_history.inputs` and returned by `GET /api/agents/:pubkey/history`, so anyone can hash it, compare it with the on-chain record, and re-run the rules in `score-rules.ts`. The hash is a commitment by the scorer, not a proof: the program does not check the inputs. Requires database migration `004_score_provenance.sql`.
+
 ### Solana Agent Registry
 
 Signal 5 is read from the [Solana Agent Registry](https://solana.com/agent-registry) (the ERC-8004 identity and feedback registry on Solana) with the `8004-solana` SDK. The engine looks up the registry identity linked to the agent's wallet and uses its feedback count and average score. Lookups are read-only, cached per agent for an hour, and skipped if the SDK is not installed. Configure with `AGENT_REGISTRY_CLUSTER` and `AGENT_REGISTRY_RPC_URL`.

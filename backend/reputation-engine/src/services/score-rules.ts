@@ -5,6 +5,8 @@
  * unit-tested directly. Used by scorer.ts.
  */
 
+import { createHash } from "crypto";
+
 // ── Types ──
 
 export type TrustTier = "Bronze" | "Silver" | "Gold";
@@ -129,4 +131,37 @@ export function calculateTier(stats: AgentStats, successRate: number): TrustTier
   }
 
   return "Bronze";
+}
+
+// ── Score Provenance ──
+
+/**
+ * Version of the scoring rules in this file. Bump it whenever `calculateScore`
+ * or `calculateTier` changes, so a published inputs hash always names the
+ * rules that turn those inputs into the score.
+ */
+export const SCORE_MODEL_VERSION = 1;
+
+/**
+ * The exact text that is hashed for a score: the agent, the model version and
+ * every input the rules read, in a fixed key order. Anyone holding this text
+ * can hash it, compare with the on-chain record, and re-run the rules.
+ */
+export function canonicalScoringInputs(agentPubkey: string, stats: AgentStats): string {
+  return JSON.stringify({
+    agent: agentPubkey,
+    modelVersion: SCORE_MODEL_VERSION,
+    txCount: stats.txCount,
+    successCount: stats.successCount,
+    uniqueCounterparties: stats.uniqueCounterparties,
+    ageInDays: stats.ageInDays,
+    registryFeedbacks: stats.registryFeedbacks,
+    registryAvgScore: stats.registryAvgScore,
+    attestationCount: stats.attestationCount,
+  });
+}
+
+/** SHA-256 of `canonicalScoringInputs`, as stored on-chain by `attest_score`. */
+export function hashScoringInputs(canonicalInputs: string): Buffer {
+  return createHash("sha256").update(canonicalInputs, "utf8").digest();
 }

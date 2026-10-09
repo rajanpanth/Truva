@@ -297,7 +297,7 @@ router.get("/:pubkey/history", async (req: Request, res: Response) => {
     const { pubkey } = req.params;
 
     const result = await query(
-      `SELECT score, tier, recorded_at FROM score_history 
+      `SELECT score, tier, recorded_at, model_version, inputs_hash, inputs FROM score_history 
        WHERE agent_pubkey = $1 
        ORDER BY recorded_at DESC 
        LIMIT 100`,

@@ -1,9 +1,9 @@
 /**
  * Chain Writer — Updates on-chain Passport PDA tier
  *
- * Derives the Passport PDA from seeds ["passport", agentPubkey],
- * signs with the backend authority keypair, and calls the
- * update_trust_tier instruction on the Anchor program.
+ * Derives the Passport PDA from seeds ["passport", agentPubkey], signs with
+ * the backend authority keypair, and sends TrustGate instructions built in
+ * chain-instructions.ts (no IDL file needed at runtime).
  *
  * Only writes when tier has actually changed to save SOL.
  */
@@ -13,13 +13,17 @@ import {
   PublicKey,
   Keypair,
   Transaction,
-  TransactionInstruction,
   sendAndConfirmTransaction,
 } from "@solana/web3.js";
-import * as anchor from "@coral-xyz/anchor";
 import bs58 from "bs58";
-import * as path from "path";
-import * as fs from "fs";
+import {
+  derivePassportPDA,
+  freezePassportIx,
+  parsePassportTier,
+  scoreUpdateInstructions,
+  type ScoreProvenance,
+} from "./chain-instructions";
+import type { TrustTier } from "./score-rules";
 
 // ── Config ──
 
@@ -30,25 +34,10 @@ const BACKEND_AUTHORITY_KEY = process.env.BACKEND_AUTHORITY_KEY;
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 1000;
 
-// ── Tier Mapping ──
-
-const TIER_MAP: Record<string, object> = {
-  Bronze: { bronze: {} },
-  Silver: { silver: {} },
-  Gold: { gold: {} },
-};
-
-const TIER_SCORE_MAP: Record<string, number> = {
-  Bronze: 0,
-  Silver: 1,
-  Gold: 2,
-};
-
 // ── Connection + Authority Setup ──
 
 let connection: Connection | null = null;
 let authority: Keypair | null = null;
-let program: anchor.Program | null = null;
 
 function getConnection(): Connection {
   if (!connection) {
@@ -79,54 +68,15 @@ function getAuthority(): Keypair {
   return authority;
 }
 
-async function getProgram(): Promise<anchor.Program> {
-  if (!program) {
-    const conn = getConnection();
-    const auth = getAuthority();
-    const wallet = new anchor.Wallet(auth);
-    const provider = new anchor.AnchorProvider(conn, wallet, {
-      commitment: "confirmed",
-    });
-
-    // Load IDL
-    const idlPath = path.resolve(__dirname, "../../../../target/idl/trustgate.json");
-    let idl: anchor.Idl;
-    try {
-      idl = JSON.parse(fs.readFileSync(idlPath, "utf-8"));
-    } catch {
-      throw new Error(`IDL not found at ${idlPath}. Run 'anchor build' first.`);
-    }
-
-    const programId = new PublicKey(TRUVA_PROGRAM_ID);
-    program = new (anchor.Program as any)(idl, programId, provider);
-  }
-  return program!;
-}
-
-// ── PDA Derivation ──
-
-function derivePassportPDA(agentPubkey: string): [PublicKey, number] {
-  const agentKey = new PublicKey(agentPubkey);
-  return PublicKey.findProgramAddressSync(
-    [Buffer.from("passport"), agentKey.toBuffer()],
-    new PublicKey(TRUVA_PROGRAM_ID)
-  );
-}
+const programId = () => new PublicKey(TRUVA_PROGRAM_ID);
 
 // ── Read Current On-Chain Tier ──
 
 export async function getOnChainTier(agentPubkey: string): Promise<string | null> {
   try {
-    const prog = await getProgram();
-    const [pda] = derivePassportPDA(agentPubkey);
-    const account = await (prog.account as any).agentPassport.fetch(pda);
-    const tierKey = Object.keys(account.trustTier as object)[0];
-    const tierMap: Record<string, string> = {
-      bronze: "Bronze",
-      silver: "Silver",
-      gold: "Gold",
-    };
-    return tierMap[tierKey] || "Bronze";
+    const pda = derivePassportPDA(new PublicKey(agentPubkey), programId());
+    const account = await getConnection().getAccountInfo(pda);
+    return account ? parsePassportTier(account.data) : null;
   } catch {
     return null;
   }
@@ -135,31 +85,34 @@ export async function getOnChainTier(agentPubkey: string): Promise<string | null
 // ── Update On-Chain Tier ──
 
 /**
- * Update the on-chain trust tier for an agent.
+ * Update the on-chain score and trust tier for an agent. With `provenance`,
+ * the same transaction also records where the score came from.
  * Retries up to 3 times with 1 second delay between attempts.
  */
 export async function updateOnChainTier(
   agentPubkey: string,
   score: number,
-  newTier: string
+  newTier: string,
+  provenance?: ScoreProvenance
 ): Promise<string | null> {
-  const [pda] = derivePassportPDA(agentPubkey);
   const auth = getAuthority();
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      const prog = await getProgram();
+      const tx = new Transaction().add(
+        ...scoreUpdateInstructions(
+          new PublicKey(agentPubkey),
+          auth.publicKey,
+          score,
+          newTier as TrustTier,
+          programId(),
+          provenance
+        )
+      );
+      const signature = await sendAndConfirmTransaction(getConnection(), tx, [auth]);
 
-      const tx = await prog.methods
-        .updateTrustTier(score, TIER_MAP[newTier])
-        .accounts({
-          passport: pda,
-          authority: auth.publicKey,
-        })
-        .rpc();
-
-      console.log(`✅ On-chain tier updated (attempt ${attempt}): ${tx}`);
-      return tx;
+      console.log(`✅ On-chain tier updated (attempt ${attempt}): ${signature}`);
+      return signature;
     } catch (err: any) {
       console.error(
         `❌ Chain write attempt ${attempt}/${MAX_RETRIES} failed:`,
@@ -184,18 +137,13 @@ export async function updateOnChainTier(
  * Returns the transaction signature, or null if the write failed.
  */
 export async function freezeOnChain(agentPubkey: string): Promise<string | null> {
-  const [pda] = derivePassportPDA(agentPubkey);
   const auth = getAuthority();
 
   try {
-    const prog = await getProgram();
-    return await prog.methods
-      .freezePassport()
-      .accounts({
-        passport: pda,
-        authority: auth.publicKey,
-      })
-      .rpc();
+    const tx = new Transaction().add(
+      freezePassportIx(new PublicKey(agentPubkey), auth.publicKey, programId())
+    );
+    return await sendAndConfirmTransaction(getConnection(), tx, [auth]);
   } catch (err: any) {
     console.error(`❌ Failed to freeze passport for ${agentPubkey}:`, err.message);
     return null;

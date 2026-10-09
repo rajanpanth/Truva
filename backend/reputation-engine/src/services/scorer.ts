@@ -11,7 +11,14 @@ import { query } from "../db/client";
 import { setCachedScore, type CachedScore } from "../cache/redis";
 import { updateOnChainTier } from "./chain-writer";
 import { fetchRegistryReputation } from "./agent-registry";
-import { calculateScore, type AgentStats, type ScoreResult } from "./score-rules";
+import {
+  SCORE_MODEL_VERSION,
+  calculateScore,
+  canonicalScoringInputs,
+  hashScoringInputs,
+  type AgentStats,
+  type ScoreResult,
+} from "./score-rules";
 
 export { calculateScore } from "./score-rules";
 export type { AgentStats, ScoreResult, ScoreSignals, TrustTier } from "./score-rules";
@@ -67,6 +74,12 @@ async function gatherStats(agentPubkey: string): Promise<AgentStats> {
   };
 }
 
+/** The agent's Solana Agent Registry asset, if a lookup ever found one. */
+async function getRegistryAsset(agentPubkey: string): Promise<string | null> {
+  const result = await query(`SELECT registry_asset FROM agents WHERE pubkey = $1`, [agentPubkey]);
+  return result.rows[0]?.registry_asset || null;
+}
+
 // ── Agent Registry Sync ──
 
 /**
@@ -112,14 +125,18 @@ async function syncRegistryReputation(
  * 1. Gathers stats from DB
  * 2. Calculates new score and tier
  * 3. Updates Redis cache
- * 4. Only calls chain-writer if tier has changed
- * 5. Inserts row into score_history table
+ * 4. Only calls chain-writer if tier has changed; the write carries the
+ *    score's provenance (inputs hash, model version, Agent Registry asset)
+ * 5. Inserts row into score_history table, with the inputs that were hashed
  * 6. Updates agents table
  */
 export async function recalculateScore(agentPubkey: string): Promise<ScoreResult> {
   try {
     const stats = await gatherStats(agentPubkey);
     const result = calculateScore(stats);
+    // What this score was computed from, published so the on-chain hash can be checked
+    const inputs = canonicalScoringInputs(agentPubkey, stats);
+    const inputsHash = hashScoringInputs(inputs);
     const successRate = stats.txCount > 0 ? stats.successCount / stats.txCount : 0;
 
     // Update Redis cache
@@ -142,7 +159,11 @@ export async function recalculateScore(agentPubkey: string): Promise<ScoreResult
     // Only write on-chain if tier actually changed
     if (currentTier !== result.tier) {
       try {
-        await updateOnChainTier(agentPubkey, result.score, result.tier);
+        await updateOnChainTier(agentPubkey, result.score, result.tier, {
+          inputsHash,
+          modelVersion: SCORE_MODEL_VERSION,
+          registryAsset: await getRegistryAsset(agentPubkey),
+        });
         console.log(`⛓️  On-chain tier updated: ${agentPubkey} ${currentTier} → ${result.tier}`);
       } catch (err) {
         console.error(`Failed to update on-chain tier for ${agentPubkey}:`, err);
@@ -152,8 +173,9 @@ export async function recalculateScore(agentPubkey: string): Promise<ScoreResult
 
     // Insert score history
     await query(
-      `INSERT INTO score_history (agent_pubkey, score, tier) VALUES ($1, $2, $3)`,
-      [agentPubkey, result.score, result.tier]
+      `INSERT INTO score_history (agent_pubkey, score, tier, model_version, inputs_hash, inputs)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [agentPubkey, result.score, result.tier, SCORE_MODEL_VERSION, inputsHash.toString("hex"), inputs]
     );
 
     // Update agents table (reputation engine's own DB)
