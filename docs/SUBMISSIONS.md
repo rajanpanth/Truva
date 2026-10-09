@@ -96,16 +96,16 @@ The key that was previously committed in the repo must be rotated first.
 
 - **Colosseum link:** **[FILL IN]** · **Repo:** https://github.com/rajanpanth/Truva (public)
 - **Description, problem, users:** use the brief description and Nepal pitch above.
-- **Programs to audit:** one Anchor program, `programs/trustgate` — about 1,260 lines of Rust
-  excluding comments and blanks (1,680 total), 20 instructions, 4 account types. Anchor 0.30.1.
+- **Programs to audit:** one Anchor program, `programs/trustgate` — about 1,720 lines of Rust
+  excluding comments and blanks (2,290 total), 24 instructions, 7 account types. Anchor 0.30.1.
 - **Value at risk:** the program custodies owner funds in agent vaults (SPL tokens held by
   program-derived accounts) and gates SOL and SPL transfers.
-- **Maturity:** deployed on devnet; 51 passing program and end-to-end tests; threat model,
+- **Maturity:** deployed on devnet; 70 passing program and end-to-end tests; threat model,
   known limitations and a prioritized list of areas for auditor attention in `SECURITY.md`.
 - **Target mainnet launch:** **[FILL IN]**
 - **6–12 month roadmap:** **[FILL IN — suggested milestones: audit and fixes; mainnet launch
-  with USDC vaults; multisig scorer; stock x402 `exact`-scheme facilitator support;
-  Token-2022 support; first seller and agent-framework integrations]**
+  with USDC vaults; scorer committee live with independent members; `exact`-scheme
+  settlement verified against a live facilitator; first seller and agent-framework integrations]**
 - **Team:** **[FILL IN: names, roles, X and GitHub handles, full-time or not]**
 - **Fundraising status and plans:** **[FILL IN]**
 - **Contact for scoping call:** **[FILL IN: Telegram or email]**
@@ -147,3 +147,13 @@ The upgraded program is live on devnet and `npm run demo:x402` ran against it en
 - Paid request 2 (`vault_pay`): https://explorer.solana.com/tx/5kcG8Mfsfc5dwKqbTL8D9T43Rn6ec6eDoLoZSAfsY1kb2XoS5fzWdHPu3u6cHyXx7vcZcSnUWaxmVKr5CAiWSMKF?cluster=devnet
 
 The token in the demo is a throwaway 6-decimal test mint, not USDC.
+
+### Program upgrade (9 Oct 2026, later the same day)
+
+The program was upgraded again in slot 509162626 with Token-2022 vaults, score provenance
+(`attest_score`) and the scorer committee instructions. `npm run demo:x402` was re-run against it:
+
+- Vault from that run: https://explorer.solana.com/address/6xZ55qNRKUV6ZrHXk4j1R9o9mdVcvKGfSbyCCEMrSZT9?cluster=devnet
+- Paid request (`vault_pay`): https://explorer.solana.com/tx/3yRN9sofX8ievRZbroLhE5K6gEdduEKF5uViBnTHYVLxyi2vbvvysGjrK6JpDhtJG6Lom5gxDakYZtbRC8jF2Gwe?cluster=devnet
+
+The scorer committee is deployed but not activated on devnet: the scorer is still a single key.

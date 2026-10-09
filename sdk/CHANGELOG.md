@@ -8,6 +8,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Requires the TrustGate program version with protocol config, merchant policies and agent vaults.
 
 ### Added
+- Token-2022 vaults: optional `tokenProgram` argument on `createVaultIx`, `vaultPayIx`, `vaultWithdrawIx`, `closeVaultIx` and `deriveAssociatedTokenAddress`; `TOKEN_2022_PROGRAM_ID`; `getVault`, `fetchWithVault` and the paywall handle both token programs
+- Score provenance: `attestScoreIx`, `TruvaClient.getScoreRecord`, `parseScoreRecordAccount`, `deriveScoreRecordPDA`
+- Scorer committee: `setCommitteeIx`, `committeeVoteIx`, `committeeSetFrozenIx`, `TruvaClient.getCommittee`, `parseCommitteeAccount`, `deriveCommitteePDA`, `deriveProposalPDA`, `MAX_COMMITTEE`
+- Program error names 6016–6020
 - Agent vault instruction builders: `createVaultIx`, `updateVaultPolicyIx`, `setVaultPausedIx`, `vaultPayIx`, `vaultWithdrawIx`, `closeVaultIx`
 - `setMerchantPolicyIx` / `closeMerchantPolicyIx` — a recipient's minimum tier
 - `verifyTrustIx` — on-chain trust check to compose into a transaction
@@ -28,6 +32,14 @@ Requires the TrustGate program version with protocol config, merchant policies a
   - New exports: `X402_HEADERS`, `SOLANA_CAIP2_NETWORKS`, `toCaip2Network`, `fromCaip2Network`, `buildPaymentRequired`, `buildPaymentRequiredV2`, `toPaymentRequirementsV2`, `selectVaultRequirements`, `encodePaymentPayload`, `decodePaymentPayload`, `decodeSettlementResponse`, `encodeX402Header`, `decodeX402Header`
   - `PaywallOptions.resource`, `PaywallOptions.mimeType`
 - `FetchWithVaultOptions.programId`
+- Paywall can also accept the standard x402 `exact` scheme on Solana, settled through a facilitator (opt-in, `PaywallOptions.exact`):
+  - The 402 lists two requirements for the same token, amount and seller: `truva-vault`, then `exact` with `extra.feePayer` (v1 body and v2 `PAYMENT-REQUIRED` header)
+  - `extra.feePayer` comes from `exact.feePayer`, or from the facilitator's `GET /supported` (cached)
+  - An `exact` payment is forwarded to the facilitator's `POST /verify` and `POST /settle`; a rejection is a 402 with the facilitator's reason, success sets `X-PAYMENT-RESPONSE` / `PAYMENT-RESPONSE`
+  - `exact` payments bypass all Truva trust checks. `truvaPaywall` throws if `exact` is combined with a `minTier` above Bronze, unless `exact.allowUngated` is set
+  - `SettledPayment.scheme` (`req.truvaPayment.scheme`): `"truva-vault"` or `"exact"`
+  - New exports: `EXACT_SCHEME`, `createFacilitatorClient`, `findExactFeePayer`, `buildExactRequirements`, `toExactRequirementsV2`, `FacilitatorError`, and their types
+  - Tested against a mocked facilitator only; not yet run against a live facilitator or a stock x402 client
 
 ### Changed
 - `getAgentScore()` also returns `authority` and `trusted`. `trusted` is false when the passport was not scored by the protocol scorer

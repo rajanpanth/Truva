@@ -198,12 +198,12 @@ This is the **gate nobody else has built**. Any Solana protocol can integrate th
 ### SDK Usage
 
 ```typescript
-import { TruvaSDK, TruvaError } from 'truva-sdk';
+import { Connection } from '@solana/web3.js';
+import { TruvaClient, TruvaError } from '@truva-protocol/sdk';
 
-const truva = new TruvaSDK({
-  rpcUrl: 'https://api.devnet.solana.com',
-  apiUrl: 'http://localhost:4000',
-});
+const truva = new TruvaClient(
+  new Connection('https://api.devnet.solana.com', 'confirmed')
+);
 
 // One line to gate any payment
 await truva.requireTrustTier('Gold', agentPublicKey);

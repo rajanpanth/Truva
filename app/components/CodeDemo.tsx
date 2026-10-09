@@ -15,12 +15,18 @@ export function CodeDemo() {
         <pre className="px-5 py-4 text-[12px] leading-[1.8] font-mono text-zinc-400 overflow-x-auto">
           <code>
             <span className="text-purple-400">import</span>
-            {" { TruvaSDK, TruvaError } "}
+            {" { Connection } "}
             <span className="text-purple-400">from</span>
-            <span className="text-[#14F195]"> &apos;truva-sdk&apos;</span>;{"\n\n"}
+            <span className="text-[#14F195]"> &apos;@solana/web3.js&apos;</span>;{"\n"}
+            <span className="text-purple-400">import</span>
+            {" { TruvaClient, TruvaError } "}
+            <span className="text-purple-400">from</span>
+            <span className="text-[#14F195]"> &apos;@truva-protocol/sdk&apos;</span>;{"\n\n"}
             <span className="text-purple-400">const</span> truva = <span className="text-purple-400">new</span>{" "}
-            <span className="text-blue-400">TruvaSDK</span>
-            ({"{ rpcUrl, apiUrl }"});{"\n\n"}
+            <span className="text-blue-400">TruvaClient</span>
+            (<span className="text-purple-400">new</span>{" "}
+            <span className="text-blue-400">Connection</span>
+            (rpcUrl, <span className="text-[#14F195]">&apos;confirmed&apos;</span>));{"\n\n"}
             <span className="text-zinc-600 italic">{"// Gate any payment with one line"}</span>{"\n"}
             <span className="text-purple-400">await</span>{" truva."}
             <span className="text-blue-400">requireTrustTier</span>

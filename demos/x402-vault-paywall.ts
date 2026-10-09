@@ -37,6 +37,7 @@ import {
   mintTo,
   transfer,
 } from "@solana/spl-token";
+import { createHash } from "crypto";
 import * as fs from "fs";
 import * as http from "http";
 import * as os from "os";
@@ -45,6 +46,7 @@ import { AddressInfo } from "net";
 import {
   PaymentRejectedError,
   TruvaClient,
+  attestScoreIx,
   createVaultIx,
   deriveAssociatedTokenAddress,
   deriveConfigPDA,
@@ -158,20 +160,38 @@ async function main() {
   console.log(`    seller: ${seller.publicKey.toBase58()}`);
   console.log(`    token:  ${mint.toBase58()} (${DEMO_MINT ? SYMBOL : "demo USD"}, 6 decimals)`);
 
-  step(3, "Agent passport: created by the agent, scored Silver by the protocol scorer");
+  step(3, "Agent passport: created by the agent, scored by the protocol scorer with provenance");
   await sendAndConfirmTransaction(
     connection,
     new Transaction().add(initializePassportIx(agent.publicKey, agent.publicKey)),
     [agent]
   );
   const [passportPda] = derivePassportPDA(agent.publicKey);
-  await program.methods
-    .updateTrustTier(62, { silver: {} })
-    .accounts({ passport: passportPda, authority: scorer.publicKey })
-    .signers([scorer])
-    .rpc();
+  // The scorer publishes the hash of what it scored, so anyone can recompute it
+  const scoringInputs = JSON.stringify({
+    agent: agent.publicKey.toBase58(),
+    successRate: 0.97,
+    accountAgeDays: 41,
+    volumeUsd: 1840,
+    registryFeedback: 12,
+  });
+  await sendAndConfirmTransaction(
+    connection,
+    new Transaction().add(
+      attestScoreIx(agent.publicKey, scorer.publicKey, {
+        score: 62,
+        inputsHash: createHash("sha256").update(scoringInputs).digest(),
+        modelVersion: 1,
+      })
+    ),
+    [scorer]
+  );
   const passport = await truva.getAgentScore(agent.publicKey);
+  const record = await truva.getScoreRecord(agent.publicKey);
   console.log(`    tier ${passport.tier}, score ${passport.score}, trusted ${passport.trusted}`);
+  console.log(
+    `    provenance: model v${record!.modelVersion}, inputs sha256 ${Buffer.from(record!.inputsHash).toString("hex").slice(0, 16)}...`
+  );
 
   step(4, "Owner creates the vault: 1.00 per payment, 2.00 per day, this seller only");
   await sendAndConfirmTransaction(

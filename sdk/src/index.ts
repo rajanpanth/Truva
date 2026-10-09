@@ -20,17 +20,22 @@ export { AgentWallet, wrapWithTrustGate } from "./agent";
 export {
   TRUSTGATE_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
+  TOKEN_2022_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
   derivePassportPDA,
   deriveConfigPDA,
   deriveMerchantPolicyPDA,
   deriveVaultPDA,
   deriveAssociatedTokenAddress,
+  deriveScoreRecordPDA,
+  deriveCommitteePDA,
+  deriveProposalPDA,
 } from "./pda";
 
 // Instruction builders and account parsers (vaults, merchant policy, trust checks)
 export {
   MAX_ALLOWLIST,
+  MAX_COMMITTEE,
   PROGRAM_ERRORS,
   initializePassportIx,
   verifyTrustIx,
@@ -45,12 +50,21 @@ export {
   parseConfigAccount,
   parseMerchantPolicyAccount,
   parseVaultAccount,
+  attestScoreIx,
+  setCommitteeIx,
+  committeeVoteIx,
+  committeeSetFrozenIx,
+  parseScoreRecordAccount,
+  parseCommitteeAccount,
 } from "./instructions";
 export type {
   VaultPolicyInput,
   ProtocolConfigData,
   MerchantPolicyData,
   AgentVaultData,
+  ScoreAttestation,
+  ScoreRecordData,
+  ScorerCommitteeData,
 } from "./instructions";
 
 // x402 paywall settled through an agent vault
@@ -90,6 +104,30 @@ export type {
   SettledPayment,
   FetchWithVaultOptions,
 } from "./x402";
+
+// Standard x402 `exact` scheme, settled through a facilitator
+export {
+  EXACT_SCHEME,
+  createFacilitatorClient,
+  findExactFeePayer,
+  buildExactRequirements,
+  toExactRequirementsV2,
+  FacilitatorError,
+} from "./x402-exact";
+export type {
+  ExactSchemeOptions,
+  FacilitatorHeaders,
+  FacilitatorEndpoint,
+  FacilitatorClient,
+  FacilitatorRequest,
+  FacilitatorVerifyResponse,
+  FacilitatorSettleResponse,
+  FacilitatorSupportedKind,
+  FacilitatorSupportedResponse,
+  ExactSvmExtra,
+  ExactPaymentRequirements,
+  ExactPaymentRequirementsV2,
+} from "./x402-exact";
 
 // Errors
 export { TruvaError, InsufficientTierError, AgentFrozenError } from "./errors";

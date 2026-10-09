@@ -8,6 +8,7 @@ import { TruvaButton, TruvaStatusPill, TruvaBadge, TruvaProgressBar, TruvaInput 
 import { WalletConnectButton } from '@/components/shared/WalletConnectButton';
 import { CreateVaultForm, type CreatedVault } from '@/components/vaults/CreateVaultForm';
 import { Shield, ArrowLeft, Zap, Wallet } from 'lucide-react';
+import { signRecordDelegationMessage } from '@/lib/auth/signDelegationMessage';
 import type { Agent } from '@/backend/types/agent';
 
 const TIER_BADGE: Record<number, 'bronze' | 'silver' | 'gold'> = {
@@ -34,7 +35,7 @@ export default function DelegatePage() {
   const params = useParams();
   const router = useRouter();
   const id = params?.id as string;
-  const { publicKey, connected } = useWallet();
+  const { publicKey, connected, signMessage } = useWallet();
 
   const [agent, setAgent] = useState<Agent | null>(null);
   const [loading, setLoading] = useState(true);
@@ -58,14 +59,24 @@ export default function DelegatePage() {
       .finally(() => setLoading(false));
   }, [id]);
 
+  // Best-effort: the API only accepts a record signed by the wallet, so this asks
+  // for a message signature. A wallet that cannot sign messages, a rejected prompt
+  // or a failed request is logged and never blocks the caller's flow.
   const recordDelegation = async (fields: { amount: number; cap: number; duration: string; txSig?: string }) => {
     if (!publicKey || !agent) return;
     try {
-      await fetch('/api/delegations', {
+      const auth = await signRecordDelegationMessage(signMessage, {
+        agentId: id,
+        wallet: publicKey.toBase58(),
+        txSig: fields.txSig ?? null,
+      });
+      const res = await fetch('/api/delegations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          wallet: publicKey.toBase58(),
+          wallet: auth.wallet,
+          signature: auth.signature,
+          timestamp: auth.timestamp,
           agent_id: id,
           agent_name: agent.name,
           amount_sol: fields.amount,
@@ -74,6 +85,7 @@ export default function DelegatePage() {
           tx_sig: fields.txSig ?? null,
         }),
       });
+      if (!res.ok) console.error('Failed to record delegation: HTTP', res.status);
     } catch (e) {
       console.error('Failed to record delegation:', e);
     }
@@ -287,14 +299,17 @@ export default function DelegatePage() {
             <CreateVaultForm
               agent={agent.public_key}
               submitLabel="CREATE_AND_FUND_VAULT"
-              onCreated={async (created) => {
-                await recordDelegation({
+              onCreated={(created) => {
+                // The vault already exists on-chain: show the result first, then
+                // record it in the background so a pending or rejected signature
+                // prompt can never hold the result back.
+                setVault(created);
+                void recordDelegation({
                   amount: parseFloat(created.deposit) || 0,
                   cap: parseFloat(created.perTxLimit) || 0,
                   duration: 'VAULT',
                   txSig: created.signature,
                 });
-                setVault(created);
               }}
             />
           </>

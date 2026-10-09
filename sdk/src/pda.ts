@@ -37,9 +37,14 @@ export function derivePassportPDA(
   );
 }
 
-/** SPL Token program (classic). Vaults do not support Token-2022. */
+/** SPL Token program (classic). */
 export const TOKEN_PROGRAM_ID = new PublicKey(
   "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+);
+
+/** Token-2022 program. Vaults accept mints owned by either token program. */
+export const TOKEN_2022_PROGRAM_ID = new PublicKey(
+  "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
 );
 
 /** SPL Associated Token Account program. */
@@ -96,10 +101,47 @@ export function deriveVaultPDA(
  */
 export function deriveAssociatedTokenAddress(
   mint: PublicKey,
-  owner: PublicKey
+  owner: PublicKey,
+  tokenProgram: PublicKey = TOKEN_PROGRAM_ID
 ): PublicKey {
   return PublicKey.findProgramAddressSync(
-    [owner.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), mint.toBuffer()],
+    [owner.toBuffer(), tokenProgram.toBuffer(), mint.toBuffer()],
     ASSOCIATED_TOKEN_PROGRAM_ID
   )[0];
+}
+
+/**
+ * Derive the score provenance record PDA for an agent.
+ *
+ * Seeds: `["score", agent]`
+ */
+export function deriveScoreRecordPDA(
+  agent: PublicKey,
+  programId: PublicKey = TRUSTGATE_PROGRAM_ID
+): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync([Buffer.from("score"), agent.toBuffer()], programId);
+}
+
+/**
+ * Derive the scorer committee PDA. Setting `config.scorer` to this address
+ * hands scoring to the committee.
+ *
+ * Seeds: `["committee"]`
+ */
+export function deriveCommitteePDA(
+  programId: PublicKey = TRUSTGATE_PROGRAM_ID
+): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync([Buffer.from("committee")], programId);
+}
+
+/**
+ * Derive the PDA collecting committee votes for an agent's next score.
+ *
+ * Seeds: `["proposal", agent]`
+ */
+export function deriveProposalPDA(
+  agent: PublicKey,
+  programId: PublicKey = TRUSTGATE_PROGRAM_ID
+): [PublicKey, number] {
+  return PublicKey.findProgramAddressSync([Buffer.from("proposal"), agent.toBuffer()], programId);
 }

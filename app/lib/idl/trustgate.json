@@ -92,6 +92,112 @@
       ]
     },
     {
+      "name": "attest_score",
+      "docs": [
+        "Read-only trust check for other programs to call by CPI",
+        "Fails unless the passport is scored by the protocol scorer, not frozen,",
+        "and at or above min_tier. Return data: [trust_score, trust_tier]",
+        "Write a score with its provenance: inputs hash, model version and",
+        "Solana Agent Registry link. The tier is derived from the score."
+      ],
+      "discriminator": [
+        43,
+        103,
+        32,
+        97,
+        108,
+        253,
+        99,
+        3
+      ],
+      "accounts": [
+        {
+          "name": "passport",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  115,
+                  115,
+                  112,
+                  111,
+                  114,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "passport.agent",
+                "account": "AgentPassport"
+              }
+            ]
+          }
+        },
+        {
+          "name": "score_record",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  99,
+                  111,
+                  114,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "passport.agent",
+                "account": "AgentPassport"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "passport"
+          ]
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "score",
+          "type": "u8"
+        },
+        {
+          "name": "inputs_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "model_version",
+          "type": "u16"
+        },
+        {
+          "name": "registry_asset",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
       "name": "close_merchant_policy",
       "docs": [
         "Remove the signer's merchant policy and reclaim rent"
@@ -255,41 +361,8 @@
                 "path": "vault"
               },
               {
-                "kind": "const",
-                "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
-                ]
+                "kind": "account",
+                "path": "token_program"
               },
               {
                 "kind": "account",
@@ -357,11 +430,268 @@
           ]
         },
         {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          "name": "token_program"
         }
       ],
       "args": []
+    },
+    {
+      "name": "committee_set_frozen",
+      "docs": [
+        "Freeze (any committee member) or unfreeze (admin) a passport scored by the committee."
+      ],
+      "discriminator": [
+        231,
+        135,
+        157,
+        189,
+        243,
+        80,
+        215,
+        71
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "committee",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  109,
+                  109,
+                  105,
+                  116,
+                  116,
+                  101,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "passport",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  115,
+                  115,
+                  112,
+                  111,
+                  114,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "passport.agent",
+                "account": "AgentPassport"
+              }
+            ]
+          }
+        },
+        {
+          "name": "signer",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "frozen",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "committee_vote",
+      "docs": [
+        "A committee member votes on an agent's score; the median is written",
+        "once the threshold is reached."
+      ],
+      "discriminator": [
+        29,
+        144,
+        232,
+        23,
+        59,
+        249,
+        225,
+        23
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "committee",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  109,
+                  109,
+                  105,
+                  116,
+                  116,
+                  101,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "passport",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  97,
+                  115,
+                  115,
+                  112,
+                  111,
+                  114,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "passport.agent",
+                "account": "AgentPassport"
+              }
+            ]
+          }
+        },
+        {
+          "name": "proposal",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  112,
+                  111,
+                  115,
+                  97,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "passport.agent",
+                "account": "AgentPassport"
+              }
+            ]
+          }
+        },
+        {
+          "name": "score_record",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  99,
+                  111,
+                  114,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "passport.agent",
+                "account": "AgentPassport"
+              }
+            ]
+          }
+        },
+        {
+          "name": "member",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "score",
+          "type": "u8"
+        },
+        {
+          "name": "inputs_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "model_version",
+          "type": "u16"
+        },
+        {
+          "name": "registry_asset",
+          "type": "pubkey"
+        }
+      ]
     },
     {
       "name": "create_vault",
@@ -414,6 +744,7 @@
           "name": "vault_token",
           "docs": [
             "Token account holding the vault's funds, owned by the vault PDA.",
+            "The mint may be an SPL Token or a Token-2022 mint.",
             "Fund it with a normal token transfer."
           ],
           "writable": true,
@@ -424,41 +755,8 @@
                 "path": "vault"
               },
               {
-                "kind": "const",
-                "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
-                ]
+                "kind": "account",
+                "path": "token_program"
               },
               {
                 "kind": "account",
@@ -519,8 +817,7 @@
           "signer": true
         },
         {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          "name": "token_program"
         },
         {
           "name": "associated_token_program",
@@ -1065,6 +1362,88 @@
       ]
     },
     {
+      "name": "set_committee",
+      "docs": [
+        "Create or replace the scorer committee (admin only)."
+      ],
+      "discriminator": [
+        197,
+        116,
+        137,
+        105,
+        6,
+        92,
+        129,
+        215
+      ],
+      "accounts": [
+        {
+          "name": "config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "committee",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  99,
+                  111,
+                  109,
+                  109,
+                  105,
+                  116,
+                  116,
+                  101,
+                  101
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "config"
+          ]
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "members",
+          "type": {
+            "vec": "pubkey"
+          }
+        },
+        {
+          "name": "threshold",
+          "type": "u8"
+        }
+      ]
+    },
+    {
       "name": "set_merchant_policy",
       "docs": [
         "Set the minimum trust tier agents need to pay the signer"
@@ -1556,41 +1935,8 @@
                 "path": "vault"
               },
               {
-                "kind": "const",
-                "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
-                ]
+                "kind": "account",
+                "path": "token_program"
               },
               {
                 "kind": "account",
@@ -1665,8 +2011,7 @@
               },
               {
                 "kind": "account",
-                "path": "recipient_token.owner",
-                "account": "TokenAccount"
+                "path": "recipient_token.owner"
               }
             ]
           }
@@ -1688,8 +2033,7 @@
           ]
         },
         {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          "name": "token_program"
         }
       ],
       "args": [
@@ -1756,41 +2100,8 @@
                 "path": "vault"
               },
               {
-                "kind": "const",
-                "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
-                ]
+                "kind": "account",
+                "path": "token_program"
               },
               {
                 "kind": "account",
@@ -1857,8 +2168,7 @@
           ]
         },
         {
-          "name": "token_program",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          "name": "token_program"
         }
       ],
       "args": [
@@ -1870,11 +2180,6 @@
     },
     {
       "name": "verify_trust",
-      "docs": [
-        "Read-only trust check for other programs to call by CPI",
-        "Fails unless the passport is scored by the protocol scorer, not frozen,",
-        "and at or above min_tier. Return data: [trust_score, trust_tier]"
-      ],
       "discriminator": [
         27,
         193,
@@ -1994,9 +2299,61 @@
         215,
         209
       ]
+    },
+    {
+      "name": "ScoreProposal",
+      "discriminator": [
+        82,
+        42,
+        217,
+        64,
+        28,
+        90,
+        134,
+        8
+      ]
+    },
+    {
+      "name": "ScoreRecord",
+      "discriminator": [
+        245,
+        238,
+        28,
+        93,
+        123,
+        218,
+        89,
+        119
+      ]
+    },
+    {
+      "name": "ScorerCommittee",
+      "discriminator": [
+        246,
+        10,
+        102,
+        26,
+        112,
+        196,
+        105,
+        210
+      ]
     }
   ],
   "events": [
+    {
+      "name": "CommitteeUpdated",
+      "discriminator": [
+        7,
+        205,
+        24,
+        147,
+        236,
+        214,
+        87,
+        197
+      ]
+    },
     {
       "name": "ConfigUpdated",
       "discriminator": [
@@ -2099,6 +2456,32 @@
         63,
         120,
         219
+      ]
+    },
+    {
+      "name": "ScoreAttested",
+      "discriminator": [
+        152,
+        152,
+        41,
+        97,
+        104,
+        162,
+        33,
+        127
+      ]
+    },
+    {
+      "name": "ScoreVoteCast",
+      "discriminator": [
+        39,
+        135,
+        137,
+        150,
+        111,
+        105,
+        207,
+        121
       ]
     },
     {
@@ -2247,6 +2630,31 @@
       "code": 6015,
       "name": "MintMismatch",
       "msg": "Token account mint does not match"
+    },
+    {
+      "code": 6016,
+      "name": "NotCommitteeMember",
+      "msg": "Signer is not a member of the scorer committee"
+    },
+    {
+      "code": 6017,
+      "name": "InvalidCommittee",
+      "msg": "Committee needs 1 to 5 distinct members and a threshold between 1 and the member count"
+    },
+    {
+      "code": 6018,
+      "name": "AlreadyVoted",
+      "msg": "This member already voted in the current round"
+    },
+    {
+      "code": 6019,
+      "name": "ProvenanceMismatch",
+      "msg": "Vote does not match the inputs hash, model version or registry link of this round"
+    },
+    {
+      "code": 6020,
+      "name": "CommitteeNotActive",
+      "msg": "The scorer committee is not the protocol scorer"
     }
   ],
   "types": [
@@ -2432,6 +2840,26 @@
               "Bump seed for the PDA"
             ],
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CommitteeUpdated",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "member_count",
+            "type": "u8"
+          },
+          {
+            "name": "threshold",
+            "type": "u8"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
           }
         ]
       }
@@ -2692,6 +3120,321 @@
               "The only key whose scores and tiers the gate accepts"
             ],
             "type": "pubkey"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "Bump seed for the PDA"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ScoreAttested",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "agent",
+            "type": "pubkey"
+          },
+          {
+            "name": "scorer",
+            "type": "pubkey"
+          },
+          {
+            "name": "score",
+            "type": "u8"
+          },
+          {
+            "name": "trust_tier",
+            "type": "u8"
+          },
+          {
+            "name": "votes",
+            "type": "u8"
+          },
+          {
+            "name": "model_version",
+            "type": "u16"
+          },
+          {
+            "name": "inputs_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "registry_asset",
+            "type": "pubkey"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ScoreProposal",
+      "docs": [
+        "Votes collected for one agent's next score",
+        "(PDA, seeds = [\"proposal\", agent]).",
+        "",
+        "The first vote of a round fixes the inputs hash, model version and",
+        "registry link; later votes must match them, so scorers can only agree on",
+        "a score computed from the same published inputs."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "agent",
+            "docs": [
+              "The agent being scored"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "round",
+            "docs": [
+              "Increases every time a score is written"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "epoch",
+            "docs": [
+              "Committee epoch the open votes were cast in"
+            ],
+            "type": "u32"
+          },
+          {
+            "name": "inputs_hash",
+            "docs": [
+              "SHA-256 of the canonical scoring inputs for this round"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "model_version",
+            "docs": [
+              "Scoring model version for this round"
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "registry_asset",
+            "docs": [
+              "Solana Agent Registry entry for this round"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "voted",
+            "docs": [
+              "Bit i is set once committee member i has voted this round"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "scores",
+            "docs": [
+              "Score voted by each committee member"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                5
+              ]
+            }
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "Bump seed for the PDA"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ScoreRecord",
+      "docs": [
+        "Provenance of an agent's current score (PDA, seeds = [\"score\", agent]).",
+        "",
+        "The passport says what the score is; this record says where it came from:",
+        "which inputs were hashed, which scoring model produced it, how many scorers",
+        "agreed, and which Solana Agent Registry entry the agent is linked to.",
+        "Anyone can recompute the hash from the published inputs and compare."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "agent",
+            "docs": [
+              "The agent this record belongs to"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "registry_asset",
+            "docs": [
+              "The agent's entry in the Solana Agent Registry (default key = not linked)"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "inputs_hash",
+            "docs": [
+              "SHA-256 of the canonical scoring inputs"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "model_version",
+            "docs": [
+              "Version of the scoring model that produced the score"
+            ],
+            "type": "u16"
+          },
+          {
+            "name": "score",
+            "docs": [
+              "The score that was written to the passport"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "votes",
+            "docs": [
+              "Number of scorers that agreed (1 for a single scorer)"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "scorer",
+            "docs": [
+              "Who wrote the score: the scorer key, or the committee PDA"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "scored_at",
+            "docs": [
+              "Timestamp the score was written"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "Bump seed for the PDA"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ScoreVoteCast",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "agent",
+            "type": "pubkey"
+          },
+          {
+            "name": "member",
+            "type": "pubkey"
+          },
+          {
+            "name": "round",
+            "type": "u32"
+          },
+          {
+            "name": "score",
+            "type": "u8"
+          },
+          {
+            "name": "votes",
+            "type": "u8"
+          },
+          {
+            "name": "threshold",
+            "type": "u8"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ScorerCommittee",
+      "docs": [
+        "A set of independent scorers that must agree before a score is written",
+        "(singleton PDA, seeds = [\"committee\"]).",
+        "",
+        "The committee takes over scoring when the admin sets `config.scorer` to",
+        "this PDA's address. From then on no single key can sign as the scorer:",
+        "scores only change through `committee_vote`."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "members",
+            "docs": [
+              "Committee members; the first `member_count` entries are used"
+            ],
+            "type": {
+              "array": [
+                "pubkey",
+                5
+              ]
+            }
+          },
+          {
+            "name": "member_count",
+            "docs": [
+              "Number of used entries in `members`"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "threshold",
+            "docs": [
+              "Votes needed to write a score"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "epoch",
+            "docs": [
+              "Increases every time the membership changes; open votes from an",
+              "earlier epoch are discarded"
+            ],
+            "type": "u32"
           },
           {
             "name": "bump",

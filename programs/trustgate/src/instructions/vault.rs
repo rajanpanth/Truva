@@ -1,6 +1,8 @@
 use anchor_lang::prelude::*;
 use anchor_spl::associated_token::AssociatedToken;
-use anchor_spl::token::{self, CloseAccount, Mint, Token, TokenAccount, TransferChecked};
+use anchor_spl::token_interface::{
+    self, CloseAccount, Mint, TokenAccount, TokenInterface, TransferChecked,
+};
 use crate::errors::TruvaError;
 use crate::state::config::ProtocolConfig;
 use crate::state::merchant::MerchantPolicy;
@@ -23,25 +25,27 @@ pub struct CreateVault<'info> {
     pub vault: Box<Account<'info, AgentVault>>,
 
     /// Token account holding the vault's funds, owned by the vault PDA.
+    /// The mint may be an SPL Token or a Token-2022 mint.
     /// Fund it with a normal token transfer.
     #[account(
         init,
         payer = owner,
         associated_token::mint = mint,
         associated_token::authority = vault,
+        associated_token::token_program = token_program,
     )]
-    pub vault_token: Box<Account<'info, TokenAccount>>,
+    pub vault_token: Box<InterfaceAccount<'info, TokenAccount>>,
 
     /// The agent key allowed to spend from this vault
     /// CHECK: Used only as a seed and stored on the vault
     pub agent: UncheckedAccount<'info>,
 
-    pub mint: Box<Account<'info, Mint>>,
+    pub mint: Box<InterfaceAccount<'info, Mint>>,
 
     #[account(mut)]
     pub owner: Signer<'info>,
 
-    pub token_program: Program<'info, Token>,
+    pub token_program: Interface<'info, TokenInterface>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
 }
@@ -163,15 +167,17 @@ pub struct VaultPay<'info> {
         mut,
         associated_token::mint = mint,
         associated_token::authority = vault,
+        associated_token::token_program = token_program,
     )]
-    pub vault_token: Box<Account<'info, TokenAccount>>,
+    pub vault_token: Box<InterfaceAccount<'info, TokenAccount>>,
 
     /// Recipient's token account (destination)
     #[account(
         mut,
         constraint = recipient_token.mint == mint.key() @ TruvaError::MintMismatch,
+        token::token_program = token_program,
     )]
-    pub recipient_token: Box<Account<'info, TokenAccount>>,
+    pub recipient_token: Box<InterfaceAccount<'info, TokenAccount>>,
 
     /// Minimum tier set by the recipient. Empty if the recipient never set one.
     /// CHECK: Address is verified by seeds; contents are read in the handler
@@ -181,12 +187,12 @@ pub struct VaultPay<'info> {
     )]
     pub merchant_policy: UncheckedAccount<'info>,
 
-    pub mint: Box<Account<'info, Mint>>,
+    pub mint: Box<InterfaceAccount<'info, Mint>>,
 
     /// The agent initiating the payment
     pub agent: Signer<'info>,
 
-    pub token_program: Program<'info, Token>,
+    pub token_program: Interface<'info, TokenInterface>,
 }
 
 pub fn pay_handler(ctx: Context<VaultPay>, amount: u64) -> Result<()> {
@@ -228,7 +234,7 @@ pub fn pay_handler(ctx: Context<VaultPay>, amount: u64) -> Result<()> {
         },
         signer_seeds,
     );
-    token::transfer_checked(transfer_ctx, amount, ctx.accounts.mint.decimals)?;
+    token_interface::transfer_checked(transfer_ctx, amount, ctx.accounts.mint.decimals)?;
 
     ctx.accounts.passport.record_payment(timestamp)?;
 
@@ -262,22 +268,24 @@ pub struct VaultWithdraw<'info> {
         mut,
         associated_token::mint = mint,
         associated_token::authority = vault,
+        associated_token::token_program = token_program,
     )]
-    pub vault_token: Box<Account<'info, TokenAccount>>,
+    pub vault_token: Box<InterfaceAccount<'info, TokenAccount>>,
 
     /// Owner's token account (destination)
     #[account(
         mut,
         constraint = owner_token.owner == owner.key() @ TruvaError::Unauthorized,
         constraint = owner_token.mint == mint.key() @ TruvaError::MintMismatch,
+        token::token_program = token_program,
     )]
-    pub owner_token: Box<Account<'info, TokenAccount>>,
+    pub owner_token: Box<InterfaceAccount<'info, TokenAccount>>,
 
-    pub mint: Box<Account<'info, Mint>>,
+    pub mint: Box<InterfaceAccount<'info, Mint>>,
 
     pub owner: Signer<'info>,
 
-    pub token_program: Program<'info, Token>,
+    pub token_program: Interface<'info, TokenInterface>,
 }
 
 pub fn withdraw_handler(ctx: Context<VaultWithdraw>, amount: u64) -> Result<()> {
@@ -301,7 +309,7 @@ pub fn withdraw_handler(ctx: Context<VaultWithdraw>, amount: u64) -> Result<()> 
         },
         signer_seeds,
     );
-    token::transfer_checked(transfer_ctx, amount, ctx.accounts.mint.decimals)?;
+    token_interface::transfer_checked(transfer_ctx, amount, ctx.accounts.mint.decimals)?;
 
     emit!(VaultWithdrawal {
         vault: ctx.accounts.vault.key(),
@@ -331,23 +339,25 @@ pub struct CloseVault<'info> {
         mut,
         associated_token::mint = mint,
         associated_token::authority = vault,
+        associated_token::token_program = token_program,
     )]
-    pub vault_token: Box<Account<'info, TokenAccount>>,
+    pub vault_token: Box<InterfaceAccount<'info, TokenAccount>>,
 
     /// Owner's token account, receives any remaining balance
     #[account(
         mut,
         constraint = owner_token.owner == owner.key() @ TruvaError::Unauthorized,
         constraint = owner_token.mint == mint.key() @ TruvaError::MintMismatch,
+        token::token_program = token_program,
     )]
-    pub owner_token: Box<Account<'info, TokenAccount>>,
+    pub owner_token: Box<InterfaceAccount<'info, TokenAccount>>,
 
-    pub mint: Box<Account<'info, Mint>>,
+    pub mint: Box<InterfaceAccount<'info, Mint>>,
 
     #[account(mut)]
     pub owner: Signer<'info>,
 
-    pub token_program: Program<'info, Token>,
+    pub token_program: Interface<'info, TokenInterface>,
 }
 
 pub fn close_handler(ctx: Context<CloseVault>) -> Result<()> {
@@ -373,7 +383,7 @@ pub fn close_handler(ctx: Context<CloseVault>) -> Result<()> {
             },
             signer_seeds,
         );
-        token::transfer_checked(transfer_ctx, remaining, ctx.accounts.mint.decimals)?;
+        token_interface::transfer_checked(transfer_ctx, remaining, ctx.accounts.mint.decimals)?;
     }
 
     // Close the token account and reclaim its rent
@@ -386,7 +396,7 @@ pub fn close_handler(ctx: Context<CloseVault>) -> Result<()> {
         },
         signer_seeds,
     );
-    token::close_account(close_ctx)?;
+    token_interface::close_account(close_ctx)?;
 
     Ok(())
 }

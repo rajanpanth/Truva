@@ -11,10 +11,11 @@ import { WalletConnectButton } from '@/components/shared/WalletConnectButton';
 import { CreateVaultForm } from '@/components/vaults/CreateVaultForm';
 import { TRUSTGATE_PROGRAM_ID, getPassportPDA } from '@/lib/solana';
 import {
-  VAULT_ACCOUNT_SIZE, VAULT_OWNER_OFFSET, depositIx, deriveVaultTokenAccount, formatUnits, parsePassportAccount,
+  TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID, VAULT_ACCOUNT_SIZE, VAULT_OWNER_OFFSET, depositIx, deriveScoreRecordPDA,
+  parseScoreRecordAccount, deriveVaultTokenAccount, formatUnits, parsePassportAccount,
   parseUnits, parseVaultAccount, setVaultPausedIx, simulateVaultPayment, spentToday, tokenSymbol,
   updateVaultLimitsIx, withdrawIx,
-  type PassportData, type PaymentVerdict, type VaultData,
+  type PassportData, type PaymentVerdict, type ScoreRecordData, type VaultData,
 } from '@/lib/solana/vault';
 
 const MAX_VAULTS = 12;
@@ -24,6 +25,10 @@ interface VaultView {
   address: PublicKey;
   data: VaultData;
   passport: PassportData | null;
+  /** Where the agent's score came from; null when it was written without provenance */
+  scoreRecord: ScoreRecordData | null;
+  /** SPL Token or Token-2022, whichever owns the mint */
+  tokenProgram: PublicKey;
   balance: bigint;
   decimals: number;
   recent: ConfirmedSignatureInfo[];
@@ -87,19 +92,25 @@ export default function VaultsPage() {
         data: parseVaultAccount(a.account.data),
       }));
 
-      const passports = await connection.getMultipleAccountsInfo(
-        parsed.map((v) => getPassportPDA(v.data.agent)[0])
-      );
+      // Per vault: the agent's passport, its score record, and the mint (to learn its token program)
+      const related = await connection.getMultipleAccountsInfo(parsed.flatMap((v) => [
+        getPassportPDA(v.data.agent)[0],
+        deriveScoreRecordPDA(v.data.agent),
+        v.data.mint,
+      ]));
 
       const views = await Promise.all(parsed.map(async (v, i): Promise<VaultView> => {
+        const [passport, record, mint] = related.slice(i * 3, i * 3 + 3);
+        const tokenProgram = mint?.owner.equals(TOKEN_2022_PROGRAM_ID) ? TOKEN_2022_PROGRAM_ID : TOKEN_PROGRAM_ID;
         const [balance, recent] = await Promise.all([
-          connection.getTokenAccountBalance(deriveVaultTokenAccount(v.data.mint, v.address)),
+          connection.getTokenAccountBalance(deriveVaultTokenAccount(v.data.mint, v.address, tokenProgram)),
           connection.getSignaturesForAddress(v.address, { limit: RECENT_TX }),
         ]);
-        const passport = passports[i];
         return {
           ...v,
+          tokenProgram,
           passport: passport ? parsePassportAccount(passport.data) : null,
+          scoreRecord: record ? parseScoreRecordAccount(record.data) : null,
           balance: BigInt(balance.value.amount),
           decimals: balance.value.decimals,
           recent,
@@ -242,7 +253,7 @@ function VaultCard({ vault, now, isOwner, onSend }: {
   isOwner: boolean;
   onSend: (tx: Transaction) => Promise<string>;
 }) {
-  const { data, passport, balance, decimals, recent } = vault;
+  const { data, passport, scoreRecord, tokenProgram, balance, decimals, recent } = vault;
   const { connection } = useConnection();
   const symbol = tokenSymbol(data.mint);
   const fmt = (amount: bigint) => formatUnits(amount, decimals) + (symbol ? ` ${symbol}` : '');
@@ -275,7 +286,7 @@ function VaultCard({ vault, now, isOwner, onSend }: {
     }
     setChecking(true);
     try {
-      setVerdict(await simulateVaultPayment(connection, data, recipient, amount));
+      setVerdict(await simulateVaultPayment(connection, data, recipient, amount, tokenProgram));
     } catch (e) {
       setVerdict({ allowed: false, code: 'SimulationFailed', reason: e instanceof Error ? e.message : 'Simulation failed' });
     } finally {
@@ -291,8 +302,8 @@ function VaultCard({ vault, now, isOwner, onSend }: {
     }
     run(() => new Transaction().add(
       direction === 'deposit'
-        ? depositIx(data.owner, vault.address, data.mint, amount, decimals)
-        : withdrawIx(data, amount)
+        ? depositIx(data.owner, vault.address, data.mint, amount, decimals, tokenProgram)
+        : withdrawIx(data, amount, tokenProgram)
     ));
   };
   const [busy, setBusy] = useState(false);
@@ -363,11 +374,36 @@ function VaultCard({ vault, now, isOwner, onSend }: {
         <Row label="TRUST_SCORE">
           <span className="font-bold">{passport ? `${passport.trustScore}/100` : 'NO PASSPORT'}</span>
         </Row>
+        {scoreRecord && (
+          <Row label="SCORED_BY">
+            <span className="inline-flex items-center gap-2">
+              <ExplorerLink kind="address" id={scoreRecord.scorer.toBase58()}>{short(scoreRecord.scorer)}</ExplorerLink>
+              <span className="text-[var(--text-secondary)]">
+                {scoreRecord.votes > 1 ? `${scoreRecord.votes} SCORERS AGREED` : 'SINGLE SCORER'} · MODEL V{scoreRecord.modelVersion}
+              </span>
+            </span>
+          </Row>
+        )}
+        {scoreRecord && (
+          <Row label="SCORE_INPUTS_HASH">
+            <span className="font-mono text-[var(--text-secondary)]" title={scoreRecord.inputsHash}>
+              {scoreRecord.inputsHash.slice(0, 10)}...{scoreRecord.inputsHash.slice(-10)}
+            </span>
+          </Row>
+        )}
+        {scoreRecord?.registryAsset && (
+          <Row label="AGENT_REGISTRY_ID">
+            <ExplorerLink kind="address" id={scoreRecord.registryAsset.toBase58()}>{short(scoreRecord.registryAsset)}</ExplorerLink>
+          </Row>
+        )}
         <Row label="OWNER">
           <ExplorerLink kind="address" id={data.owner.toBase58()}>{short(data.owner)}</ExplorerLink>
         </Row>
         <Row label="TOKEN_MINT">
-          <ExplorerLink kind="address" id={data.mint.toBase58()}>{short(data.mint)}</ExplorerLink>
+          <span className="inline-flex items-center gap-2">
+            <ExplorerLink kind="address" id={data.mint.toBase58()}>{short(data.mint)}</ExplorerLink>
+            {tokenProgram.equals(TOKEN_2022_PROGRAM_ID) && <span className="text-[var(--text-secondary)]">TOKEN-2022</span>}
+          </span>
         </Row>
         <Row label="ALLOWED_RECIPIENTS">
           {data.allowlist.length === 0 ? (

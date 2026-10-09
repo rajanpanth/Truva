@@ -10,6 +10,12 @@ import { TRUSTGATE_PROGRAM_ID } from '@/lib/solana';
  */
 
 export const TOKEN_PROGRAM_ID = new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA');
+export const TOKEN_2022_PROGRAM_ID = new PublicKey('TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb');
+
+/** Vaults accept mints owned by either token program. */
+export function isTokenProgram(owner: PublicKey): boolean {
+  return owner.equals(TOKEN_PROGRAM_ID) || owner.equals(TOKEN_2022_PROGRAM_ID);
+}
 export const ASSOCIATED_TOKEN_PROGRAM_ID = new PublicKey('ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL');
 
 export const MAX_ALLOWLIST = 8;
@@ -85,9 +91,12 @@ export function deriveVaultPDA(owner: PublicKey, agent: PublicKey, mint: PublicK
   )[0];
 }
 
-export function deriveVaultTokenAccount(mint: PublicKey, vault: PublicKey): PublicKey {
+/** Associated token account of `owner` (a wallet or a vault PDA) for `mint`. */
+export function deriveVaultTokenAccount(
+  mint: PublicKey, owner: PublicKey, tokenProgram: PublicKey = TOKEN_PROGRAM_ID
+): PublicKey {
   return PublicKey.findProgramAddressSync(
-    [vault.toBuffer(), TOKEN_PROGRAM_ID.toBuffer(), mint.toBuffer()],
+    [owner.toBuffer(), tokenProgram.toBuffer(), mint.toBuffer()],
     ASSOCIATED_TOKEN_PROGRAM_ID
   )[0];
 }
@@ -163,18 +172,19 @@ const signer = (pubkey: PublicKey, isWritable = false) => ({ pubkey, isSigner: t
 /** Create a spending vault for one agent and one mint. Signed by the owner. */
 export function createVaultIx(
   owner: PublicKey, agent: PublicKey, mint: PublicKey,
-  perTxLimit: bigint, dailyLimit: bigint, allowlist: PublicKey[]
+  perTxLimit: bigint, dailyLimit: bigint, allowlist: PublicKey[],
+  tokenProgram: PublicKey = TOKEN_PROGRAM_ID
 ): TransactionInstruction {
   const vault = deriveVaultPDA(owner, agent, mint);
   return new TransactionInstruction({
     programId: TRUSTGATE_PROGRAM_ID,
     keys: [
       rw(vault),
-      rw(deriveVaultTokenAccount(mint, vault)),
+      rw(deriveVaultTokenAccount(mint, vault, tokenProgram)),
       ro(agent),
       ro(mint),
       signer(owner, true),
-      ro(TOKEN_PROGRAM_ID),
+      ro(tokenProgram),
       ro(ASSOCIATED_TOKEN_PROGRAM_ID),
       ro(SystemProgram.programId),
     ],
@@ -184,14 +194,15 @@ export function createVaultIx(
 
 /** Fund a vault: a plain SPL `TransferChecked` from the sender's associated token account. */
 export function depositIx(
-  from: PublicKey, vault: PublicKey, mint: PublicKey, amount: bigint, decimals: number
+  from: PublicKey, vault: PublicKey, mint: PublicKey, amount: bigint, decimals: number,
+  tokenProgram: PublicKey = TOKEN_PROGRAM_ID
 ): TransactionInstruction {
   return new TransactionInstruction({
-    programId: TOKEN_PROGRAM_ID,
+    programId: tokenProgram,
     keys: [
-      rw(deriveVaultTokenAccount(mint, from)),
+      rw(deriveVaultTokenAccount(mint, from, tokenProgram)),
       ro(mint),
-      rw(deriveVaultTokenAccount(mint, vault)),
+      rw(deriveVaultTokenAccount(mint, vault, tokenProgram)),
       signer(from),
     ],
     data: Buffer.concat([Buffer.from([12]), u64(amount), Buffer.from([decimals])]),
@@ -199,24 +210,28 @@ export function depositIx(
 }
 
 /** Withdraw tokens from a vault to the owner's associated token account. Signed by the owner. */
-export function withdrawIx(vault: VaultData, amount: bigint): TransactionInstruction {
+export function withdrawIx(
+  vault: VaultData, amount: bigint, tokenProgram: PublicKey = TOKEN_PROGRAM_ID
+): TransactionInstruction {
   const address = deriveVaultPDA(vault.owner, vault.agent, vault.mint);
   return new TransactionInstruction({
     programId: TRUSTGATE_PROGRAM_ID,
     keys: [
       ro(address),
-      rw(deriveVaultTokenAccount(vault.mint, address)),
-      rw(deriveVaultTokenAccount(vault.mint, vault.owner)),
+      rw(deriveVaultTokenAccount(vault.mint, address, tokenProgram)),
+      rw(deriveVaultTokenAccount(vault.mint, vault.owner, tokenProgram)),
       ro(vault.mint),
       signer(vault.owner),
-      ro(TOKEN_PROGRAM_ID),
+      ro(tokenProgram),
     ],
     data: Buffer.concat([Buffer.from(DISCRIMINATORS.vault_withdraw), u64(amount)]),
   });
 }
 
 /** Pay `recipient` from a vault. Signed by the agent. */
-export function vaultPayIx(vault: VaultData, recipient: PublicKey, amount: bigint): TransactionInstruction {
+export function vaultPayIx(
+  vault: VaultData, recipient: PublicKey, amount: bigint, tokenProgram: PublicKey = TOKEN_PROGRAM_ID
+): TransactionInstruction {
   const address = deriveVaultPDA(vault.owner, vault.agent, vault.mint);
   const pda = (...seeds: (Buffer | Uint8Array)[]) =>
     PublicKey.findProgramAddressSync(seeds, TRUSTGATE_PROGRAM_ID)[0];
@@ -226,12 +241,12 @@ export function vaultPayIx(vault: VaultData, recipient: PublicKey, amount: bigin
       ro(pda(Buffer.from('config'))),
       rw(pda(Buffer.from('passport'), vault.agent.toBuffer())),
       rw(address),
-      rw(deriveVaultTokenAccount(vault.mint, address)),
-      rw(deriveVaultTokenAccount(vault.mint, recipient)),
+      rw(deriveVaultTokenAccount(vault.mint, address, tokenProgram)),
+      rw(deriveVaultTokenAccount(vault.mint, recipient, tokenProgram)),
       ro(pda(Buffer.from('merchant'), recipient.toBuffer())),
       ro(vault.mint),
       signer(vault.agent),
-      ro(TOKEN_PROGRAM_ID),
+      ro(tokenProgram),
     ],
     data: Buffer.concat([Buffer.from(DISCRIMINATORS.vault_pay), u64(amount)]),
   });
@@ -250,14 +265,15 @@ export interface PaymentVerdict {
  * verdict is the program's own.
  */
 export async function simulateVaultPayment(
-  connection: Connection, vault: VaultData, recipient: PublicKey, amount: bigint
+  connection: Connection, vault: VaultData, recipient: PublicKey, amount: bigint,
+  tokenProgram: PublicKey = TOKEN_PROGRAM_ID
 ): Promise<PaymentVerdict> {
   const { blockhash } = await connection.getLatestBlockhash();
   const message = new TransactionMessage({
     // No fee is charged in a simulation; the owner is used because the account is known to exist.
     payerKey: vault.owner,
     recentBlockhash: blockhash,
-    instructions: [vaultPayIx(vault, recipient, amount)],
+    instructions: [vaultPayIx(vault, recipient, amount, tokenProgram)],
   }).compileToV0Message();
   const result = await connection.simulateTransaction(new VersionedTransaction(message), {
     sigVerify: false,
@@ -325,4 +341,63 @@ export function parseUnits(value: string, decimals: number): bigint | null {
   const frac = match[2] ?? '';
   if (frac.length > decimals) return null;
   return BigInt(match[1]) * BigInt(10) ** BigInt(decimals) + BigInt(frac.padEnd(decimals, '0') || '0');
+}
+
+// ── Score provenance and scorer committee ──
+
+export const MAX_COMMITTEE = 5;
+
+export interface ScoreRecordData {
+  /** The agent's Solana Agent Registry entry, or null when not linked */
+  registryAsset: PublicKey | null;
+  /** SHA-256 of the scoring inputs, hex */
+  inputsHash: string;
+  modelVersion: number;
+  score: number;
+  /** Number of scorers that agreed (1 for a single scorer) */
+  votes: number;
+  /** The scorer key, or the committee address */
+  scorer: PublicKey;
+  scoredAt: number;
+}
+
+export function deriveScoreRecordPDA(agent: PublicKey): PublicKey {
+  return PublicKey.findProgramAddressSync([Buffer.from('score'), agent.toBuffer()], TRUSTGATE_PROGRAM_ID)[0];
+}
+
+export function deriveCommitteePDA(): PublicKey {
+  return PublicKey.findProgramAddressSync([Buffer.from('committee')], TRUSTGATE_PROGRAM_ID)[0];
+}
+
+/**
+ * Parse a `ScoreRecord` account (agent, registry_asset, inputs_hash, model_version, score, votes, scorer, scored_at).
+ * Returns null while a first committee round is still open and no score has been written.
+ */
+export function parseScoreRecordAccount(data: Uint8Array): ScoreRecordData | null {
+  const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+  const scoredAt = Number(view.getBigInt64(140, true));
+  if (scoredAt === 0) return null;
+  const registry = new PublicKey(data.subarray(40, 72));
+  return {
+    registryAsset: registry.equals(PublicKey.default) ? null : registry,
+    inputsHash: Array.from(data.subarray(72, 104), (b) => b.toString(16).padStart(2, '0')).join(''),
+    modelVersion: view.getUint16(104, true),
+    score: data[106],
+    votes: data[107],
+    scorer: new PublicKey(data.subarray(108, 140)),
+    scoredAt,
+  };
+}
+
+export interface CommitteeData {
+  members: PublicKey[];
+  threshold: number;
+}
+
+/** Parse a `ScorerCommittee` account (members[5], member_count, threshold, epoch). */
+export function parseCommitteeAccount(data: Uint8Array): CommitteeData {
+  const count = data[8 + 32 * MAX_COMMITTEE];
+  const members: PublicKey[] = [];
+  for (let i = 0; i < count; i++) members.push(new PublicKey(data.subarray(8 + 32 * i, 40 + 32 * i)));
+  return { members, threshold: data[8 + 32 * MAX_COMMITTEE + 1] };
 }

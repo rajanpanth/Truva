@@ -6,7 +6,10 @@ import { TruvaButton, TruvaStatCard, TruvaStatusPill } from '@/components/ui/tru
 import { Bot, RefreshCw, ShieldAlert, ShieldCheck, Vault } from 'lucide-react';
 import { getConnection } from '@/lib/solana/connection';
 import { TRUSTGATE_PROGRAM_ID } from '@/lib/solana';
-import { PASSPORT_ACCOUNT_SIZE, VAULT_ACCOUNT_SIZE, parsePassportAccount, parseVaultAccount } from '@/lib/solana/vault';
+import {
+  PASSPORT_ACCOUNT_SIZE, VAULT_ACCOUNT_SIZE, deriveCommitteePDA, parseCommitteeAccount, parsePassportAccount,
+  parseVaultAccount, type CommitteeData,
+} from '@/lib/solana/vault';
 
 const UPGRADEABLE_LOADER = new PublicKey('BPFLoaderUpgradeab1e11111111111111111111111');
 const RECENT_TX = 12;
@@ -14,6 +17,8 @@ const RECENT_TX = 12;
 interface ProtocolStatus {
   admin: string | null;
   scorer: string | null;
+  /** The scorer committee, when one has been set */
+  committee: (CommitteeData & { address: string; active: boolean }) | null;
   upgradeAuthority: string | null;
   deployedSlot: number | null;
   passports: number;
@@ -34,8 +39,9 @@ async function loadStatus(): Promise<ProtocolStatus> {
   const [configPda] = PublicKey.findProgramAddressSync([new TextEncoder().encode('config')], TRUSTGATE_PROGRAM_ID);
   const [programData] = PublicKey.findProgramAddressSync([TRUSTGATE_PROGRAM_ID.toBuffer()], UPGRADEABLE_LOADER);
 
-  const [[config, data], passports, vaults, recent] = await Promise.all([
-    connection.getMultipleAccountsInfo([configPda, programData]),
+  const committeePda = deriveCommitteePDA();
+  const [[config, data, committee], passports, vaults, recent] = await Promise.all([
+    connection.getMultipleAccountsInfo([configPda, programData, committeePda]),
     connection.getProgramAccounts(TRUSTGATE_PROGRAM_ID, { filters: [{ dataSize: PASSPORT_ACCOUNT_SIZE }] }),
     connection.getProgramAccounts(TRUSTGATE_PROGRAM_ID, { filters: [{ dataSize: VAULT_ACCOUNT_SIZE }] }),
     connection.getSignaturesForAddress(TRUSTGATE_PROGRAM_ID, { limit: RECENT_TX }),
@@ -52,9 +58,14 @@ async function loadStatus(): Promise<ProtocolStatus> {
   // ProgramData layout: u32 tag, u64 deploy slot, Option<Pubkey> upgrade authority
   const view = data ? new DataView(data.data.buffer, data.data.byteOffset, data.data.byteLength) : null;
 
+  const scorer = config ? new PublicKey(config.data.subarray(40, 72)).toBase58() : null;
+
   return {
     admin: config ? new PublicKey(config.data.subarray(8, 40)).toBase58() : null,
-    scorer: config ? new PublicKey(config.data.subarray(40, 72)).toBase58() : null,
+    scorer,
+    committee: committee
+      ? { ...parseCommitteeAccount(committee.data), address: committeePda.toBase58(), active: scorer === committeePda.toBase58() }
+      : null,
     deployedSlot: view ? Number(view.getBigUint64(4, true)) : null,
     upgradeAuthority: data && data.data[12] === 1 ? new PublicKey(data.data.subarray(13, 45)).toBase58() : null,
     passports: passports.length,
@@ -149,8 +160,24 @@ export default function ProtocolStatusPage() {
             <span className="font-mono">{status?.deployedSlot?.toLocaleString('en-US') ?? '—'}</span>
           </div>
           <p className="text-[12px] text-[var(--text-muted)] leading-relaxed mt-3">
-            The scorer is the only key whose trust scores the program accepts. The admin can rotate it.
+            {status?.committee?.active
+              ? `Scores are written by a committee: ${status.committee.threshold} of ${status.committee.members.length} scorers must agree on the same inputs, and the program takes the median.`
+              : 'The scorer is the only key whose trust scores the program accepts. The admin can rotate it, or hand scoring to a committee.'}
           </p>
+          {status?.committee && (
+            <div className="mt-4">
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="text-[13px] uppercase tracking-[2px] font-bold">SCORER_COMMITTEE</h3>
+                <TruvaStatusPill
+                  variant={status.committee.active ? 'active' : 'standby'}
+                  label={status.committee.active ? `ACTIVE · ${status.committee.threshold} OF ${status.committee.members.length}` : 'NOT ACTIVE'}
+                />
+              </div>
+              {status.committee.members.map((member, i) => (
+                <AddressRow key={member.toBase58()} label={`MEMBER_${i + 1}`} value={member.toBase58()} />
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[2px] p-5">

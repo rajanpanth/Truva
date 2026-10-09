@@ -113,7 +113,38 @@ const pause = setVaultPausedIx(owner, agent, USDC_MINT, true);
 const state = await truva.getVault(owner, agent, USDC_MINT);
 ```
 
-Builders return plain `TransactionInstruction`s. Vaults hold classic SPL tokens (not Token-2022).
+Builders return plain `TransactionInstruction`s. Vaults hold SPL Token and Token-2022 mints. For a
+Token-2022 mint, pass `TOKEN_2022_PROGRAM_ID` as the last argument of `createVaultIx`, `vaultPayIx`,
+`vaultWithdrawIx` and `closeVaultIx` (after `programId`); `fetchWithVault` and the paywall detect it
+from the mint. Mints with a transfer hook are not supported.
+
+## Score Provenance and the Scorer Committee
+
+```ts
+import { createHash } from "crypto";
+import { attestScoreIx, setCommitteeIx, committeeVoteIx, deriveCommitteePDA } from "@truva-protocol/sdk";
+
+// Scorer: write a score and commit to what it was computed from
+const inputsHash = createHash("sha256").update(canonicalInputsJson).digest();
+attestScoreIx(agent, scorer, { score: 62, inputsHash, modelVersion: 1, registryAsset });
+
+// Anyone: where did this score come from?
+const record = await truva.getScoreRecord(agent);
+// { score, votes, modelVersion, inputsHash, registryAsset, scorer, scoredAt } or null
+
+// Admin: hand scoring to a 2-of-3 committee
+setCommitteeIx(admin, [memberA, memberB, memberC], 2);
+// ...then set the protocol scorer to the committee PDA with `update_config`
+const [committeePda] = deriveCommitteePDA();
+
+// Members: vote on the same inputs; at the threshold the program writes the median
+committeeVoteIx(agent, memberA, { score: 60, inputsHash, modelVersion: 1 });
+const committee = await truva.getCommittee(); // { members, threshold, epoch, address, active }
+```
+
+The tier is always derived from the score (0–49 Bronze, 50–79 Silver, 80–100 Gold). Under a committee,
+any member can freeze a passport with `committeeSetFrozenIx(agent, member, true)`; only the admin can
+unfreeze. The hash is a commitment: the program does not verify that the score follows from the inputs.
 
 ## x402 Paywall
 
@@ -145,7 +176,7 @@ try {
 
 ### x402 compatibility
 
-The messages follow the [x402 specification](https://github.com/coinbase/x402/tree/main/specs) (v1 and v2 HTTP transports). The payment scheme does not: it is `truva-vault`, not x402's `exact`.
+The messages follow the [x402 specification](https://github.com/coinbase/x402/tree/main/specs) (v1 and v2 HTTP transports). The payment scheme does not: it is `truva-vault`, not x402's `exact`. A seller can opt in to accepting `exact` too, without trust gating; see [Accepting the standard `exact` scheme](#accepting-the-standard-exact-scheme). The rest of this section describes `truva-vault`.
 
 What the paywall sends for an unpaid request, HTTP 402:
 
@@ -216,7 +247,7 @@ The receipt comes back as base64 JSON in `X-PAYMENT-RESPONSE` (v1 request) or `P
 What is not standard:
 
 - **The scheme.** A stock x402 client (`@x402/fetch`, `x402-fetch`, `x402-axios`, ...) can parse the 402 response, but it only knows the `exact` scheme, so it cannot pay a `truva-vault` requirement. Paying needs this SDK (`fetchWithVault` or `createVaultPayment`). The published v1 TypeScript client (`x402`) validates `scheme` against a fixed list and rejects the whole response rather than skipping the entry.
-- **No facilitator.** The seller verifies and submits the transaction itself. `/verify`, `/settle` and `/supported` are not implemented, and no public facilitator supports `truva-vault`.
+- **No facilitator for `truva-vault`.** The seller verifies and submits the transaction itself. The SDK does not serve `/verify`, `/settle` or `/supported`, and no public facilitator supports `truva-vault`. (With the `exact` option the paywall is a client of someone else's facilitator.)
 - **The payer pays the fee.** The agent is fee payer and sends a fully signed legacy transaction. In `exact` on Solana the facilitator is fee payer (`extra.feePayer`) and the transaction is partially signed and versioned.
 - **`errorReason`** is a Truva program error name or a sentence (e.g. `ExceedsDailyLimit`), not one of x402's error codes.
 - **`fetchWithVault` cannot pay `exact`.** It throws `PaymentRejectedError` when a server offers no `truva-vault` requirement.
@@ -224,6 +255,77 @@ What is not standard:
 - **Browsers.** The paywall does not set `Access-Control-Expose-Headers`. Add `PAYMENT-REQUIRED, PAYMENT-RESPONSE, X-PAYMENT-RESPONSE` to it in your CORS setup if browser code needs those headers.
 
 Helpers for building or reading the messages yourself: `buildPaymentRequired`, `buildPaymentRequiredV2`, `selectVaultRequirements`, `encodePaymentPayload`, `decodePaymentPayload`, `decodeSettlementResponse`, `toCaip2Network`, `X402_HEADERS`.
+
+### Accepting the standard `exact` scheme
+
+A seller that does not need trust gating can let stock x402 clients pay as well. Set `exact` and the paywall lists a second requirement, x402's own `exact` scheme on Solana, for the same token, amount and seller wallet:
+
+```ts
+app.get("/report",
+  truvaPaywall({
+    connection, payTo: sellerWallet, mint: USDC_MINT, amount: 1_000_000,
+    exact: { facilitatorUrl: "https://x402.org/facilitator" },
+  }),
+  (req, res) => res.json({ report: "...", paidWith: req.truvaPayment.scheme })); // "truva-vault" | "exact"
+```
+
+**`exact` payments are not trust-gated.** They are plain token transfers that never run the TrustGate program, so there is no passport, no tier check, no vault limit and no on-chain merchant policy: anyone with the tokens can pay. For that reason `truvaPaywall` throws when it is given `exact` together with a `minTier` above Bronze. If you really want a route where vault payers need a tier but anyone may pay through `exact`, set `exact.allowUngated: true`. A handler can tell the two apart with `req.truvaPayment.scheme`.
+
+| Option | |
+|---|---|
+| `facilitatorUrl` | Base URL of an x402 facilitator that supports `exact` on your Solana network. `/verify`, `/settle` and `/supported` are appended |
+| `feePayer` | The facilitator's fee payer address, sent to clients as `extra.feePayer`. If omitted, it is read from the facilitator's `GET /supported` on the first request and cached |
+| `headers` | Extra headers for facilitator requests (an API key). An object, or a function `(endpoint: "supported" \| "verify" \| "settle") => headers`, sync or async |
+| `fetch` | `fetch` used to reach the facilitator. Default: the global `fetch` (Node 18+) |
+| `allowUngated` | Allow `exact` on a route whose `minTier` is above Bronze. Default `false` |
+
+The 402 then lists both, `truva-vault` first (shown in v1 layout; the `PAYMENT-REQUIRED` header carries the same two in v2 layout, with `amount` and the CAIP-2 network):
+
+```jsonc
+"accepts": [
+  { "scheme": "truva-vault", "network": "solana-devnet", "maxAmountRequired": "1000000",
+    "asset": "<token mint>", "payTo": "<seller wallet>", "resource": "https://api.example.com/report",
+    "description": "", "mimeType": "", "maxTimeoutSeconds": 60,
+    "extra": { "programId": "<TrustGate program>", "minTier": "Bronze" } },
+  { "scheme": "exact", "network": "solana-devnet", "maxAmountRequired": "1000000",
+    "asset": "<token mint>", "payTo": "<seller wallet>", "resource": "https://api.example.com/report",
+    "description": "", "mimeType": "", "maxTimeoutSeconds": 60,
+    "extra": { "feePayer": "<facilitator fee payer>" } }
+]
+```
+
+When a payment header names the `exact` scheme, the paywall does not inspect the transaction. It sends the client's payment payload, unchanged, with its own requirement to the facilitator: `POST {facilitatorUrl}/verify`, and if that says `isValid: true`, `POST {facilitatorUrl}/settle` with the same body:
+
+```jsonc
+// x402 v1 (payment came in X-PAYMENT)
+{ "x402Version": 1,
+  "paymentPayload": { "x402Version": 1, "scheme": "exact", "network": "solana-devnet",
+                      "payload": { "transaction": "<base64 partially signed transaction>" } },
+  "paymentRequirements": { /* the v1 "exact" entry above */ } }
+
+// x402 v2 (payment came in PAYMENT-SIGNATURE)
+{ "x402Version": 2,
+  "paymentPayload": { "x402Version": 2, "resource": { "url": "..." }, "accepted": { /* v2 "exact" entry */ },
+                      "payload": { "transaction": "<base64 partially signed transaction>" } },
+  "paymentRequirements": { "scheme": "exact", "network": "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1",
+                           "amount": "1000000", "asset": "<token mint>", "payTo": "<seller wallet>",
+                           "maxTimeoutSeconds": 60, "extra": { "feePayer": "<facilitator fee payer>" } } }
+```
+
+On success the handler runs and the receipt header (`X-PAYMENT-RESPONSE` or `PAYMENT-RESPONSE`) is `{ success: true, transaction, network, payer }`. If the facilitator rejects the payment at either step, or cannot be reached, the response is 402 with the facilitator's reason (`invalidReason` / `errorReason`, e.g. `insufficient_funds`) in the body's `error` and in a `success: false` receipt header. A v2 payment whose `accepted` requirement differs from the one offered (network, amount, asset, payTo, feePayer) is refused without calling the facilitator.
+
+Things to know:
+
+- **The facilitator is trusted.** The paywall serves the resource when the facilitator says the payment settled; it does not check the chain itself. Use a facilitator you trust, over HTTPS.
+- **The seller's token account must exist.** As with `truva-vault`, the payment goes to `payTo`'s associated token account for `mint`.
+- **If `/supported` fails,** the 402 lists `truva-vault` only and `exact` payments are refused; the lookup is retried after 30 seconds.
+- **If `/settle` times out or its answer is lost,** the client gets a 402 although the transfer may have landed. The paywall does not reconcile this.
+- **`fetchWithVault` is unchanged.** It pays `truva-vault` and ignores the `exact` entry.
+- **Old v1 clients and mixed lists.** The 402 body now mixes a non-standard scheme with `exact`. A client that rejects a response containing a scheme it does not know (see the note on the v1 `x402` package above) will not get as far as paying `exact`. v2 clients read the `PAYMENT-REQUIRED` header.
+
+Not verified: this was written from the specification text ([`scheme_exact_svm.md`](https://github.com/coinbase/x402/blob/main/specs/schemes/exact/scheme_exact_svm.md), section 7 "Facilitator Interface" of [`x402-specification-v1.md`](https://github.com/coinbase/x402/blob/main/specs/x402-specification-v1.md) and [`x402-specification-v2.md`](https://github.com/coinbase/x402/blob/main/specs/x402-specification-v2.md), [`transports-v2/http.md`](https://github.com/coinbase/x402/blob/main/specs/transports-v2/http.md)) and tested against a mocked facilitator only. No payment has been verified or settled through a live facilitator, and no stock x402 client library has been run against the paywall. The only live check was reading `https://x402.org/facilitator/supported`, whose response has the shape the fee payer lookup expects (an `exact` kind for `solana-devnet` and for its CAIP-2 id, each with `extra.feePayer`). Facilitators that need per-request signed authentication, such as Coinbase's CDP facilitator, are untested; `headers` as a function is the intended hook.
+
+Lower-level pieces, if you want to call a facilitator yourself: `createFacilitatorClient`, `findExactFeePayer`, `buildExactRequirements`, `toExactRequirementsV2`, `FacilitatorError`, `EXACT_SCHEME`.
 
 ## elizaOS Plugin
 

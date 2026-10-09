@@ -62,6 +62,44 @@ pub mod trustgate {
     /// Read-only trust check for other programs to call by CPI
     /// Fails unless the passport is scored by the protocol scorer, not frozen,
     /// and at or above min_tier. Return data: [trust_score, trust_tier]
+    /// Write a score with its provenance: inputs hash, model version and
+    /// Solana Agent Registry link. The tier is derived from the score.
+    pub fn attest_score(
+        ctx: Context<AttestScore>,
+        score: u8,
+        inputs_hash: [u8; 32],
+        model_version: u16,
+        registry_asset: Pubkey,
+    ) -> Result<()> {
+        instructions::score::attest_handler(ctx, score, inputs_hash, model_version, registry_asset)
+    }
+
+    /// Create or replace the scorer committee (admin only).
+    pub fn set_committee(
+        ctx: Context<SetCommittee>,
+        members: Vec<Pubkey>,
+        threshold: u8,
+    ) -> Result<()> {
+        instructions::committee::set_handler(ctx, members, threshold)
+    }
+
+    /// A committee member votes on an agent's score; the median is written
+    /// once the threshold is reached.
+    pub fn committee_vote(
+        ctx: Context<CommitteeVote>,
+        score: u8,
+        inputs_hash: [u8; 32],
+        model_version: u16,
+        registry_asset: Pubkey,
+    ) -> Result<()> {
+        instructions::committee::vote_handler(ctx, score, inputs_hash, model_version, registry_asset)
+    }
+
+    /// Freeze (any committee member) or unfreeze (admin) a passport scored by the committee.
+    pub fn committee_set_frozen(ctx: Context<CommitteeSetFrozen>, frozen: bool) -> Result<()> {
+        instructions::committee::set_frozen_handler(ctx, frozen)
+    }
+
     pub fn verify_trust(ctx: Context<VerifyTrust>, min_tier: TrustTier) -> Result<()> {
         instructions::verify_trust::handler(ctx, min_tier)
     }

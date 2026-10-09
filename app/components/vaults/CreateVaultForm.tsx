@@ -6,8 +6,8 @@ import { PublicKey, Transaction } from '@solana/web3.js';
 import { TruvaButton, TruvaInput } from '@/components/ui/truva';
 import { WalletConnectButton } from '@/components/shared/WalletConnectButton';
 import {
-  DEVNET_USDC_MINT, MAX_ALLOWLIST, TOKEN_PROGRAM_ID, createVaultIx, depositIx, deriveVaultPDA,
-  deriveVaultTokenAccount, parseUnits,
+  DEVNET_USDC_MINT, MAX_ALLOWLIST, createVaultIx, depositIx, deriveVaultPDA,
+  deriveVaultTokenAccount, isTokenProgram, parseUnits,
 } from '@/lib/solana/vault';
 
 export interface CreatedVault {
@@ -77,9 +77,9 @@ export function CreateVaultForm({ agent: fixedAgent, submitLabel = 'CREATE_VAULT
       if (!mintInfo.value || !parsed || !('parsed' in parsed) || parsed.parsed?.type !== 'mint') {
         throw new Error('Token mint not found on devnet');
       }
-      if (!mintInfo.value.owner.equals(TOKEN_PROGRAM_ID)) {
-        throw new Error('Vaults support classic SPL tokens only (not Token-2022)');
-      }
+      // SPL Token or Token-2022
+      const tokenProgram = mintInfo.value.owner;
+      if (!isTokenProgram(tokenProgram)) throw new Error('Token mint is not an SPL token');
       const decimals: number = parsed.parsed.info.decimals;
 
       const perTxUnits = parseUnits(perTx, decimals);
@@ -96,15 +96,17 @@ export function CreateVaultForm({ agent: fixedAgent, submitLabel = 'CREATE_VAULT
         throw new Error('You already have a vault for this agent and token');
       }
 
-      const tx = new Transaction().add(createVaultIx(publicKey, agentKey, mintKey, perTxUnits, dailyUnits, allowlist));
+      const tx = new Transaction().add(
+        createVaultIx(publicKey, agentKey, mintKey, perTxUnits, dailyUnits, allowlist, tokenProgram)
+      );
       if (depositUnits > BigInt(0)) {
         const balance = await connection
-          .getTokenAccountBalance(deriveVaultTokenAccount(mintKey, publicKey))
+          .getTokenAccountBalance(deriveVaultTokenAccount(mintKey, publicKey, tokenProgram))
           .catch(() => null);
         if (!balance || BigInt(balance.value.amount) < depositUnits) {
           throw new Error(`Your wallet holds ${balance?.value.uiAmountString ?? '0'} of this token; lower the deposit or fund the wallet`);
         }
-        tx.add(depositIx(publicKey, vault, mintKey, depositUnits, decimals));
+        tx.add(depositIx(publicKey, vault, mintKey, depositUnits, decimals, tokenProgram));
       }
 
       const signature = await sendTransaction(tx, connection);

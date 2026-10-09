@@ -19,18 +19,25 @@ import type {
 import { TIER_LIMITS_LAMPORTS, TIER_RANK } from "./types";
 import { TruvaError } from "./errors";
 import {
+  TOKEN_2022_PROGRAM_ID,
   deriveAssociatedTokenAddress,
+  deriveCommitteePDA,
   deriveConfigPDA,
   deriveMerchantPolicyPDA,
   derivePassportPDA,
+  deriveScoreRecordPDA,
   deriveVaultPDA,
 } from "./pda";
 import {
+  parseCommitteeAccount,
   parseConfigAccount,
   parseMerchantPolicyAccount,
+  parseScoreRecordAccount,
   parseVaultAccount,
 } from "./instructions";
 import type {
+  ScoreRecordData,
+  ScorerCommitteeData,
   AgentVaultData,
   ProtocolConfigData,
 } from "./instructions";
@@ -110,15 +117,51 @@ export class TruvaClient {
     mint: PublicKey
   ): Promise<(AgentVaultData & { address: PublicKey; balance: bigint }) | null> {
     const [vault] = deriveVaultPDA(owner, agent, mint);
-    const [vaultInfo, tokenInfo] = await this.connection.getMultipleAccountsInfo(
-      [vault, deriveAssociatedTokenAddress(mint, vault)],
+    // The vault's token account address depends on which token program owns the mint
+    const [vaultInfo, classicToken, token2022] = await this.connection.getMultipleAccountsInfo(
+      [
+        vault,
+        deriveAssociatedTokenAddress(mint, vault),
+        deriveAssociatedTokenAddress(mint, vault, TOKEN_2022_PROGRAM_ID),
+      ],
       { commitment: this.config.commitment }
     );
     if (!vaultInfo) return null;
 
-    // SPL token account layout: mint (32), owner (32), amount (u64 LE)
+    // Token account layout (both programs): mint (32), owner (32), amount (u64 LE)
+    const tokenInfo = classicToken ?? token2022;
     const balance = tokenInfo ? tokenInfo.data.readBigUInt64LE(64) : 0n;
     return { ...parseVaultAccount(vaultInfo.data), address: vault, balance };
+  }
+
+  /**
+   * Where an agent's current score came from: inputs hash, scoring model
+   * version, how many scorers agreed, and the agent's Solana Agent Registry
+   * link. Null if the score was written without provenance.
+   */
+  async getScoreRecord(agent: PublicKey): Promise<ScoreRecordData | null> {
+    const info = await this.connection.getAccountInfo(deriveScoreRecordPDA(agent)[0], {
+      commitment: this.config.commitment,
+    });
+    if (!info) return null;
+    const record = parseScoreRecordAccount(info.data);
+    // The account exists from the first committee vote on, before any score is written
+    return record.scoredAt === 0 ? null : record;
+  }
+
+  /**
+   * The scorer committee, and whether it is the protocol scorer right now.
+   * Null if no committee was ever set.
+   */
+  async getCommittee(): Promise<(ScorerCommitteeData & { address: PublicKey; active: boolean }) | null> {
+    const [address] = deriveCommitteePDA();
+    const [info, configInfo] = await this.connection.getMultipleAccountsInfo(
+      [address, deriveConfigPDA()[0]],
+      { commitment: this.config.commitment }
+    );
+    if (!info) return null;
+    const active = !!configInfo && parseConfigAccount(configInfo.data).scorer.equals(address);
+    return { ...parseCommitteeAccount(info.data), address, active };
   }
 
   // ── SNS Domain Resolution ─────────────────────────────────────────────────

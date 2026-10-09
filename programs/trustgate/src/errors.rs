@@ -49,4 +49,19 @@ pub enum TruvaError {
 
     #[msg("Token account mint does not match")]
     MintMismatch,
+
+    #[msg("Signer is not a member of the scorer committee")]
+    NotCommitteeMember,
+
+    #[msg("Committee needs 1 to 5 distinct members and a threshold between 1 and the member count")]
+    InvalidCommittee,
+
+    #[msg("This member already voted in the current round")]
+    AlreadyVoted,
+
+    #[msg("Vote does not match the inputs hash, model version or registry link of this round")]
+    ProvenanceMismatch,
+
+    #[msg("The scorer committee is not the protocol scorer")]
+    CommitteeNotActive,
 }

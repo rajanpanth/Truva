@@ -79,7 +79,7 @@ Every state-changing instruction emits a structured Anchor event (`ConfigUpdated
 
 ### 9. Test Coverage
 
-51 tests run against a local validator (`tests/trustgate.test.ts`, `tests/x402.test.ts`). They include negative cases for each control: config creation by a non-upgrade-authority, self-scoring, a rotated scorer, a substituted merchant policy account, every vault limit, pause, freeze, a different agent spending from a vault, and the agent attempting to change policy or withdraw.
+70 tests run against a local validator (`tests/trustgate.test.ts`, `tests/x402.test.ts`, `tests/z-governance.test.ts`). They include negative cases for each control: config creation by a non-upgrade-authority, self-scoring, a rotated scorer, a substituted merchant policy account, every vault limit, pause, freeze, a different agent spending from a vault, and the agent attempting to change policy or withdraw.
 
 ---
 
@@ -89,9 +89,10 @@ These are deliberate scope limits or open issues, listed so integrators and audi
 
 1. **Direct payments are advisory.** An agent that holds its own funds can transfer them without calling TrustGate. Only vault funds are enforced.
 2. **Direct SPL caps ignore decimals.** `process_payment_spl` applies the same raw-unit caps as the SOL path regardless of the mint. Vaults do not have this issue (the owner sets limits per mint).
-3. **Classic SPL Token only.** Vaults do not support Token-2022 mints.
+3. **Token-2022 extensions.** Vaults accept SPL Token and Token-2022 mints, but pass no extra accounts to the token program, so mints with a transfer hook cannot be paid from a vault. With a transfer-fee mint the recipient receives the amount minus the fee, while limits count the full amount.
 4. **Fixed 24-hour window.** The daily limit uses a fixed window that restarts on the first payment after it expires, so up to twice the daily limit can be spent across a window boundary.
-5. **Single-key scorer.** The scorer is one key held by the backend. It is trusted to score honestly and to freeze correctly; compromise lets an attacker set any score or freeze any agent until the admin rotates it. A multisig or timelock is planned before mainnet.
+5. **Scorer trust.** By default the scorer is one key held by the backend; compromise lets an attacker set any score or freeze any agent until the admin rotates it. The program now supports an M-of-N scorer committee (`set_committee`, `committee_vote`): members must vote on identical inputs and the median is written, any one member can freeze, and only the admin can unfreeze. The committee is opt-in and is **not active on the devnet deployment**; the reputation engine does not yet vote as a committee member. The admin remains a single key that can replace the committee or the scorer.
+5a. **Provenance is a commitment, not a proof.** `attest_score` and `committee_vote` store a hash of the scoring inputs. The program cannot check that the score follows from those inputs, or that a linked Agent Registry ID belongs to the agent; both rely on the scorer(s) and on anyone recomputing from the published inputs.
 6. **Rent on closure.** `close_passport` returns rent to the scorer, not to whoever paid for the passport.
 7. **Daily-window rollover is untested.** The test suite cannot advance the validator clock.
 8. **Not audited.** The program is deployed on devnet only.

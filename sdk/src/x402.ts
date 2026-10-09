@@ -18,6 +18,11 @@
  * The program enforces the vault owner's limits, the agent's passport and the
  * seller's merchant policy at settlement.
  *
+ * A seller that does not need trust gating can also accept the stock `exact`
+ * scheme (`PaywallOptions.exact`): those payments are forwarded to an x402
+ * facilitator's `/verify` and `/settle` and skip every Truva check. See
+ * ./x402-exact.
+ *
  * Spec: https://github.com/coinbase/x402 (specs/x402-specification-v1.md,
  * specs/x402-specification-v2.md, specs/transports-v1/http.md,
  * specs/transports-v2/http.md).
@@ -32,9 +37,28 @@ import {
 import type { Signer } from "@solana/web3.js";
 import { TruvaClient } from "./client";
 import { DISCRIMINATORS, PROGRAM_ERRORS, vaultPayIx } from "./instructions";
-import { TRUSTGATE_PROGRAM_ID, deriveAssociatedTokenAddress } from "./pda";
+import {
+  TOKEN_2022_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+  TRUSTGATE_PROGRAM_ID,
+  deriveAssociatedTokenAddress,
+} from "./pda";
 import type { TrustTier } from "./types";
 import { TIER_RANK } from "./types";
+import {
+  EXACT_SCHEME,
+  FacilitatorError,
+  buildExactRequirements,
+  createFacilitatorClient,
+  findExactFeePayer,
+  toExactRequirementsV2,
+} from "./x402-exact";
+import type {
+  ExactPaymentRequirements,
+  ExactPaymentRequirementsV2,
+  ExactSchemeOptions,
+  FacilitatorRequest,
+} from "./x402-exact";
 
 export const TRUVA_VAULT_SCHEME = "truva-vault";
 
@@ -172,10 +196,15 @@ export interface SettlementResponse {
 
 export interface SettledPayment {
   signature: string;
-  /** The agent that paid */
+  /** The agent that paid (for `exact`: the payer the facilitator reports) */
   payer: string;
   amount: string;
   network: string;
+  /**
+   * Scheme the payment was settled with: "truva-vault" or "exact". An `exact`
+   * payment passed no Truva trust check.
+   */
+  scheme?: string;
 }
 
 /** Thrown when a payment is refused, by the server or by the buyer's own guard. */
@@ -491,8 +520,12 @@ export async function settleVaultPayment(
   if (amount < price) {
     throw new PaymentRejectedError(`amount ${amount} is below the price ${price}`);
   }
-  // vault_pay accounts: [4] recipient token account, [6] mint, [7] agent
-  if (!ix.keys[4].pubkey.equals(deriveAssociatedTokenAddress(mint, payTo))) {
+  // vault_pay accounts: [4] recipient token account, [6] mint, [7] agent, [8] token program
+  const tokenProgram = ix.keys[8].pubkey;
+  if (!tokenProgram.equals(TOKEN_PROGRAM_ID) && !tokenProgram.equals(TOKEN_2022_PROGRAM_ID)) {
+    throw new PaymentRejectedError("payment uses an unknown token program");
+  }
+  if (!ix.keys[4].pubkey.equals(deriveAssociatedTokenAddress(mint, payTo, tokenProgram))) {
     throw new PaymentRejectedError("payment is not addressed to this seller");
   }
   if (!ix.keys[6].pubkey.equals(mint)) {
@@ -539,6 +572,7 @@ export async function settleVaultPayment(
     payer: agent.toBase58(),
     amount: amount.toString(),
     network: requirements.network,
+    scheme: TRUVA_VAULT_SCHEME,
   };
 }
 
@@ -562,7 +596,22 @@ export interface PaywallOptions {
    */
   resource?: string;
   programId?: PublicKey;
+  /**
+   * Also accept the standard x402 `exact` scheme, verified and settled by a
+   * facilitator, so stock x402 clients can pay. The 402 response then lists
+   * two requirements for the same token, amount and seller: `truva-vault`
+   * first, `exact` second.
+   *
+   * `exact` payments are plain token transfers and bypass every Truva check
+   * (passport, tier, vault limits, merchant policy). `truvaPaywall` throws if
+   * this is set together with a `minTier` above Bronze, unless
+   * `exact.allowUngated` is true.
+   */
+  exact?: ExactSchemeOptions;
 }
+
+/** How long a failed `/supported` lookup is remembered before retrying. */
+const FEE_PAYER_RETRY_MS = 30_000;
 
 /** Absolute URL of the request, as x402 expects in `resource`. */
 function requestUrl(req: any): string {
@@ -583,13 +632,95 @@ function requestUrl(req: any): string {
  * read from `X-PAYMENT` (v1) or `PAYMENT-SIGNATURE` (v2). On success the
  * settled payment is attached as `req.truvaPayment` and the receipt is sent in
  * `X-PAYMENT-RESPONSE` (v1) or `PAYMENT-RESPONSE` (v2), matching the request.
+ *
+ * With `options.exact` the 402 also lists a standard x402 `exact` requirement,
+ * and a payment with that scheme is sent to the facilitator's `/verify` and
+ * then `/settle`; a rejection by either is a 402 with the facilitator's reason.
+ * `req.truvaPayment.scheme` tells the handler which scheme paid. `exact`
+ * payments pass no Truva trust check.
+ *
+ * @throws Error when built with `exact` and a `minTier` above Bronze without
+ *   `exact.allowUngated`, or with a malformed `exact` option.
  */
 export function truvaPaywall(options: PaywallOptions) {
+  const exact = options.exact;
+  const networkName = options.network ?? "solana-devnet";
+  const caip2 = toCaip2Network(networkName);
+  /** x402 v1 name of the network, used in the v1 `exact` requirement */
+  const v1Network = fromCaip2Network(networkName) ?? networkName;
+
+  if (exact) {
+    if (typeof exact.facilitatorUrl !== "string" || !/^https?:\/\//i.test(exact.facilitatorUrl)) {
+      throw new Error("truvaPaywall: exact.facilitatorUrl must be an http(s) URL");
+    }
+    if (exact.feePayer !== undefined && !isAddress(exact.feePayer)) {
+      throw new Error("truvaPaywall: exact.feePayer is not a Solana address");
+    }
+    const minTier = options.minTier ?? "Bronze";
+    if (TIER_RANK[minTier] > TIER_RANK.Bronze && !exact.allowUngated) {
+      throw new Error(
+        `truvaPaywall: this route requires the ${minTier} tier, but x402 "exact" payments bypass ` +
+          "Truva trust checks (no passport, no vault limits). Remove `exact`, or set " +
+          "`exact.allowUngated: true` to let anyone pay through `exact`."
+      );
+    }
+  }
+
+  const facilitator = exact ? createFacilitatorClient(exact) : undefined;
+  let feePayerLookup: Promise<string> | undefined;
+  let feePayerError: unknown;
+  let feePayerRetryAt = 0;
+
+  /** The facilitator's fee payer: configured, or read once from `/supported`. */
+  const resolveFeePayer = (): Promise<string> => {
+    if (exact!.feePayer) return Promise.resolve(exact!.feePayer);
+    if (feePayerLookup) return feePayerLookup;
+    if (Date.now() < feePayerRetryAt) return Promise.reject(feePayerError);
+    const lookup = facilitator!.supported().then((supported) => {
+      const feePayer = findExactFeePayer(supported, [v1Network, caip2, networkName]);
+      if (!isAddress(feePayer)) {
+        throw new FacilitatorError("supported", `no "exact" kind with a feePayer for ${networkName}`);
+      }
+      return feePayer;
+    });
+    feePayerLookup = lookup;
+    lookup.catch((err) => {
+      feePayerLookup = undefined;
+      feePayerError = err;
+      feePayerRetryAt = Date.now() + FEE_PAYER_RETRY_MS;
+    });
+    return lookup;
+  };
+
   return async (req: any, res: any, next: () => void): Promise<void> => {
     const requirements = buildPaymentRequirements({
       ...options,
       resource: options.resource ?? requestUrl(req),
     });
+
+    // The `exact` requirement, if offered and the fee payer is known. When the
+    // facilitator cannot be reached the route still sells through truva-vault.
+    let exactV1: ExactPaymentRequirements | undefined;
+    let exactV2: ExactPaymentRequirementsV2 | undefined;
+    let exactUnavailable = "";
+    if (exact) {
+      try {
+        exactV1 = buildExactRequirements({
+          network: v1Network,
+          amount: requirements.maxAmountRequired,
+          asset: requirements.asset,
+          payTo: requirements.payTo,
+          feePayer: await resolveFeePayer(),
+          resource: requirements.resource,
+          description: requirements.description,
+          mimeType: requirements.mimeType,
+          maxTimeoutSeconds: requirements.maxTimeoutSeconds,
+        });
+        if (caip2) exactV2 = toExactRequirementsV2(exactV1, caip2);
+      } catch (err) {
+        exactUnavailable = (err as Error)?.message ?? String(err);
+      }
+    }
 
     const headerV2 = req.headers?.[X402_HEADERS.paymentV2.toLowerCase()];
     const headerV1 = req.headers?.[X402_HEADERS.paymentV1.toLowerCase()];
@@ -600,11 +731,14 @@ export function truvaPaywall(options: PaywallOptions) {
       ? toCaip2Network(requirements.network) ?? requirements.network
       : requirements.network;
 
-    const refuse = (error: string, settlementFailed: boolean) => {
+    const refuse = (error: string, settlementFailed: boolean, payer?: string) => {
       res.statusCode = 402;
       res.setHeader("Content-Type", "application/json");
       const v2 = buildPaymentRequiredV2(requirements, error);
-      if (v2) res.setHeader(X402_HEADERS.requiredV2, encodeX402Header(v2));
+      if (v2) {
+        const accepts = exactV2 ? [...v2.accepts, exactV2] : v2.accepts;
+        res.setHeader(X402_HEADERS.requiredV2, encodeX402Header({ ...v2, accepts }));
+      }
       if (settlementFailed) {
         const failure: SettlementResponse = {
           success: false,
@@ -612,14 +746,106 @@ export function truvaPaywall(options: PaywallOptions) {
           transaction: "",
           network: receiptNetwork,
         };
+        if (payer) failure.payer = payer;
         res.setHeader(responseHeader, encodeX402Header(failure));
       }
-      res.end(JSON.stringify(buildPaymentRequired(requirements, error)));
+      const v1 = buildPaymentRequired(requirements, error);
+      res.end(JSON.stringify(exactV1 ? { ...v1, accepts: [...v1.accepts, exactV1] } : v1));
     };
 
     if (!header || typeof header !== "string") {
       refuse("X-PAYMENT header is required", false);
       return;
+    }
+
+    // Standard `exact` payment: the facilitator verifies and settles it
+    if (exact && facilitator) {
+      let payload: Record<string, unknown> | undefined;
+      try {
+        payload = decodeX402Header(header);
+      } catch {
+        payload = undefined; // settleVaultPayment below reports it as malformed
+      }
+      const payloadVersion: X402Version = payload?.x402Version === 2 ? 2 : 1;
+      const accepted = payload && isRecord(payload.accepted) ? payload.accepted : undefined;
+      const scheme = payloadVersion === 2 ? accepted?.scheme : payload?.scheme;
+
+      if (payload && scheme === EXACT_SCHEME) {
+        const paymentRequirements = payloadVersion === 2 ? exactV2 : exactV1;
+        if (!exactV1) {
+          refuse(`exact payments are unavailable: ${exactUnavailable}`, true);
+          return;
+        }
+        if (!paymentRequirements) {
+          refuse(`network "${networkName}" has no CAIP-2 id; pay with x402 version 1`, true);
+          return;
+        }
+        if (!isRecord(payload.payload)) {
+          refuse("malformed payment header", true);
+          return;
+        }
+        if (payloadVersion === 2) {
+          // The client echoes the requirement it chose; it must be the one offered
+          const extra = isRecord(accepted!.extra) ? accepted!.extra : {};
+          if (
+            accepted!.network !== exactV2!.network ||
+            accepted!.amount !== exactV2!.amount ||
+            accepted!.asset !== exactV2!.asset ||
+            accepted!.payTo !== exactV2!.payTo ||
+            extra.feePayer !== exactV2!.extra.feePayer
+          ) {
+            refuse("accepted requirement does not match what this server offers", true);
+            return;
+          }
+        } else if (!sameNetwork(payload.network, networkName)) {
+          refuse("scheme or network does not match", true);
+          return;
+        }
+
+        const request: FacilitatorRequest = {
+          x402Version: payloadVersion,
+          paymentPayload: payload,
+          paymentRequirements,
+        };
+        let payer: string | undefined;
+        try {
+          const verified = await facilitator.verify(request);
+          if (typeof verified.payer === "string" && verified.payer) payer = verified.payer;
+          if (!verified.isValid) {
+            refuse(verified.invalidReason || "payment verification failed", true, payer);
+            return;
+          }
+          const settlement = await facilitator.settle(request);
+          if (typeof settlement.payer === "string" && settlement.payer) payer = settlement.payer;
+          if (!settlement.success || !settlement.transaction) {
+            refuse(settlement.errorReason || "payment settlement failed", true, payer);
+            return;
+          }
+          const settled: SettledPayment = {
+            signature: settlement.transaction,
+            payer: payer ?? "",
+            amount: requirements.maxAmountRequired,
+            network: requirements.network,
+            scheme: EXACT_SCHEME,
+          };
+          req.truvaPayment = settled;
+          const receipt: SettlementResponse = {
+            success: true,
+            transaction: settlement.transaction,
+            network: receiptNetwork,
+          };
+          if (payer) receipt.payer = payer;
+          res.setHeader(responseHeader, encodeX402Header(receipt));
+        } catch (err) {
+          if (err instanceof FacilitatorError) {
+            refuse(err.message, true, payer);
+            return;
+          }
+          throw err;
+        }
+        next();
+        return;
+      }
     }
 
     try {
@@ -648,6 +874,20 @@ export function truvaPaywall(options: PaywallOptions) {
 // ── Buyer side ───────────────────────────────────────────────────────────────
 
 /**
+ * The token program that owns `mint`: Token-2022 when the mint account says so,
+ * classic SPL Token otherwise (including when the mint cannot be read).
+ */
+async function tokenProgramOf(connection: Connection, mint: PublicKey): Promise<PublicKey> {
+  try {
+    const info = await connection.getAccountInfo(mint);
+    if (info?.owner.equals(TOKEN_2022_PROGRAM_ID)) return TOKEN_2022_PROGRAM_ID;
+  } catch {
+    // fall through to the classic program
+  }
+  return TOKEN_PROGRAM_ID;
+}
+
+/**
  * Build and sign a payment header value for a `truva-vault` requirement: the
  * `X-PAYMENT` value by default, the `PAYMENT-SIGNATURE` value with
  * `x402Version: 2`. The agent signs and pays the transaction fee; the tokens
@@ -664,15 +904,17 @@ export async function createVaultPayment(opts: {
   x402Version?: X402Version;
 }): Promise<string> {
   const { connection, agent, vaultOwner, requirements } = opts;
+  const mint = new PublicKey(requirements.asset);
 
   const tx = new Transaction().add(
     vaultPayIx(
       vaultOwner,
       agent.publicKey,
-      new PublicKey(requirements.asset),
+      mint,
       new PublicKey(requirements.payTo),
       BigInt(requirements.maxAmountRequired),
-      new PublicKey(requirements.extra.programId)
+      new PublicKey(requirements.extra.programId),
+      await tokenProgramOf(connection, mint)
     )
   );
   tx.feePayer = agent.publicKey;

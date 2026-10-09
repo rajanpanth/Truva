@@ -19,6 +19,8 @@ The [Solana Agent Registry](https://solana.com/agent-registry) says who an agent
 - **🧾 Merchant Policy** — A seller sets the minimum tier it accepts. Payments must pass the seller's policy account, so the paying agent cannot lower or skip it.
 - **💸 x402-style Paywall** — SDK middleware answers HTTP 402, verifies the agent's `vault_pay` transaction, settles it and serves the resource. A matching `fetchWithVault` client pays automatically, with its own price cap.
 - **🪪 Agent Passports** — PDA per agent with score, tier, transaction counts and a freeze flag. Only the protocol scorer can set scores; nobody can score themselves.
+- **🔎 Score Provenance** — Each score can be written with the SHA-256 of its inputs, the scoring model version and the agent's Solana Agent Registry ID, so anyone can recompute and check it.
+- **🗳️ Scorer Committee** — The admin can hand scoring to an M-of-N committee: members vote on the same published inputs and the program writes the median. No single key can then set a score.
 - **📊 6-Signal Scoring Engine** — Off-chain scoring from transaction volume, success rate, counterparty diversity, account age, Solana Agent Registry feedback, and validator attestations.
 - **🧊 Kill Switch** — The scorer can freeze a passport, blocking every payment. A risk monitor can do it automatically when an agent's activity looks compromised.
 - **🔌 SDK & Integrations** — TypeScript SDK (pure `@solana/web3.js`) with Eliza plugin, LangChain tool and MCP server.
@@ -135,7 +137,7 @@ createVaultIx(owner, agent, USDC, {
 setVaultPausedIx(owner, agent, USDC, true); // stop the agent immediately
 ```
 
-The payment scheme is `truva-vault`. It follows the x402 handshake (402 response with `accepts`, `X-PAYMENT` request header, `X-PAYMENT-RESPONSE` receipt) but is not x402's stock `exact` scheme: the payment is a `vault_pay` instruction rather than a plain token transfer, and the seller settles it directly instead of through a third-party facilitator. Vaults hold classic SPL tokens (not Token-2022).
+The payment scheme is `truva-vault`. It follows the x402 handshake (402 response with `accepts`, `X-PAYMENT` request header, `X-PAYMENT-RESPONSE` receipt) but is not x402's stock `exact` scheme: the payment is a `vault_pay` instruction rather than a plain token transfer, and the seller settles it directly instead of through a third-party facilitator. Vaults hold SPL Token and Token-2022 mints (transfer hooks are not supported). Sellers that do not need trust gating can also accept the standard `exact` scheme through a facilitator; see the [SDK README](./sdk/README.md).
 
 Run the whole flow locally:
 
@@ -505,6 +507,10 @@ After each webhook batch the engine checks every affected agent's last 10 minute
 | `initialize_passport` | Anyone (payer) | Create an agent passport (score 0, Bronze). Authority is always the scorer |
 | `adopt_passport` | Scorer | Bring an older or rotated passport under the current scorer with an explicit score and tier |
 | `update_trust_tier` | Scorer | Set score and tier |
+| `attest_score` | Scorer | Set the score (tier is derived) and record its provenance: inputs hash, model version, Agent Registry ID |
+| `set_committee` | Admin | Create or replace the M-of-N scorer committee. It takes over once `update_config` sets the scorer to the committee PDA |
+| `committee_vote` | Committee member | Vote on an agent's score; at the threshold the program writes the median and the provenance |
+| `committee_set_frozen` | Committee member (freeze) / Admin (unfreeze) | Kill switch when the committee is the scorer |
 | `verify_trust` | None | Read-only trust check for CPI. Returns `[score, tier]` |
 | `set_merchant_policy` / `close_merchant_policy` | Recipient | Set or remove the minimum tier the recipient accepts |
 | `create_vault` | Owner | Create a vault for one agent and one mint with limits and an allowlist |
@@ -566,7 +572,7 @@ Truva Protocol handles real value transfers on Solana. Security is a core design
 - **Recipient-controlled tier** — the merchant policy PDA is derived and verified by the program, so it cannot be substituted or omitted
 - **Deterministic PDA addressing** for config, passports, merchant policies and vaults
 - **Checked arithmetic** on all counters and spend totals
-- **51 passing tests** covering authority checks, spoofing attempts, every vault limit, pause, freeze, and the end-to-end x402 paywall
+- **70 passing tests** covering authority checks, spoofing attempts, every vault limit, pause, freeze, Token-2022 vaults, score provenance, the scorer committee, and the end-to-end x402 paywall
 
 For a detailed breakdown of our security architecture, threat model, and areas requiring formal audit, see **[SECURITY.md](./SECURITY.md)**.
 

@@ -17,14 +17,20 @@ import {
   TOKEN_PROGRAM_ID,
   TRUSTGATE_PROGRAM_ID,
   deriveAssociatedTokenAddress,
+  deriveCommitteePDA,
   deriveConfigPDA,
   deriveMerchantPolicyPDA,
   derivePassportPDA,
+  deriveProposalPDA,
+  deriveScoreRecordPDA,
   deriveVaultPDA,
 } from "./pda";
 
 /** Maximum number of recipients on a vault allowlist. */
 export const MAX_ALLOWLIST = 8;
+
+/** Maximum number of scorers on the committee. */
+export const MAX_COMMITTEE = 5;
 
 /** Anchor instruction discriminators: `sha256("global:<name>")[0..8]`. */
 export const DISCRIMINATORS = {
@@ -38,6 +44,10 @@ export const DISCRIMINATORS = {
   vault_pay: [81, 165, 99, 6, 171, 27, 225, 236],
   vault_withdraw: [98, 28, 187, 98, 87, 69, 46, 64],
   close_vault: [141, 103, 17, 126, 72, 75, 29, 29],
+  attest_score: [43, 103, 32, 97, 108, 253, 99, 3],
+  set_committee: [197, 116, 137, 105, 6, 92, 129, 215],
+  committee_vote: [29, 144, 232, 23, 59, 249, 225, 23],
+  committee_set_frozen: [231, 135, 157, 189, 243, 80, 215, 71],
 } as const;
 
 /** Custom program error codes (Anchor offset 6000). */
@@ -58,6 +68,11 @@ export const PROGRAM_ERRORS: Record<number, string> = {
   6013: "InvalidLimits",
   6014: "InvalidAmount",
   6015: "MintMismatch",
+  6016: "NotCommitteeMember",
+  6017: "InvalidCommittee",
+  6018: "AlreadyVoted",
+  6019: "ProvenanceMismatch",
+  6020: "CommitteeNotActive",
 };
 
 // ── Encoding helpers ─────────────────────────────────────────────────────────
@@ -178,25 +193,29 @@ function policyData(policy: VaultPolicyInput): Buffer[] {
 /**
  * Create a spending vault for one agent and one mint. Signed by the owner.
  * Fund it afterwards with a normal token transfer to the vault's token account
- * (`deriveAssociatedTokenAddress(mint, vault)`).
+ * (`deriveAssociatedTokenAddress(mint, vault, tokenProgram)`).
+ *
+ * For a Token-2022 mint pass `TOKEN_2022_PROGRAM_ID` as `tokenProgram`, here
+ * and in every other vault instruction for that mint.
  */
 export function createVaultIx(
   owner: PublicKey,
   agent: PublicKey,
   mint: PublicKey,
   policy: VaultPolicyInput,
-  programId: PublicKey = TRUSTGATE_PROGRAM_ID
+  programId: PublicKey = TRUSTGATE_PROGRAM_ID,
+  tokenProgram: PublicKey = TOKEN_PROGRAM_ID
 ): TransactionInstruction {
   const [vault] = deriveVaultPDA(owner, agent, mint, programId);
   return new TransactionInstruction({
     programId,
     keys: [
       rw(vault),
-      rw(deriveAssociatedTokenAddress(mint, vault)),
+      rw(deriveAssociatedTokenAddress(mint, vault, tokenProgram)),
       ro(agent),
       ro(mint),
       signer(owner, true),
-      ro(TOKEN_PROGRAM_ID),
+      ro(tokenProgram),
       ro(ASSOCIATED_TOKEN_PROGRAM_ID),
       ro(SystemProgram.programId),
     ],
@@ -245,7 +264,8 @@ export function vaultPayIx(
   mint: PublicKey,
   recipient: PublicKey,
   amount: bigint | number,
-  programId: PublicKey = TRUSTGATE_PROGRAM_ID
+  programId: PublicKey = TRUSTGATE_PROGRAM_ID,
+  tokenProgram: PublicKey = TOKEN_PROGRAM_ID
 ): TransactionInstruction {
   const [vault] = deriveVaultPDA(vaultOwner, agent, mint, programId);
   return new TransactionInstruction({
@@ -254,12 +274,12 @@ export function vaultPayIx(
       ro(deriveConfigPDA(programId)[0]),
       rw(derivePassportPDA(agent, programId)[0]),
       rw(vault),
-      rw(deriveAssociatedTokenAddress(mint, vault)),
-      rw(deriveAssociatedTokenAddress(mint, recipient)),
+      rw(deriveAssociatedTokenAddress(mint, vault, tokenProgram)),
+      rw(deriveAssociatedTokenAddress(mint, recipient, tokenProgram)),
       ro(deriveMerchantPolicyPDA(recipient, programId)[0]),
       ro(mint),
       signer(agent),
-      ro(TOKEN_PROGRAM_ID),
+      ro(tokenProgram),
     ],
     data: ixData("vault_pay", u64(amount)),
   });
@@ -271,18 +291,19 @@ export function vaultWithdrawIx(
   agent: PublicKey,
   mint: PublicKey,
   amount: bigint | number,
-  programId: PublicKey = TRUSTGATE_PROGRAM_ID
+  programId: PublicKey = TRUSTGATE_PROGRAM_ID,
+  tokenProgram: PublicKey = TOKEN_PROGRAM_ID
 ): TransactionInstruction {
   const [vault] = deriveVaultPDA(owner, agent, mint, programId);
   return new TransactionInstruction({
     programId,
     keys: [
       ro(vault),
-      rw(deriveAssociatedTokenAddress(mint, vault)),
-      rw(deriveAssociatedTokenAddress(mint, owner)),
+      rw(deriveAssociatedTokenAddress(mint, vault, tokenProgram)),
+      rw(deriveAssociatedTokenAddress(mint, owner, tokenProgram)),
       ro(mint),
       signer(owner),
-      ro(TOKEN_PROGRAM_ID),
+      ro(tokenProgram),
     ],
     data: ixData("vault_withdraw", u64(amount)),
   });
@@ -293,20 +314,152 @@ export function closeVaultIx(
   owner: PublicKey,
   agent: PublicKey,
   mint: PublicKey,
-  programId: PublicKey = TRUSTGATE_PROGRAM_ID
+  programId: PublicKey = TRUSTGATE_PROGRAM_ID,
+  tokenProgram: PublicKey = TOKEN_PROGRAM_ID
 ): TransactionInstruction {
   const [vault] = deriveVaultPDA(owner, agent, mint, programId);
   return new TransactionInstruction({
     programId,
     keys: [
       rw(vault),
-      rw(deriveAssociatedTokenAddress(mint, vault)),
-      rw(deriveAssociatedTokenAddress(mint, owner)),
+      rw(deriveAssociatedTokenAddress(mint, vault, tokenProgram)),
+      rw(deriveAssociatedTokenAddress(mint, owner, tokenProgram)),
       ro(mint),
       signer(owner, true),
-      ro(TOKEN_PROGRAM_ID),
+      ro(tokenProgram),
     ],
     data: ixData("close_vault"),
+  });
+}
+
+// ── Score provenance and scorer committee ──────────────────────────────────
+
+export interface ScoreAttestation {
+  /** Trust score 0–100. The program derives the tier from it. */
+  score: number;
+  /** SHA-256 of the canonical scoring inputs (32 bytes) */
+  inputsHash: Uint8Array;
+  /** Version of the scoring model */
+  modelVersion: number;
+  /** The agent's Solana Agent Registry entry. Omit when the agent is not linked. */
+  registryAsset?: PublicKey;
+}
+
+function attestationData(a: ScoreAttestation): Buffer[] {
+  if (!Number.isInteger(a.score) || a.score < 0 || a.score > 100) {
+    throw new Error("Score must be an integer between 0 and 100");
+  }
+  if (a.inputsHash.length !== 32) {
+    throw new Error("inputsHash must be 32 bytes (SHA-256)");
+  }
+  if (!Number.isInteger(a.modelVersion) || a.modelVersion < 0 || a.modelVersion > 0xffff) {
+    throw new Error("modelVersion must fit in 16 bits");
+  }
+  const version = Buffer.alloc(2);
+  version.writeUInt16LE(a.modelVersion);
+  return [
+    Buffer.from([a.score]),
+    Buffer.from(a.inputsHash),
+    version,
+    (a.registryAsset ?? PublicKey.default).toBuffer(),
+  ];
+}
+
+/**
+ * Write a score together with its provenance. Signed by the protocol scorer
+ * (the passport authority), who also pays for the record on first use.
+ */
+export function attestScoreIx(
+  agent: PublicKey,
+  scorer: PublicKey,
+  attestation: ScoreAttestation,
+  programId: PublicKey = TRUSTGATE_PROGRAM_ID
+): TransactionInstruction {
+  return new TransactionInstruction({
+    programId,
+    keys: [
+      rw(derivePassportPDA(agent, programId)[0]),
+      rw(deriveScoreRecordPDA(agent, programId)[0]),
+      signer(scorer, true),
+      ro(SystemProgram.programId),
+    ],
+    data: ixData("attest_score", ...attestationData(attestation)),
+  });
+}
+
+/**
+ * Create or replace the scorer committee. Signed by the protocol admin.
+ * The committee starts scoring once `config.scorer` is set to
+ * `deriveCommitteePDA()` with `update_config`.
+ */
+export function setCommitteeIx(
+  admin: PublicKey,
+  members: PublicKey[],
+  threshold: number,
+  programId: PublicKey = TRUSTGATE_PROGRAM_ID
+): TransactionInstruction {
+  if (members.length < 1 || members.length > MAX_COMMITTEE) {
+    throw new Error(`A committee has 1 to ${MAX_COMMITTEE} members`);
+  }
+  if (!Number.isInteger(threshold) || threshold < 1 || threshold > members.length) {
+    throw new Error("Threshold must be between 1 and the number of members");
+  }
+  return new TransactionInstruction({
+    programId,
+    keys: [
+      ro(deriveConfigPDA(programId)[0]),
+      rw(deriveCommitteePDA(programId)[0]),
+      signer(admin, true),
+      ro(SystemProgram.programId),
+    ],
+    data: ixData("set_committee", pubkeyVec(members), Buffer.from([threshold])),
+  });
+}
+
+/**
+ * Vote on an agent's score as a committee member. Once `threshold` members
+ * have voted on the same inputs, the program writes the median score.
+ */
+export function committeeVoteIx(
+  agent: PublicKey,
+  member: PublicKey,
+  attestation: ScoreAttestation,
+  programId: PublicKey = TRUSTGATE_PROGRAM_ID
+): TransactionInstruction {
+  return new TransactionInstruction({
+    programId,
+    keys: [
+      ro(deriveConfigPDA(programId)[0]),
+      ro(deriveCommitteePDA(programId)[0]),
+      rw(derivePassportPDA(agent, programId)[0]),
+      rw(deriveProposalPDA(agent, programId)[0]),
+      rw(deriveScoreRecordPDA(agent, programId)[0]),
+      signer(member, true),
+      ro(SystemProgram.programId),
+    ],
+    data: ixData("committee_vote", ...attestationData(attestation)),
+  });
+}
+
+/**
+ * Freeze or unfreeze a passport scored by the committee. Any committee
+ * member can freeze; only the protocol admin can unfreeze.
+ */
+export function committeeSetFrozenIx(
+  agent: PublicKey,
+  signerKey: PublicKey,
+  frozen: boolean,
+  programId: PublicKey = TRUSTGATE_PROGRAM_ID
+): TransactionInstruction {
+  return new TransactionInstruction({
+    programId,
+    keys: [
+      ro(deriveConfigPDA(programId)[0]),
+      ro(deriveCommitteePDA(programId)[0]),
+      rw(derivePassportPDA(agent, programId)[0]),
+      signer(signerKey),
+    ],
+    data: ixData("committee_set_frozen", Buffer.from([frozen ? 1 : 0])),
   });
 }
 
@@ -390,5 +543,57 @@ export function parseVaultAccount(data: Buffer): AgentVaultData {
   return {
     owner, agent, mint, perTxLimit, dailyLimit, spentInWindow,
     windowStart, totalSpent, paused, allowlist,
+  };
+}
+
+export interface ScoreRecordData {
+  agent: PublicKey;
+  /** The agent's Solana Agent Registry entry, or null when not linked */
+  registryAsset: PublicKey | null;
+  /** SHA-256 of the canonical scoring inputs */
+  inputsHash: Uint8Array;
+  modelVersion: number;
+  score: number;
+  /** Number of scorers that agreed (1 for a single scorer) */
+  votes: number;
+  /** The scorer key, or the committee PDA */
+  scorer: PublicKey;
+  /** Unix timestamp the score was written; 0 while a first committee round is still open */
+  scoredAt: number;
+}
+
+/** Parse a `ScoreRecord` account. */
+export function parseScoreRecordAccount(data: Buffer): ScoreRecordData {
+  const registry = new PublicKey(data.subarray(40, 72));
+  return {
+    agent: new PublicKey(data.subarray(8, 40)),
+    registryAsset: registry.equals(PublicKey.default) ? null : registry,
+    inputsHash: Uint8Array.from(data.subarray(72, 104)),
+    modelVersion: data.readUInt16LE(104),
+    score: data[106],
+    votes: data[107],
+    scorer: new PublicKey(data.subarray(108, 140)),
+    scoredAt: Number(data.readBigInt64LE(140)),
+  };
+}
+
+export interface ScorerCommitteeData {
+  members: PublicKey[];
+  threshold: number;
+  /** Increases every time the membership changes */
+  epoch: number;
+}
+
+/** Parse a `ScorerCommittee` account. */
+export function parseCommitteeAccount(data: Buffer): ScorerCommitteeData {
+  const count = data[8 + 32 * MAX_COMMITTEE];
+  const members: PublicKey[] = [];
+  for (let i = 0; i < count; i++) {
+    members.push(new PublicKey(data.subarray(8 + 32 * i, 40 + 32 * i)));
+  }
+  return {
+    members,
+    threshold: data[8 + 32 * MAX_COMMITTEE + 1],
+    epoch: data.readUInt32LE(8 + 32 * MAX_COMMITTEE + 2),
   };
 }
